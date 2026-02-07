@@ -40,49 +40,55 @@ export default async function ClassementsPage() {
   const rootId = process.env.GOOGLE_DRIVE_FOLDER_ID!;
   const saisonsRaw = await getDriveChildren(rootId);
 
-  const saisons: Saison[] = [];
+  const saisons: Saison[] = await Promise.all(
+    saisonsRaw
+      .filter((s) => s.isFolder)
+      .map(async (saison) => {
+        const toursRaw = await getDriveChildren(saison.id);
 
-  for (const saison of saisonsRaw.filter((s) => s.isFolder)) {
-    const toursRaw = await getDriveChildren(saison.id);
+        const tours: Tour[] = await Promise.all(
+          toursRaw
+            .filter((t) => t.isFolder)
+            .map(async (tour) => {
+              const tableauxRaw = await getDriveChildren(tour.id);
 
-    const tours: Tour[] = [];
+              const tableaux: Tableau[] = await Promise.all(
+                tableauxRaw
+                  .filter((t) => t.isFolder)
+                  .map(async (tableau) => {
+                    const filesRaw = await getDriveChildren(tableau.id);
 
-    for (const tour of toursRaw.filter((t) => t.isFolder)) {
-      const tableauxRaw = await getDriveChildren(tour.id);
+                    const fichiers: TableauFile[] = filesRaw
+                      .filter((f) => !f.isFolder && typeof f.url === "string")
+                      .map((f) => ({
+                        id: f.id,
+                        name: f.name.replace(/\.(pdf|jpg|jpeg|png)$/i, ""),
+                        url: f.url!,
+                      }));
 
-      const tableaux: Tableau[] = [];
+                    return {
+                      id: tableau.id,
+                      name: tableau.name,
+                      fichiers,
+                    };
+                  }),
+              );
 
-      for (const tableau of tableauxRaw.filter((t) => t.isFolder)) {
-        const filesRaw = await getDriveChildren(tableau.id);
+              return {
+                id: tour.id,
+                name: tour.name,
+                tableaux,
+              };
+            }),
+        );
 
-        const fichiers: TableauFile[] = filesRaw
-          .filter((f) => !f.isFolder && typeof f.url === "string")
-          .map((f) => ({
-            id: f.id,
-            name: f.name.replace(/\.(pdf|jpg|jpeg|png)$/i, ""),
-            url: f.url!, // safe après le filter
-          }));
-
-        tableaux.push({
-          id: tableau.id,
-          name: tableau.name,
-          fichiers,
-        });
-      }
-
-      tours.push({
-        id: tour.id,
-        name: tour.name,
-        tableaux,
-      });
-    }
-
-    saisons.push({
-      id: saison.id,
-      name: saison.name,
-      tours,
-    });
-  }
+        return {
+          id: saison.id,
+          name: saison.name,
+          tours,
+        };
+      }),
+  );
 
   return (
     <div className="max-w-5xl mx-auto space-y-10">
