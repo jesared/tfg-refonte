@@ -12,15 +12,10 @@ const defaultProps = {
 
 function createIcon(
   displayName: string,
-  path: React.ReactNode
+  path: React.ReactNode,
 ): React.FC<React.SVGProps<SVGSVGElement>> {
   const Icon = ({ className, ...props }: React.SVGProps<SVGSVGElement>) => (
-    <svg
-      viewBox="0 0 24 24"
-      className={className}
-      {...defaultProps}
-      {...props}
-    >
+    <svg viewBox="0 0 24 24" className={className} {...defaultProps} {...props}>
       {path}
     </svg>
   );
@@ -40,28 +35,28 @@ export const CalendarDays = createIcon(
     <line x1="8" y1="15" x2="8" y2="17" />
     <line x1="12" y1="15" x2="12" y2="17" />
     <line x1="16" y1="15" x2="16" y2="17" />
-  </>
+  </>,
 );
 
 export const Check = createIcon(
   "Check",
   <>
     <polyline points="20 6 9 17 4 12" />
-  </>
+  </>,
 );
 
 export const ChevronRight = createIcon(
   "ChevronRight",
   <>
     <polyline points="9 18 15 12 9 6" />
-  </>
+  </>,
 );
 
 export const Dot = createIcon(
   "Dot",
   <>
     <circle cx="12" cy="12" r="1" />
-  </>
+  </>,
 );
 
 export const Gift = createIcon(
@@ -71,7 +66,7 @@ export const Gift = createIcon(
     <line x1="12" y1="8" x2="12" y2="21" />
     <path d="M12 8H6a3 3 0 0 1 0-6c3 0 6 6 6 6Z" />
     <path d="M12 8h6a3 3 0 1 0 0-6c-3 0-6 6-6 6Z" />
-  </>
+  </>,
 );
 
 export const Home = createIcon(
@@ -79,7 +74,7 @@ export const Home = createIcon(
   <>
     <path d="M3 10.5L12 3l9 7.5" />
     <path d="M5 10v10h14V10" />
-  </>
+  </>,
 );
 
 export const Mail = createIcon(
@@ -87,7 +82,7 @@ export const Mail = createIcon(
   <>
     <rect x="3" y="5" width="18" height="14" rx="2" />
     <polyline points="3,7 12,13 21,7" />
-  </>
+  </>,
 );
 
 export const Scale = createIcon(
@@ -97,7 +92,7 @@ export const Scale = createIcon(
     <line x1="6" y1="6" x2="18" y2="6" />
     <path d="M6 6l-4 7a4 4 0 0 0 8 0L6 6Z" />
     <path d="M18 6l-4 7a4 4 0 0 0 8 0l-4-7Z" />
-  </>
+  </>,
 );
 
 export const Swords = createIcon(
@@ -108,7 +103,7 @@ export const Swords = createIcon(
     <path d="M14 7l3 3" />
     <path d="M8 13l3 3" />
     <path d="M21 14l-7.5 7.5" />
-  </>
+  </>,
 );
 
 export const Table2 = createIcon(
@@ -118,7 +113,7 @@ export const Table2 = createIcon(
     <line x1="3" y1="10" x2="21" y2="10" />
     <line x1="9" y1="4" x2="9" y2="20" />
     <line x1="15" y1="4" x2="15" y2="20" />
-  </>
+  </>,
 );
 
 export const Trophy = createIcon(
@@ -129,7 +124,7 @@ export const Trophy = createIcon(
     <path d="M18 4h2a3 3 0 0 1-3 3" />
     <path d="M12 12v4" />
     <path d="M8 20h8" />
-  </>
+  </>,
 );
 
 export const X = createIcon(
@@ -137,5 +132,28 @@ export const X = createIcon(
   <>
     <line x1="18" y1="6" x2="6" y2="18" />
     <line x1="6" y1="6" x2="18" y2="18" />
-  </>
+  </>,
+);
+export const Folder = createIcon(
+  "Folder",
+  <>
+    <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" />
+  </>,
+);
+
+export const File = createIcon(
+  "File",
+  <>
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
+    <polyline points="14 2 14 8 20 8" />
+  </>,
+);
+
+export const Image = createIcon(
+  "Image",
+  <>
+    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+    <circle cx="8.5" cy="8.5" r="1.5" />
+    <path d="M21 15l-5-5L5 21" />
+  </>,
 );

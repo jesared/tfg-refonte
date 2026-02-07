@@ -5,6 +5,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { File, Folder, Image } from "@/lib/lucide-react";
 
 type ClassementsContentProps = {
   saisons: {
@@ -53,23 +54,39 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
                   <AccordionContent>
                     <div className="space-y-4">
                       {[...saison.tours].sort(sortToursDesc).map((tour) => (
-                        <div key={tour.id}>
-                          <h4 className="font-semibold text-sm mb-2">{tour.name}</h4>
+                        <div key={tour.id} className="rounded-md border border-slate-200 p-3">
+                          {/* DOSSIER / TOUR */}
+                          <h4 className="flex items-center gap-2 font-semibold text-sm mb-2">
+                            <Folder className="h-4 w-4 text-tfg-purple" />
+                            {tour.name}
+                          </h4>
 
-                          <ul className="space-y-1 pl-4">
-                            {tour.fichiers.map((file) => (
-                              <li key={file.id}>
-                                <a
-                                  href={file.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-tfg-purple hover:underline"
-                                >
-                                  {file.name}
-                                </a>
-                              </li>
-                            ))}
-                          </ul>
+                          {/* FICHIERS */}
+                          {tour.fichiers.length === 0 ? (
+                            <p className="text-xs text-muted-foreground pl-6">
+                              Aucun fichier pour ce tour.
+                            </p>
+                          ) : (
+                            <ul className="space-y-1 pl-6">
+                              {tour.fichiers.map((file) => (
+                                <li key={file.id}>
+                                  <a
+                                    href={file.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 text-tfg-purple hover:underline text-sm"
+                                  >
+                                    {file.name.match(/\.(jpg|png|jpeg)$/i) ? (
+                                      <Image className="h-4 w-4" />
+                                    ) : (
+                                      <File className="h-4 w-4" />
+                                    )}
+                                    {file.name}
+                                  </a>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
                         </div>
                       ))}
                     </div>
