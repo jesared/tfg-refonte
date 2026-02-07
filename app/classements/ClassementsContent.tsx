@@ -25,12 +25,14 @@ type ClassementsContentProps = {
 };
 
 function sortToursDesc(a: { name: string }, b: { name: string }) {
-  const getNum = (name: string) => parseInt(name.replace(/\D+/g, ""), 10) || 0;
+  const extractTourNumber = (name: string) =>
+    name.match(/tour\s*(\d+)/i) ? parseInt(name.match(/tour\s*(\d+)/i)![1], 10) : 0;
 
-  return getNum(b.name) - getNum(a.name);
+  return extractTourNumber(b.name) - extractTourNumber(a.name);
 }
 
 export default function ClassementsContent({ saisons }: ClassementsContentProps) {
+  // 👉 on prend la seule saison
   const saison = saisons[0];
 
   if (!saison) {
