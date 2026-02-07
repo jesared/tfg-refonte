@@ -9,6 +9,14 @@ const config = {
   theme: {
     extend: {
       colors: {
+        tfg: {
+          purple: "#3F3456",
+          purpleSoft: "#4B4066",
+          yellow: "#E6E600",
+          brown: "#6B4F3F",
+          gray: "#2E2E2E",
+          light: "#F7F7F7",
+        },
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: "hsl(var(--card))",
