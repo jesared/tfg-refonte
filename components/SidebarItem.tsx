@@ -1,5 +1,7 @@
-import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
+import Link from "next/link";
+
+import { cn } from "@/lib/utils";
 
 type SidebarItemProps = {
   href: string;
@@ -20,13 +22,20 @@ export function SidebarItem({
     <Link
       href={href}
       onClick={onSelect}
-      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
+      className={cn(
+        "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition",
         active
-          ? "bg-slate-900 text-white shadow-sm"
-          : "text-slate-600 hover:bg-slate-200/70 hover:text-slate-900"
-      }`}
+          ? "border-l-4 border-tfg-yellow bg-tfg-purpleSoft text-white shadow-sm"
+          : "text-white/70 hover:bg-white/10 hover:text-white"
+      )}
     >
-      <Icon className="h-4 w-4" aria-hidden="true" />
+      <Icon
+        className={cn(
+          "h-4 w-4 transition-colors",
+          active ? "text-tfg-yellow" : "text-white/60 group-hover:text-white"
+        )}
+        aria-hidden="true"
+      />
       <span>{label}</span>
     </Link>
   );
