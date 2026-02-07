@@ -119,35 +119,25 @@ export async function getDriveFiles(folderId: string): Promise<DriveFile[]> {
  */
 
 export async function getDriveChildren(parentId: string): Promise<DriveItem[]> {
-  const auth = getAuth();
-  if (!auth) return [];
+  const auth = new google.auth.GoogleAuth({
+    credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY!),
+    scopes: ["https://www.googleapis.com/auth/drive.readonly"],
+  });
 
   const drive = google.drive({ version: "v3", auth });
 
   const res = await drive.files.list({
-    q: `'${parentId}' in parents`,
+    q: `'${parentId}' in parents and trashed = false`,
     fields: "files(id, name, mimeType, webViewLink)",
     orderBy: "name",
   });
 
   return (
-    res.data.files
-      ?.filter(
-        (
-          f,
-        ): f is {
-          id: string;
-          name: string;
-          mimeType: string;
-          webViewLink?: string;
-        } =>
-          typeof f.id === "string" && typeof f.name === "string" && typeof f.mimeType === "string",
-      )
-      .map((f) => ({
-        id: f.id,
-        name: f.name,
-        isFolder: f.mimeType === "application/vnd.google-apps.folder",
-        url: f.webViewLink,
-      })) || []
+    res.data.files?.map((file) => ({
+      id: file.id!,
+      name: file.name!,
+      isFolder: file.mimeType === "application/vnd.google-apps.folder",
+      url: file.webViewLink ?? undefined,
+    })) ?? []
   );
 }
