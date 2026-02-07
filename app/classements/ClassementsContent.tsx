@@ -157,7 +157,13 @@ export default function ClassementsContent() {
                   key={item.label}
                   className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3"
                 >
-                  <span className="text-sm font-medium text-slate-700">
+                  <span
+                    className={`text-sm font-medium ${
+                      item.label === "Vainqueur" || item.label === "Finaliste"
+                        ? "rounded-full bg-tfg-yellow px-2.5 py-0.5 text-black"
+                        : "text-slate-700"
+                    }`}
+                  >
                     {item.label}
                   </span>
                   <span className="text-sm font-semibold text-slate-900">

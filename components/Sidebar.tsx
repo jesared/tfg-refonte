@@ -30,16 +30,16 @@ export function Sidebar() {
 
   return (
     <>
-      <header className="border-b border-slate-200 bg-white md:hidden">
+      <header className="border-b border-tfg-purpleSoft bg-tfg-purple md:hidden">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex flex-col">
-            <span className="text-sm font-semibold text-slate-900">Trophée François Grieder</span>
-            <span className="text-xs text-slate-500">Challenge régional de tennis de table</span>
+            <span className="text-sm font-semibold text-white">Trophée François Grieder</span>
+            <span className="text-xs text-tfg-light/80">Challenge régional de tennis de table</span>
           </div>
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            className="inline-flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm"
+            className="inline-flex items-center gap-2 rounded-md border border-tfg-yellow/50 px-3 py-2 text-sm font-medium text-tfg-light shadow-sm transition hover:bg-tfg-purpleSoft"
             aria-expanded={isOpen}
             aria-controls="mobile-sidebar"
           >
@@ -57,18 +57,18 @@ export function Sidebar() {
       />
       <div
         id="mobile-sidebar"
-        className={`fixed inset-y-0 left-0 z-50 w-72 border-r border-slate-200 bg-white px-6 py-6 shadow-lg transition-transform md:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 border-r border-tfg-purpleSoft bg-tfg-purple px-6 py-6 shadow-lg transition-transform md:hidden ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         role="dialog"
         aria-modal="true"
       >
         <div className="flex items-center justify-between">
-          <div className="text-sm font-semibold text-slate-900">Navigation</div>
+          <div className="text-sm font-semibold text-white">Navigation</div>
           <button
             type="button"
             onClick={() => setIsOpen(false)}
-            className="rounded-md p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+            className="rounded-md p-2 text-tfg-light/70 hover:bg-tfg-purpleSoft hover:text-white"
             aria-label="Fermer le menu"
           >
             <X className="h-4 w-4" aria-hidden="true" />
@@ -88,8 +88,8 @@ export function Sidebar() {
         </nav>
       </div>
 
-      <aside className="hidden border-r border-slate-200 bg-slate-50 md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col md:px-6 md:py-8">
-        <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+      <aside className="hidden border-r border-tfg-purpleSoft bg-tfg-purple md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col md:px-6 md:py-8">
+        <div className="text-xs font-semibold uppercase tracking-wide text-tfg-light/70">
           Navigation
         </div>
         <nav className="mt-6 space-y-2">
@@ -103,7 +103,7 @@ export function Sidebar() {
             />
           ))}
         </nav>
-        <div className="mt-auto pt-8 text-xs text-slate-400">Trophée François Grieder</div>
+        <div className="mt-auto pt-8 text-xs text-tfg-light/60">Trophée François Grieder</div>
       </aside>
     </>
   );

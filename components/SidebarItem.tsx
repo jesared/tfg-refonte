@@ -16,17 +16,21 @@ export function SidebarItem({
   active = false,
   onSelect,
 }: SidebarItemProps) {
+  const iconClasses = active
+    ? "h-4 w-4 text-tfg-yellow"
+    : "h-4 w-4 text-tfg-light/70";
+
   return (
     <Link
       href={href}
       onClick={onSelect}
-      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
+      className={`flex items-center gap-3 rounded-lg border-l-4 px-3 py-2 text-sm font-medium transition ${
         active
-          ? "bg-slate-900 text-white shadow-sm"
-          : "text-slate-600 hover:bg-slate-200/70 hover:text-slate-900"
+          ? "border-tfg-yellow bg-tfg-purpleSoft text-white shadow-sm"
+          : "border-transparent text-tfg-light/80 hover:bg-tfg-purpleSoft/70 hover:text-white"
       }`}
     >
-      <Icon className="h-4 w-4" aria-hidden="true" />
+      <Icon className={iconClasses} aria-hidden="true" />
       <span>{label}</span>
     </Link>
   );

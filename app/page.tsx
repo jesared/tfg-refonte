@@ -65,24 +65,24 @@ export default function Home() {
           <span>Accueil</span>
         </div>
         <div className="space-y-4">
-          <h1 className="text-2xl font-semibold text-slate-900 sm:text-4xl">
+          <h1 className="text-2xl font-semibold text-tfg-purple sm:text-4xl">
             Présentation courte du trophée
           </h1>
           <p className="max-w-2xl text-base leading-relaxed text-slate-700 sm:text-lg">
-            Le Trophée François Grieder réunit les clubs de la région autour d'un
-            challenge convivial, rythmé par des rencontres sportives et une
-            ambiance associative.
+            Le Trophée <span className="font-semibold text-tfg-brown">François Grieder</span>{" "}
+            réunit les clubs de la région autour d&apos;un challenge convivial,
+            rythmé par des rencontres sportives et une ambiance associative.
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
           <a
-            className="inline-flex items-center justify-center rounded-full bg-slate-900 px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+            className="inline-flex items-center justify-center rounded-full bg-tfg-purple px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-tfg-purpleSoft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tfg-purple"
             href="#"
           >
             Voir tournois
           </a>
           <a
-            className="inline-flex items-center justify-center rounded-full border border-slate-200 px-6 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-slate-300 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+            className="inline-flex items-center justify-center rounded-full bg-tfg-purple px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-tfg-yellow hover:text-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tfg-purple"
             href="/classements"
           >
             Classements
@@ -182,8 +182,8 @@ export default function Home() {
             <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">
               Classement provisoire live
             </h2>
-            <span className="flex items-center gap-2 text-xs font-semibold text-rose-600">
-              <span className="h-2 w-2 rounded-full bg-rose-500" />
+            <span className="flex items-center gap-2 text-xs font-semibold text-tfg-yellow">
+              <span className="h-2 w-2 rounded-full bg-tfg-yellow" />
               En direct
             </span>
           </div>
@@ -199,7 +199,11 @@ export default function Home() {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span className="text-xs font-semibold text-slate-500">
+                    <span
+                      className={`text-xs font-semibold ${
+                        index === 0 ? "text-tfg-yellow" : "text-slate-500"
+                      }`}
+                    >
                       #{index + 1}
                     </span>
                     <p className="text-sm font-semibold text-slate-900">
