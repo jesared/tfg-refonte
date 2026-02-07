@@ -43,6 +43,27 @@ export const CalendarDays = createIcon(
   </>
 );
 
+export const Check = createIcon(
+  "Check",
+  <>
+    <polyline points="20 6 9 17 4 12" />
+  </>
+);
+
+export const ChevronRight = createIcon(
+  "ChevronRight",
+  <>
+    <polyline points="9 18 15 12 9 6" />
+  </>
+);
+
+export const Dot = createIcon(
+  "Dot",
+  <>
+    <circle cx="12" cy="12" r="1" />
+  </>
+);
+
 export const Gift = createIcon(
   "Gift",
   <>
