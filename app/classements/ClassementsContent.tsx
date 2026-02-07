@@ -40,7 +40,14 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
               <Accordion type="multiple" className="space-y-2">
                 {saison.tours.map((tour) => (
                   <AccordionItem key={tour.id} value={tour.id}>
-                    <AccordionTrigger>{tour.name}</AccordionTrigger>
+                    <AccordionTrigger>
+                      <span className="flex flex-1 items-center justify-between gap-4">
+                        <span>{tour.name}</span>
+                        <span className="text-sm font-normal text-muted-foreground">
+                          Voir les tableaux
+                        </span>
+                      </span>
+                    </AccordionTrigger>
                     <AccordionContent>
                       <ul className="space-y-2">
                         {tour.fichiers.map((file) => (
