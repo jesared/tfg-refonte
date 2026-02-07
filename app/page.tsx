@@ -11,9 +11,10 @@ export default function Home() {
             Présentation courte du trophée
           </h1>
           <p className="max-w-2xl text-base leading-relaxed text-slate-700 sm:text-lg">
-            Le Trophée François Grieder réunit les clubs de la région autour d'un
-            challenge convivial, rythmé par des rencontres sportives et une
-            ambiance associative.
+            Le trophée François Grieder est un challenge établi sur la base d’un classement général
+            des joueurs participant aux différents tournois régionaux homologués organisés dans le
+            département de la Marne et depuis l’année dernière dans le département des Ardennes
+            puisque le club de Tagnon organise un tour.
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -38,33 +39,23 @@ export default function Home() {
             Mise en avant saison en cours
           </h2>
           <p className="mt-3 text-base leading-relaxed text-slate-700">
-            Suivez la progression des équipes, découvrez les prochaines dates et
-            consultez les résultats les plus récents de la saison en cours.
+            Suivez la progression des équipes, découvrez les prochaines dates et consultez les
+            résultats les plus récents de la saison en cours.
           </p>
           <div className="mt-6 flex flex-wrap gap-4 text-sm">
             <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-              <p className="text-xs uppercase tracking-wide text-slate-600">
-                Journée clé
-              </p>
-              <p className="mt-2 font-semibold text-slate-900">
-                12 avril - Tour régional
-              </p>
+              <p className="text-xs uppercase tracking-wide text-slate-600">Journée clé</p>
+              <p className="mt-2 font-semibold text-slate-900">12 avril - Tour régional</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-              <p className="text-xs uppercase tracking-wide text-slate-600">
-                Score à suivre
-              </p>
-              <p className="mt-2 font-semibold text-slate-900">
-                Classement provisoire mis à jour
-              </p>
+              <p className="text-xs uppercase tracking-wide text-slate-600">Score à suivre</p>
+              <p className="mt-2 font-semibold text-slate-900">Classement provisoire mis à jour</p>
             </div>
           </div>
         </div>
 
         <div className="rounded-3xl border border-slate-200 bg-white px-5 py-7 shadow-sm sm:px-8 sm:py-10">
-          <h3 className="text-lg font-semibold text-slate-900">
-            En résumé
-          </h3>
+          <h3 className="text-lg font-semibold text-slate-900">En résumé</h3>
           <ul className="mt-4 space-y-4 text-base text-slate-700">
             <li className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
               Tournois qualificatifs ouverts jusqu'à fin mars.
