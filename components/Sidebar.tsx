@@ -2,7 +2,7 @@
 
 import { CalendarDays, Gift, Home, Mail, Scale, Table2, Trophy, X } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { SidebarItem } from "@/components/SidebarItem";
 
@@ -20,7 +20,6 @@ const isItemActive = (pathname: string, href: string) => {
   if (href === "/") {
     return pathname === "/";
   }
-
   return pathname.startsWith(href);
 };
 
@@ -28,14 +27,26 @@ export function Sidebar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
 
+  /**
+   * 🔒 Empêche le scroll derrière le menu mobile
+   */
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
   return (
     <>
+      {/* HEADER MOBILE */}
       <header className="border-b border-slate-200 bg-white md:hidden">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex flex-col">
             <span className="text-sm font-semibold text-slate-900">Trophée François Grieder</span>
             <span className="text-xs text-slate-500">Challenge régional de tennis de table</span>
           </div>
+
           <button
             type="button"
             onClick={() => setIsOpen(true)}
@@ -48,13 +59,16 @@ export function Sidebar() {
         </div>
       </header>
 
+      {/* OVERLAY MOBILE */}
       <div
-        className={`fixed inset-0 z-40  transition-opacity md:hidden ${
+        className={`fixed inset-0 z-40 bg-black/40 transition-opacity md:hidden ${
           isOpen ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={() => setIsOpen(false)}
         aria-hidden="true"
       />
+
+      {/* SIDEBAR MOBILE */}
       <div
         id="mobile-sidebar"
         className={`fixed inset-y-0 left-0 z-50 w-72 border-r border-tfg-purple/60 bg-tfg-purple px-6 py-6 shadow-lg transition-transform md:hidden ${
@@ -74,6 +88,7 @@ export function Sidebar() {
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
+
         <nav className="mt-6 space-y-2">
           {navigationItems.map((item) => (
             <SidebarItem
@@ -88,8 +103,12 @@ export function Sidebar() {
         </nav>
       </div>
 
-      <aside className="hidden border-r border-tfg-purple/60 bg-tfg-purple  md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col md:px-6 md:py-8">
-        <div className="text-xs font-semibold uppercase tracking-wide">Navigation</div>
+      {/* SIDEBAR DESKTOP */}
+      <aside className="hidden border-r border-tfg-purple/60 bg-tfg-purple md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col md:px-6 md:py-8">
+        <div className="text-xs font-semibold uppercase tracking-wide text-white/60">
+          Navigation
+        </div>
+
         <nav className="mt-6 space-y-2">
           {navigationItems.map((item) => (
             <SidebarItem
@@ -101,7 +120,8 @@ export function Sidebar() {
             />
           ))}
         </nav>
-        <div className="mt-auto pt-8 text-xs text-ftg-gray">Trophée François Grieder</div>
+
+        <div className="mt-auto pt-8 text-xs text-white/50">Trophée François Grieder</div>
       </aside>
     </>
   );
