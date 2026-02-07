@@ -54,6 +54,9 @@ const rankingDownloads = [
 ];
 
 export default function Home() {
+  const facebookPageUrl = "https://www.facebook.com/tropheefgrieder";
+  const shareUrl = "https://trophee-francois-grieder.fr";
+
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 sm:gap-10">
       <section className="flex flex-col gap-6 rounded-3xl border border-slate-200 bg-white px-5 py-7 shadow-sm sm:px-8 sm:py-10">
