@@ -29,9 +29,30 @@ export default function RecompensesPage() {
             <p className="text-base leading-7 text-zinc-700">
               Chaque club participant contribue à hauteur de 100&nbsp;€, une mise
               de fond unique destinée à constituer une enveloppe commune pour les
-              récompenses. Cette contribution garantit un engagement équitable et
-              renforce l&apos;esprit d&apos;entraide entre les équipes.
+              récompenses. Cette contribution garantit un engagement équitable,
+              renforce l&apos;esprit d&apos;entraide entre les équipes et assure
+              une redistribution transparente lors de la cérémonie finale.
             </p>
+            <div className="grid gap-3 text-sm text-zinc-600 sm:grid-cols-2">
+              <div className="rounded-2xl border border-zinc-200 bg-white/80 p-4">
+                <p className="text-xs uppercase tracking-wide text-zinc-500">
+                  Répartition
+                </p>
+                <p className="mt-2">
+                  60% pour le 1er, 25% pour le 2e et 15% pour le 3e, afin de
+                  valoriser chaque podium.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-zinc-200 bg-white/80 p-4">
+                <p className="text-xs uppercase tracking-wide text-zinc-500">
+                  Transparence
+                </p>
+                <p className="mt-2">
+                  Les clubs reçoivent un récapitulatif des contributions et des
+                  dotations lors de la remise officielle.
+                </p>
+              </div>
+            </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-zinc-200 bg-white p-4">
@@ -67,8 +88,13 @@ export default function RecompensesPage() {
               <h3 className="mt-3 text-xl font-semibold">Trophée principal</h3>
               <p className="mt-3 text-sm text-zinc-600">
                 Remise du trophée François Grieder, dotation financière majeure
-                et mise en avant officielle du club vainqueur.
+                (60% de l&apos;enveloppe) et mise en avant officielle du club
+                vainqueur sur les supports de la ligue.
               </p>
+              <ul className="mt-4 space-y-2 text-sm text-zinc-500">
+                <li>• Trophée gravé + médaille</li>
+                <li>• Mise à l&apos;honneur lors de la soirée finale</li>
+              </ul>
             </article>
             <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
               <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
@@ -76,9 +102,13 @@ export default function RecompensesPage() {
               </p>
               <h3 className="mt-3 text-xl font-semibold">Dotation d&apos;équipe</h3>
               <p className="mt-3 text-sm text-zinc-600">
-                Lot financier et équipement sportif pour valoriser la progression
-                jusqu&apos;à la finale.
+                Lot financier (25% de l&apos;enveloppe) et équipement sportif pour
+                valoriser la progression jusqu&apos;à la finale.
               </p>
+              <ul className="mt-4 space-y-2 text-sm text-zinc-500">
+                <li>• Pack textile pour l&apos;effectif</li>
+                <li>• Bon d&apos;achat chez un partenaire local</li>
+              </ul>
             </article>
             <article className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
               <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
@@ -86,10 +116,123 @@ export default function RecompensesPage() {
               </p>
               <h3 className="mt-3 text-xl font-semibold">Prix de podium</h3>
               <p className="mt-3 text-sm text-zinc-600">
-                Récompense symbolique, dotée par les partenaires locaux, pour
-                saluer une saison régulière et solide.
+                Récompense symbolique (15% de l&apos;enveloppe), dotée par les
+                partenaires locaux, pour saluer une saison régulière et solide.
               </p>
+              <ul className="mt-4 space-y-2 text-sm text-zinc-500">
+                <li>• Trophée podium + kit supporters</li>
+                <li>• Mise en avant dans la newsletter</li>
+              </ul>
             </article>
+          </div>
+        </section>
+
+        <section className="grid gap-8 rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="space-y-4">
+            <h2 className="text-2xl font-semibold">Photo des trophées</h2>
+            <p className="text-base leading-7 text-zinc-700">
+              Les trophées sont présentés comme un symbole d&apos;excellence et
+              d&apos;esprit sportif. Ils sont dévoilés lors du lancement de la
+              saison afin de motiver chaque équipe à viser le podium.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+                <p className="text-xs uppercase tracking-wide text-zinc-500">
+                  Matériaux
+                </p>
+                <p className="mt-2 text-sm text-zinc-600">
+                  Métal brossé, bois verni, finitions artisanales locales.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+                <p className="text-xs uppercase tracking-wide text-zinc-500">
+                  Gravure
+                </p>
+                <p className="mt-2 text-sm text-zinc-600">
+                  Nom du club vainqueur et édition de la saison.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="overflow-hidden rounded-3xl border border-zinc-200 bg-zinc-50">
+            <img
+              src="https://images.unsplash.com/photo-1506459225024-1428097a7e18?auto=format&fit=crop&w=900&q=80"
+              alt="Trophées dorés exposés sur une table en bois."
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
+          </div>
+        </section>
+
+        <section className="space-y-6">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <h2 className="text-2xl font-semibold">Carrousel des moments forts</h2>
+            <p className="max-w-xl text-sm text-zinc-600">
+              Une boucle animée met en avant les trophées, les dotations et la
+              célébration finale. Faites défiler pour découvrir chaque étape.
+            </p>
+          </div>
+          <div className="relative overflow-hidden rounded-3xl border border-zinc-200 bg-zinc-50">
+            <div className="flex w-[200%] animate-[trophy-scroll_24s_linear_infinite] gap-6 p-6">
+              {[
+                {
+                  title: "Trophée principal",
+                  desc: "Moment phare avec remise officielle du trophée.",
+                },
+                {
+                  title: "Dotation 2e place",
+                  desc: "Équipement sportif pour renforcer l&apos;effectif.",
+                },
+                {
+                  title: "Prix podium",
+                  desc: "Récompense symbolique et visibilité locale.",
+                },
+                {
+                  title: "Célébration finale",
+                  desc: "Discours, photos et mise à l&apos;honneur des clubs.",
+                },
+              ].map((item) => (
+                <article
+                  key={item.title}
+                  className="min-w-[240px] flex-1 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm"
+                >
+                  <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                    Highlight
+                  </p>
+                  <h3 className="mt-3 text-lg font-semibold">{item.title}</h3>
+                  <p className="mt-2 text-sm text-zinc-600">{item.desc}</p>
+                </article>
+              ))}
+              {[
+                {
+                  title: "Trophée principal",
+                  desc: "Moment phare avec remise officielle du trophée.",
+                },
+                {
+                  title: "Dotation 2e place",
+                  desc: "Équipement sportif pour renforcer l&apos;effectif.",
+                },
+                {
+                  title: "Prix podium",
+                  desc: "Récompense symbolique et visibilité locale.",
+                },
+                {
+                  title: "Célébration finale",
+                  desc: "Discours, photos et mise à l&apos;honneur des clubs.",
+                },
+              ].map((item) => (
+                <article
+                  key={`${item.title}-duplicate`}
+                  className="min-w-[240px] flex-1 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm"
+                >
+                  <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                    Highlight
+                  </p>
+                  <h3 className="mt-3 text-lg font-semibold">{item.title}</h3>
+                  <p className="mt-2 text-sm text-zinc-600">{item.desc}</p>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
 
