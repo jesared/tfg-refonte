@@ -25,7 +25,7 @@ export default function Home() {
           </a>
           <a
             className="inline-flex items-center justify-center rounded-full border border-slate-200 px-6 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:text-slate-900"
-            href="#"
+            href="/classements"
           >
             Classements
           </a>
