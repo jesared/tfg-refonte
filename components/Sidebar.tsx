@@ -88,7 +88,7 @@ export function Sidebar() {
         </nav>
       </div>
 
-      <aside className="hidden border-r border-tfg-purple/60 bg-tfg-purple text-white md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col md:px-6 md:py-8">
+      <aside className="hidden border-r border-tfg-purple/60 bg-tfg-purple  md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col md:px-6 md:py-8">
         <div className="text-xs font-semibold uppercase tracking-wide text-white/70">
           Navigation
         </div>
@@ -103,7 +103,7 @@ export function Sidebar() {
             />
           ))}
         </nav>
-        <div className="mt-auto pt-8 text-xs text-white/50">Trophée François Grieder</div>
+        <div className="mt-auto pt-8 text-xs text-ftg-gray">Trophée François Grieder</div>
       </aside>
     </>
   );
