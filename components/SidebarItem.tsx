@@ -26,13 +26,13 @@ export function SidebarItem({
         "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition",
         active
           ? "border-l-4 border-tfg-yellow bg-tfg-purpleSoft text-white shadow-sm"
-          : "text-white/70 hover:bg-white/10 hover:text-white"
+          : "text-slate-600 hover:bg-slate-200/70 hover:text-slate-900"
       )}
     >
       <Icon
         className={cn(
           "h-4 w-4 transition-colors",
-          active ? "text-tfg-yellow" : "text-white/60 group-hover:text-white"
+          active ? "text-tfg-yellow" : "text-slate-400 group-hover:text-slate-700"
         )}
         aria-hidden="true"
       />
