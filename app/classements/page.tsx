@@ -3,8 +3,24 @@ import ClassementsContent from "./ClassementsContent";
 
 export const revalidate = 3600;
 
+type Season = {
+  id: string;
+  name: string;
+};
+
 export default async function ClassementsPage() {
-  const seasons = await getDriveFolders(process.env.GOOGLE_DRIVE_FOLDER_ID!);
+  const rawSeasons = await getDriveFolders(process.env.GOOGLE_DRIVE_FOLDER_ID!);
+
+  // ✅ NORMALISATION DES DONNÉES GOOGLE
+  const seasons: Season[] = rawSeasons
+    .filter(
+      (s): s is { id: string; name: string } =>
+        typeof s.id === "string" && typeof s.name === "string",
+    )
+    .map((s) => ({
+      id: s.id,
+      name: s.name,
+    }));
 
   return (
     <div className="max-w-5xl mx-auto space-y-10">
