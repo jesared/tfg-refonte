@@ -8,7 +8,7 @@ const defaultProps = {
   strokeWidth: 2,
   strokeLinecap: "round",
   strokeLinejoin: "round",
-};
+} as const;
 
 function createIcon(
   displayName: string,
