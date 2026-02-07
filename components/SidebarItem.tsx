@@ -23,9 +23,9 @@ export function SidebarItem({
       href={href}
       onClick={onSelect}
       className={cn(
-        "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition",
+        "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
         active
-          ? "border-l-4 border-tfg-yellow bg-tfg-gray text-white"
+          ? "border-l-4 border-tfg-yellow bg-tfg-purple/90 text-white shadow-sm"
           : "text-slate-600 hover:bg-slate-200/70 hover:text-slate-900",
       )}
     >
@@ -36,7 +36,7 @@ export function SidebarItem({
         )}
         aria-hidden="true"
       />
-      <span>{label}</span>
+      <span className="truncate">{label}</span>
     </Link>
   );
 }
