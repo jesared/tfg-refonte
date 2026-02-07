@@ -49,20 +49,40 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
                       </span>
                     </AccordionTrigger>
                     <AccordionContent>
-                      <ul className="space-y-2">
-                        {tour.fichiers.map((file) => (
-                          <li key={file.id}>
-                            <a
-                              href={file.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-tfg-purple hover:underline"
-                            >
-                              {file.name}
-                            </a>
-                          </li>
+                      <Accordion type="multiple" className="space-y-2">
+                        {Object.entries(
+                          tour.fichiers.reduce<Record<string, typeof tour.fichiers>>(
+                            (groups, file) => {
+                              const match = file.name.match(/\btableau\s+([A-Z])\b/i);
+                              const key = match ? match[1].toUpperCase() : "Autres";
+                              groups[key] = groups[key] ?? [];
+                              groups[key].push(file);
+                              return groups;
+                            },
+                            {},
+                          ),
+                        ).map(([label, files]) => (
+                          <AccordionItem key={label} value={label}>
+                            <AccordionTrigger>Tableau {label}</AccordionTrigger>
+                            <AccordionContent>
+                              <ul className="space-y-2">
+                                {files.map((file) => (
+                                  <li key={file.id}>
+                                    <a
+                                      href={file.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-tfg-purple hover:underline"
+                                    >
+                                      {file.name}
+                                    </a>
+                                  </li>
+                                ))}
+                              </ul>
+                            </AccordionContent>
+                          </AccordionItem>
                         ))}
-                      </ul>
+                      </Accordion>
                     </AccordionContent>
                   </AccordionItem>
                 ))}
