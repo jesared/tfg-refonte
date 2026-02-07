@@ -22,6 +22,15 @@ type ClassementsContentProps = {
   }[];
 };
 
+/**
+ * Tri décroissant des tours (Tour 4 → Tour 3 → Tour 2 → Tour 1)
+ */
+function sortToursDesc(a: { name: string }, b: { name: string }) {
+  const getNum = (name: string) => parseInt(name.replace(/\D+/g, ""), 10) || 0;
+
+  return getNum(b.name) - getNum(a.name);
+}
+
 export default function ClassementsContent({ saisons }: ClassementsContentProps) {
   return (
     <div className="space-y-6">
@@ -43,7 +52,7 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
 
                   <AccordionContent>
                     <div className="space-y-4">
-                      {saison.tours.map((tour) => (
+                      {[...saison.tours].sort(sortToursDesc).map((tour) => (
                         <div key={tour.id}>
                           <h4 className="font-semibold text-sm mb-2">{tour.name}</h4>
 

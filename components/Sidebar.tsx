@@ -49,7 +49,7 @@ export function Sidebar() {
       </header>
 
       <div
-        className={`fixed inset-0 z-40 bg-black/50 transition-opacity md:hidden ${
+        className={`fixed inset-0 z-40  transition-opacity md:hidden ${
           isOpen ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={() => setIsOpen(false)}
@@ -57,7 +57,7 @@ export function Sidebar() {
       />
       <div
         id="mobile-sidebar"
-        className={`fixed inset-y-0 left-0 z-50 w-72 border-r border-tfg-purple/60 bg-tfg-purple px-6 py-6 text-white shadow-lg transition-transform md:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 border-r border-tfg-purple/60 bg-tfg-purple px-6 py-6 shadow-lg transition-transform md:hidden ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         role="dialog"
@@ -89,9 +89,7 @@ export function Sidebar() {
       </div>
 
       <aside className="hidden border-r border-tfg-purple/60 bg-tfg-purple  md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col md:px-6 md:py-8">
-        <div className="text-xs font-semibold uppercase tracking-wide text-white/70">
-          Navigation
-        </div>
+        <div className="text-xs font-semibold uppercase tracking-wide">Navigation</div>
         <nav className="mt-6 space-y-2">
           {navigationItems.map((item) => (
             <SidebarItem
