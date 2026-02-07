@@ -23,7 +23,7 @@ type Tableau = {
 type Tour = {
   id: string;
   name: string;
-  fichiers: TableauFile[]; // 👈 fichiers à la racine du tour
+  fichiers: TableauFile[]; // fichiers à la racine du tour
   tableaux: Tableau[];
 };
 
@@ -38,7 +38,12 @@ type Saison = {
 ======================= */
 
 export default async function ClassementsPage() {
-  const rootId = process.env.GOOGLE_DRIVE_FOLDER_ID!;
+  const rootId = process.env.GOOGLE_DRIVE_FOLDER_ID;
+
+  if (!rootId) {
+    throw new Error("GOOGLE_DRIVE_FOLDER_ID manquant");
+  }
+
   const saisonsRaw = await getDriveChildren(rootId);
 
   const saisons: Saison[] = await Promise.all(
@@ -51,12 +56,12 @@ export default async function ClassementsPage() {
           toursRaw
             .filter((t) => t.isFolder)
             .map(async (tour) => {
-              // 🔥 ON LIT TOUS LES ENFANTS DU TOUR
+              // 🔥 Tous les enfants du tour
               const tourChildren = await getDriveChildren(tour.id);
 
               // 📄 fichiers à la racine du tour
-              const fichiersTour: TableauFile[] = tourChildren
-                .filter((f) => !f.isFolder && typeof f.url === "string")
+              const fichiers: TableauFile[] = tourChildren
+                .filter((f) => !f.isFolder && f.url)
                 .map((f) => ({
                   id: f.id,
                   name: f.name.replace(/\.(pdf|jpg|jpeg|png)$/i, ""),
@@ -66,12 +71,12 @@ export default async function ClassementsPage() {
               // 📁 sous-dossiers = tableaux
               const tableaux: Tableau[] = await Promise.all(
                 tourChildren
-                  .filter((t) => t.isFolder)
+                  .filter((child) => child.isFolder)
                   .map(async (tableau) => {
                     const filesRaw = await getDriveChildren(tableau.id);
 
-                    const fichiers: TableauFile[] = filesRaw
-                      .filter((f) => !f.isFolder && typeof f.url === "string")
+                    const fichiersTableau: TableauFile[] = filesRaw
+                      .filter((f) => !f.isFolder && f.url)
                       .map((f) => ({
                         id: f.id,
                         name: f.name.replace(/\.(pdf|jpg|jpeg|png)$/i, ""),
@@ -81,17 +86,16 @@ export default async function ClassementsPage() {
                     return {
                       id: tableau.id,
                       name: tableau.name,
-                      fichiers,
+                      fichiers: fichiersTableau,
                     };
                   }),
               );
 
-              // ✅ ICI LA DIFFÉRENCE
               return {
                 id: tour.id,
                 name: tour.name,
-                fichiers: fichiersTour, // 👈 AJOUT OBLIGATOIRE
-                tableaux,
+                fichiers, // ✅ fichiers racine du tour
+                tableaux, // ✅ tableaux
               };
             }),
         );

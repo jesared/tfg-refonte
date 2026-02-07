@@ -26,6 +26,7 @@ type Tableau = {
 type Tour = {
   id: string;
   name: string;
+  fichiers: TableauFile[]; // ✅ fichiers à la racine du tour
   tableaux: Tableau[];
 };
 
@@ -71,68 +72,73 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
                 Aucun résultat disponible pour cette saison.
               </p>
             ) : (
-              <Accordion type="single" collapsible>
-                <AccordionItem value={saison.id}>
-                  <AccordionTrigger>Voir tous les tableaux</AccordionTrigger>
+              <Accordion type="multiple" className="space-y-2">
+                {[...saison.tours].sort(sortToursDesc).map((tour) => (
+                  <AccordionItem key={tour.id} value={tour.id}>
+                    <AccordionTrigger className="font-semibold">{tour.name}</AccordionTrigger>
 
-                  <AccordionContent>
-                    <div className="space-y-4">
-                      {[...saison.tours].sort(sortToursDesc).map((tour) => (
-                        <div key={tour.id} className="rounded-md border border-slate-200 p-3">
-                          {/* TOUR */}
-                          <h4 className="flex items-center gap-2 font-semibold text-sm mb-3">
+                    <AccordionContent className="space-y-4">
+                      {/* 📄 fichiers à la racine du tour */}
+                      {tour.fichiers.length > 0 && (
+                        <div>
+                          <h5 className="text-sm font-medium mb-2 flex items-center gap-2">
                             <Folder className="h-4 w-4 text-tfg-purple" />
-                            {tour.name}
-                          </h4>
-
-                          {/* TABLEAUX */}
-                          {tour.tableaux.length === 0 ? (
-                            <p className="text-xs text-muted-foreground pl-6">
-                              Aucun tableau pour ce tour.
-                            </p>
-                          ) : (
-                            <div className="space-y-3 pl-4">
-                              {tour.tableaux.map((tableau) => (
-                                <div key={tableau.id}>
-                                  <h5 className="flex items-center gap-2 text-sm font-medium mb-1">
-                                    <Folder className="h-4 w-4 text-slate-500" />
-                                    {tableau.name}
-                                  </h5>
-
-                                  {tableau.fichiers.length === 0 ? (
-                                    <p className="text-xs text-muted-foreground pl-6">
-                                      Aucun fichier.
-                                    </p>
+                            Documents
+                          </h5>
+                          <ul className="space-y-1 pl-6">
+                            {tour.fichiers.map((file) => (
+                              <li key={file.id}>
+                                <a
+                                  href={file.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-2 text-sm text-tfg-purple hover:underline"
+                                >
+                                  {file.name.match(/\.(jpg|jpeg|png)$/i) ? (
+                                    <Image className="h-4 w-4" />
                                   ) : (
-                                    <ul className="space-y-1 pl-6">
-                                      {tableau.fichiers.map((file) => (
-                                        <li key={file.id}>
-                                          <a
-                                            href={file.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex items-center gap-2 text-tfg-purple hover:underline text-sm"
-                                          >
-                                            {file.name.match(/\.(jpg|jpeg|png)$/i) ? (
-                                              <Image className="h-4 w-4" />
-                                            ) : (
-                                              <File className="h-4 w-4" />
-                                            )}
-                                            {file.name}
-                                          </a>
-                                        </li>
-                                      ))}
-                                    </ul>
+                                    <File className="h-4 w-4" />
                                   )}
-                                </div>
+                                  {file.name}
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* 📁 tableaux */}
+                      {tour.tableaux.map((tableau) => (
+                        <div key={tableau.id} className="pl-2">
+                          <h6 className="flex items-center gap-2 text-sm font-semibold mb-1">
+                            <Folder className="h-4 w-4 text-slate-500" />
+                            {tableau.name}
+                          </h6>
+
+                          {tableau.fichiers.length === 0 ? (
+                            <p className="text-xs text-muted-foreground pl-6">Aucun fichier.</p>
+                          ) : (
+                            <ul className="space-y-1 pl-6">
+                              {tableau.fichiers.map((file) => (
+                                <li key={file.id}>
+                                  <a
+                                    href={file.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 text-sm text-tfg-purple hover:underline"
+                                  >
+                                    <File className="h-4 w-4" />
+                                    {file.name}
+                                  </a>
+                                </li>
                               ))}
-                            </div>
+                            </ul>
                           )}
                         </div>
                       ))}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
               </Accordion>
             )}
           </CardContent>
