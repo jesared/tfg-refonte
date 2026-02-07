@@ -23,6 +23,7 @@ type Tableau = {
 type Tour = {
   id: string;
   name: string;
+  fichiers: TableauFile[]; // 👈 fichiers à la racine du tour
   tableaux: Tableau[];
 };
 
@@ -50,10 +51,21 @@ export default async function ClassementsPage() {
           toursRaw
             .filter((t) => t.isFolder)
             .map(async (tour) => {
-              const tableauxRaw = await getDriveChildren(tour.id);
+              // 🔥 ON LIT TOUS LES ENFANTS DU TOUR
+              const tourChildren = await getDriveChildren(tour.id);
 
+              // 📄 fichiers à la racine du tour
+              const fichiersTour: TableauFile[] = tourChildren
+                .filter((f) => !f.isFolder && typeof f.url === "string")
+                .map((f) => ({
+                  id: f.id,
+                  name: f.name.replace(/\.(pdf|jpg|jpeg|png)$/i, ""),
+                  url: f.url!,
+                }));
+
+              // 📁 sous-dossiers = tableaux
               const tableaux: Tableau[] = await Promise.all(
-                tableauxRaw
+                tourChildren
                   .filter((t) => t.isFolder)
                   .map(async (tableau) => {
                     const filesRaw = await getDriveChildren(tableau.id);
@@ -74,9 +86,11 @@ export default async function ClassementsPage() {
                   }),
               );
 
+              // ✅ ICI LA DIFFÉRENCE
               return {
                 id: tour.id,
                 name: tour.name,
+                fichiers: fichiersTour, // 👈 AJOUT OBLIGATOIRE
                 tableaux,
               };
             }),
