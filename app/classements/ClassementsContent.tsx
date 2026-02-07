@@ -37,55 +37,35 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
                 Aucun résultat disponible pour cette saison.
               </p>
             ) : (
-              <Accordion type="multiple" className="space-y-2">
-                {saison.tours.map((tour) => (
-                  <AccordionItem key={tour.id} value={tour.id}>
-                    <AccordionTrigger>
-                      <span className="flex flex-1 items-center justify-between gap-4">
-                        <span>{tour.name}</span>
-                        <span className="text-sm font-normal text-muted-foreground">
-                          Voir les tableaux
-                        </span>
-                      </span>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <Accordion type="multiple" className="space-y-2">
-                        {Object.entries(
-                          tour.fichiers.reduce<Record<string, typeof tour.fichiers>>(
-                            (groups, file) => {
-                              const match = file.name.match(/\btableau\s+([A-Z])\b/i);
-                              const key = match ? match[1].toUpperCase() : "Autres";
-                              groups[key] = groups[key] ?? [];
-                              groups[key].push(file);
-                              return groups;
-                            },
-                            {},
-                          ),
-                        ).map(([label, files]) => (
-                          <AccordionItem key={label} value={label}>
-                            <AccordionTrigger>Tableau {label}</AccordionTrigger>
-                            <AccordionContent>
-                              <ul className="space-y-2">
-                                {files.map((file) => (
-                                  <li key={file.id}>
-                                    <a
-                                      href={file.url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-tfg-purple hover:underline"
-                                    >
-                                      {file.name}
-                                    </a>
-                                  </li>
-                                ))}
-                              </ul>
-                            </AccordionContent>
-                          </AccordionItem>
-                        ))}
-                      </Accordion>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
+              <Accordion type="single" collapsible>
+                <AccordionItem value={saison.id}>
+                  <AccordionTrigger>Voir tous les tableaux</AccordionTrigger>
+
+                  <AccordionContent>
+                    <div className="space-y-4">
+                      {saison.tours.map((tour) => (
+                        <div key={tour.id}>
+                          <h4 className="font-semibold text-sm mb-2">{tour.name}</h4>
+
+                          <ul className="space-y-1 pl-4">
+                            {tour.fichiers.map((file) => (
+                              <li key={file.id}>
+                                <a
+                                  href={file.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-tfg-purple hover:underline"
+                                >
+                                  {file.name}
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
               </Accordion>
             )}
           </CardContent>
