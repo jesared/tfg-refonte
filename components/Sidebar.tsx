@@ -1,16 +1,6 @@
 "use client";
 
-import {
-  CalendarDays,
-  Gift,
-  Home,
-  Mail,
-  Scale,
-  Swords,
-  Table2,
-  Trophy,
-  X,
-} from "lucide-react";
+import { CalendarDays, Gift, Home, Mail, Scale, Table2, Trophy, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
@@ -18,10 +8,9 @@ import { SidebarItem } from "@/components/SidebarItem";
 
 const navigationItems = [
   { href: "/", label: "Accueil", icon: Home },
-  { href: "/le-trophee", label: "Le Trophée", icon: Trophy },
+  { href: "/trophee", label: "Le Trophée", icon: Trophy },
   { href: "/saison-2024-2025", label: "Saison 2024–2025", icon: CalendarDays },
-  { href: "/tournois", label: "Tournois", icon: Swords },
-  { href: "/tableaux-reglement", label: "Tableaux & Règlement", icon: Table2 },
+  { href: "/tableaux", label: "Tableaux & Règlement", icon: Table2 },
   { href: "/classements", label: "Classements", icon: Scale },
   { href: "/recompenses", label: "Récompenses", icon: Gift },
   { href: "/contact", label: "Contact", icon: Mail },
@@ -44,12 +33,8 @@ export function Sidebar() {
       <header className="border-b border-slate-200 bg-white md:hidden">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex flex-col">
-            <span className="text-sm font-semibold text-slate-900">
-              Trophée François Grieder
-            </span>
-            <span className="text-xs text-slate-500">
-              Challenge régional de tennis de table
-            </span>
+            <span className="text-sm font-semibold text-slate-900">Trophée François Grieder</span>
+            <span className="text-xs text-slate-500">Challenge régional de tennis de table</span>
           </div>
           <button
             type="button"
@@ -118,9 +103,7 @@ export function Sidebar() {
             />
           ))}
         </nav>
-        <div className="mt-auto pt-8 text-xs text-slate-400">
-          Trophée François Grieder
-        </div>
+        <div className="mt-auto pt-8 text-xs text-slate-400">Trophée François Grieder</div>
       </aside>
     </>
   );
