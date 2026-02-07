@@ -22,25 +22,6 @@ type Saison = {
   tours: Tour[];
 };
 
-const getTourNumber = (name: string) => {
-  const match = name.match(/\b(\d+)\b/);
-  return match ? Number(match[1]) : null;
-};
-
-const compareTours = (a: Tour, b: Tour) => {
-  const aNumber = getTourNumber(a.name);
-  const bNumber = getTourNumber(b.name);
-
-  if (aNumber === 8 && bNumber !== 8) return -1;
-  if (bNumber === 8 && aNumber !== 8) return 1;
-
-  if (aNumber !== null && bNumber !== null && aNumber !== bNumber) {
-    return aNumber - bNumber;
-  }
-
-  return a.name.localeCompare(b.name, "fr", { numeric: true });
-};
-
 export default async function ClassementsPage() {
   const rootId = process.env.GOOGLE_DRIVE_FOLDER_ID!;
   const saisonsRaw = await getDriveChildren(rootId);
@@ -69,8 +50,6 @@ export default async function ClassementsPage() {
         fichiers,
       });
     }
-
-    tours.sort(compareTours);
 
     saisons.push({
       id: saison.id,
