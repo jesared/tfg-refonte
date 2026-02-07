@@ -57,18 +57,18 @@ export function Sidebar() {
       />
       <div
         id="mobile-sidebar"
-        className={`fixed inset-y-0 left-0 z-50 w-72 border-r border-slate-200 bg-white px-6 py-6 shadow-lg transition-transform md:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 border-r border-tfg-purple/60 bg-tfg-purple px-6 py-6 text-white shadow-lg transition-transform md:hidden ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         role="dialog"
         aria-modal="true"
       >
         <div className="flex items-center justify-between">
-          <div className="text-sm font-semibold text-slate-900">Navigation</div>
+          <div className="text-sm font-semibold text-white">Navigation</div>
           <button
             type="button"
             onClick={() => setIsOpen(false)}
-            className="rounded-md p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+            className="rounded-md p-2 text-white/70 hover:bg-white/10 hover:text-white"
             aria-label="Fermer le menu"
           >
             <X className="h-4 w-4" aria-hidden="true" />
@@ -88,8 +88,8 @@ export function Sidebar() {
         </nav>
       </div>
 
-      <aside className="hidden border-r border-slate-200 bg-slate-50 md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col md:px-6 md:py-8">
-        <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+      <aside className="hidden border-r border-tfg-purple/60 bg-tfg-purple text-white md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col md:px-6 md:py-8">
+        <div className="text-xs font-semibold uppercase tracking-wide text-white/70">
           Navigation
         </div>
         <nav className="mt-6 space-y-2">
@@ -103,7 +103,7 @@ export function Sidebar() {
             />
           ))}
         </nav>
-        <div className="mt-auto pt-8 text-xs text-slate-400">Trophée François Grieder</div>
+        <div className="mt-auto pt-8 text-xs text-white/50">Trophée François Grieder</div>
       </aside>
     </>
   );
