@@ -4,16 +4,26 @@ import ClassementsContent from "./ClassementsContent";
 export const revalidate = 3600;
 export const runtime = "nodejs";
 
+/* =======================
+   TYPES
+======================= */
+
 type TableauFile = {
   id: string;
   name: string;
   url: string;
 };
 
-type Tour = {
+type Tableau = {
   id: string;
   name: string;
   fichiers: TableauFile[];
+};
+
+type Tour = {
+  id: string;
+  name: string;
+  tableaux: Tableau[];
 };
 
 type Saison = {
@@ -21,6 +31,10 @@ type Saison = {
   name: string;
   tours: Tour[];
 };
+
+/* =======================
+   PAGE
+======================= */
 
 export default async function ClassementsPage() {
   const rootId = process.env.GOOGLE_DRIVE_FOLDER_ID!;
@@ -34,20 +48,32 @@ export default async function ClassementsPage() {
     const tours: Tour[] = [];
 
     for (const tour of toursRaw.filter((t) => t.isFolder)) {
-      const filesRaw = await getDriveChildren(tour.id);
+      const tableauxRaw = await getDriveChildren(tour.id);
 
-      const fichiers: TableauFile[] = filesRaw
-        .filter((f) => !f.isFolder && typeof f.url === "string")
-        .map((f) => ({
-          id: f.id,
-          name: f.name.replace(".pdf", ""),
-          url: f.url!,
-        }));
+      const tableaux: Tableau[] = [];
+
+      for (const tableau of tableauxRaw.filter((t) => t.isFolder)) {
+        const filesRaw = await getDriveChildren(tableau.id);
+
+        const fichiers: TableauFile[] = filesRaw
+          .filter((f) => !f.isFolder && typeof f.url === "string")
+          .map((f) => ({
+            id: f.id,
+            name: f.name.replace(/\.(pdf|jpg|jpeg|png)$/i, ""),
+            url: f.url!, // safe après le filter
+          }));
+
+        tableaux.push({
+          id: tableau.id,
+          name: tableau.name,
+          fichiers,
+        });
+      }
 
       tours.push({
         id: tour.id,
         name: tour.name,
-        fichiers,
+        tableaux,
       });
     }
 
