@@ -2,13 +2,30 @@ import type { Config } from "tailwindcss";
 
 const config = {
   darkMode: ["class", ".dark"],
-  content: [
-    "./app/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-  ],
+  content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
+        keyframes: {
+          "accordion-down": {
+            from: { height: "0", opacity: "0" },
+            to: {
+              height: "var(--radix-accordion-content-height)",
+              opacity: "1",
+            },
+          },
+          "accordion-up": {
+            from: {
+              height: "var(--radix-accordion-content-height)",
+              opacity: "1",
+            },
+            to: { height: "0", opacity: "0" },
+          },
+        },
+        animation: {
+          "accordion-down": "accordion-down 350ms cubic-bezier(0.22, 1, 0.36, 1)",
+          "accordion-up": "accordion-up 250ms cubic-bezier(0.4, 0, 0.2, 1)",
+        },
         tfg: {
           purple: "#3F3456",
           purpleSoft: "#4B4066",

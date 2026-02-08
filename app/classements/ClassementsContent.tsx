@@ -119,7 +119,14 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
                   <AccordionItem key={tour.id} value={tour.id}>
                     <AccordionTrigger className="font-semibold">{tour.name}</AccordionTrigger>
 
-                    <AccordionContent className="space-y-4">
+                    <AccordionContent
+                      className="
+    space-y-4
+    overflow-hidden
+    data-[state=open]:animate-accordion-down
+    data-[state=closed]:animate-accordion-up
+  "
+                    >
                       {/* 📄 fichiers à la racine du tour */}
                       {tour.fichiers.length > 0 && (
                         <div>
@@ -157,7 +164,7 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
                                       <DriveImage
                                         fileId={file.id}
                                         alt={file.name}
-                                        className="max-h-64 w-auto rounded-md border hover:shadow-lg transition"
+                                        className="max-h-16 w-auto rounded-md border hover:shadow-lg transition"
                                       />
                                     </div>
                                   </>
@@ -218,7 +225,7 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
                                         <DriveImage
                                           fileId={file.id}
                                           alt={file.name}
-                                          className="max-h-64 w-auto rounded-md border hover:shadow-lg transition"
+                                          className="max-h-16 w-auto rounded-md border hover:shadow-lg transition"
                                         />
                                       </div>
                                     </>
