@@ -76,6 +76,19 @@ function getSeasonImages(saison: Saison): TableauFile[] {
 
   return images;
 }
+function sortSaisonsDesc(a: Saison, b: Saison) {
+  const getStartYear = (name: string) => parseInt(name.split("/")[0], 10) || 0;
+
+  return getStartYear(b.name) - getStartYear(a.name);
+}
+function preloadImage(src: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image();
+    img.onload = () => resolve();
+    img.onerror = reject;
+    img.src = src;
+  });
+}
 
 /* =======================
    COMPONENT
@@ -89,7 +102,7 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
 
   return (
     <div className="space-y-6">
-      {saisons.map((saison) => (
+      {[...saisons].sort(sortSaisonsDesc).map((saison) => (
         <Card key={saison.id}>
           <CardHeader>
             <CardTitle>{saison.name}</CardTitle>
@@ -101,7 +114,7 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
                 Aucun résultat disponible pour cette saison.
               </p>
             ) : (
-              <Accordion type="multiple" className="space-y-2">
+              <Accordion type="single" collapsible className="space-y-2">
                 {[...saison.tours].sort(sortToursDesc).map((tour) => (
                   <AccordionItem key={tour.id} value={tour.id}>
                     <AccordionTrigger className="font-semibold">{tour.name}</AccordionTrigger>
@@ -127,12 +140,19 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
 
                                     <div
                                       className="mt-2 pl-6 cursor-zoom-in"
-                                      onClick={() =>
-                                        setFullscreenImage({
-                                          fileId: file.id,
-                                          alt: file.name,
-                                        })
-                                      }
+                                      onClick={async () => {
+                                        const src = `https://drive.google.com/thumbnail?id=${file.id}&sz=w2000`;
+
+                                        try {
+                                          await preloadImage(src); // 👈 PRÉCHARGEMENT
+                                          setFullscreenImage({
+                                            fileId: file.id,
+                                            alt: file.name,
+                                          });
+                                        } catch {
+                                          console.warn("Image non disponible");
+                                        }
+                                      }}
                                     >
                                       <DriveImage
                                         fileId={file.id}
@@ -181,12 +201,19 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
 
                                       <div
                                         className="mt-2 pl-6 cursor-zoom-in"
-                                        onClick={() =>
-                                          setFullscreenImage({
-                                            fileId: file.id,
-                                            alt: file.name,
-                                          })
-                                        }
+                                        onClick={async () => {
+                                          const src = `https://drive.google.com/thumbnail?id=${file.id}&sz=w2000`;
+
+                                          try {
+                                            await preloadImage(src); // 👈 PRÉCHARGEMENT
+                                            setFullscreenImage({
+                                              fileId: file.id,
+                                              alt: file.name,
+                                            });
+                                          } catch {
+                                            console.warn("Image non disponible");
+                                          }
+                                        }}
                                       >
                                         <DriveImage
                                           fileId={file.id}
