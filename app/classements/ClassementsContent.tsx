@@ -121,8 +121,7 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
 
                     <AccordionContent
                       className="
-    space-y-4
-    overflow-hidden
+   overflow-hidden
     data-[state=open]:animate-accordion-down
     data-[state=closed]:animate-accordion-up
   "
