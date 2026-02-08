@@ -1,3 +1,6 @@
+"use client";
+
+import { DriveImage } from "@/components/DriveImage";
 import {
   Accordion,
   AccordionContent,
@@ -6,6 +9,7 @@ import {
 } from "@/components/ui/accordion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { File, Folder, Image } from "@/lib/lucide-react";
+import { useState } from "react";
 
 /* =======================
    TYPES
@@ -26,7 +30,7 @@ type Tableau = {
 type Tour = {
   id: string;
   name: string;
-  fichiers: TableauFile[]; // ✅ fichiers à la racine du tour
+  fichiers: TableauFile[];
   tableaux: Tableau[];
 };
 
@@ -53,11 +57,36 @@ function sortToursDesc(a: { name: string }, b: { name: string }) {
   return extract(b.name) - extract(a.name);
 }
 
+function isImageFile(name: string) {
+  return /\.(jpg|jpeg|png)$/i.test(name);
+}
+
+function getSeasonImages(saison: Saison): TableauFile[] {
+  const images: TableauFile[] = [];
+
+  for (const tour of saison.tours) {
+    // images à la racine du tour
+    images.push(...tour.fichiers.filter((f) => isImageFile(f.name)));
+
+    // images dans les tableaux
+    for (const tableau of tour.tableaux) {
+      images.push(...tableau.fichiers.filter((f) => isImageFile(f.name)));
+    }
+  }
+
+  return images;
+}
+
 /* =======================
    COMPONENT
 ======================= */
 
 export default function ClassementsContent({ saisons }: ClassementsContentProps) {
+  const [fullscreenImage, setFullscreenImage] = useState<{
+    fileId: string;
+    alt: string;
+  } | null>(null);
+
   return (
     <div className="space-y-6">
       {saisons.map((saison) => (
@@ -85,22 +114,44 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
                             <Folder className="h-4 w-4 text-tfg-purple" />
                             Documents
                           </h5>
-                          <ul className="space-y-1 pl-6">
+
+                          <ul className="space-y-3 pl-6">
                             {tour.fichiers.map((file) => (
                               <li key={file.id}>
-                                <a
-                                  href={file.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center gap-2 text-sm text-tfg-purple hover:underline"
-                                >
-                                  {file.name.match(/\.(jpg|jpeg|png)$/i) ? (
-                                    <Image className="h-4 w-4" />
-                                  ) : (
+                                {isImageFile(file.name) ? (
+                                  <>
+                                    <div className="flex items-center gap-2 text-sm font-medium text-tfg-purple">
+                                      <Image className="h-4 w-4" />
+                                      Affiche
+                                    </div>
+
+                                    <div
+                                      className="mt-2 pl-6 cursor-zoom-in"
+                                      onClick={() =>
+                                        setFullscreenImage({
+                                          fileId: file.id,
+                                          alt: file.name,
+                                        })
+                                      }
+                                    >
+                                      <DriveImage
+                                        fileId={file.id}
+                                        alt={file.name}
+                                        className="max-h-64 w-auto rounded-md border hover:shadow-lg transition"
+                                      />
+                                    </div>
+                                  </>
+                                ) : (
+                                  <a
+                                    href={file.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 text-sm text-tfg-purple hover:underline"
+                                  >
                                     <File className="h-4 w-4" />
-                                  )}
-                                  {file.name}
-                                </a>
+                                    {file.name}
+                                  </a>
+                                )}
                               </li>
                             ))}
                           </ul>
@@ -118,18 +169,43 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
                           {tableau.fichiers.length === 0 ? (
                             <p className="text-xs text-muted-foreground pl-6">Aucun fichier.</p>
                           ) : (
-                            <ul className="space-y-1 pl-6">
+                            <ul className="space-y-3 pl-6">
                               {tableau.fichiers.map((file) => (
                                 <li key={file.id}>
-                                  <a
-                                    href={file.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-2 text-sm text-tfg-purple hover:underline"
-                                  >
-                                    <File className="h-4 w-4" />
-                                    {file.name}
-                                  </a>
+                                  {isImageFile(file.name) ? (
+                                    <>
+                                      <div className="flex items-center gap-2 text-sm font-medium text-tfg-purple">
+                                        <Image className="h-4 w-4" />
+                                        Affiche
+                                      </div>
+
+                                      <div
+                                        className="mt-2 pl-6 cursor-zoom-in"
+                                        onClick={() =>
+                                          setFullscreenImage({
+                                            fileId: file.id,
+                                            alt: file.name,
+                                          })
+                                        }
+                                      >
+                                        <DriveImage
+                                          fileId={file.id}
+                                          alt={file.name}
+                                          className="max-h-64 w-auto rounded-md border hover:shadow-lg transition"
+                                        />
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <a
+                                      href={file.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-2 text-sm text-tfg-purple hover:underline"
+                                    >
+                                      <File className="h-4 w-4" />
+                                      {file.name}
+                                    </a>
+                                  )}
                                 </li>
                               ))}
                             </ul>
@@ -144,6 +220,26 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
           </CardContent>
         </Card>
       ))}
+      {fullscreenImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+          onClick={() => setFullscreenImage(null)}
+        >
+          <img
+            src={`https://drive.google.com/thumbnail?id=${fullscreenImage.fileId}&sz=w2000`}
+            alt={fullscreenImage.alt}
+            className="max-h-full max-w-full object-contain rounded-md shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+
+          <button
+            onClick={() => setFullscreenImage(null)}
+            className="absolute top-4 right-4 text-white text-sm bg-black/60 hover:bg-black/80 px-3 py-1 rounded"
+          >
+            Fermer ✕
+          </button>
+        </div>
+      )}
     </div>
   );
 }

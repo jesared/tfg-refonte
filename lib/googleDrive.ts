@@ -140,3 +140,22 @@ export async function getDriveChildren(parentId: string): Promise<DriveItem[]> {
     })) ?? []
   );
 }
+export async function canAccessFile(fileId: string): Promise<boolean> {
+  try {
+    const auth = new google.auth.GoogleAuth({
+      credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY!),
+      scopes: ["https://www.googleapis.com/auth/drive.readonly"],
+    });
+
+    const drive = google.drive({ version: "v3", auth });
+
+    await drive.files.get({
+      fileId,
+      fields: "id",
+    });
+
+    return true;
+  } catch {
+    return false;
+  }
+}

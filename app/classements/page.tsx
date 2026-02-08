@@ -10,7 +10,7 @@ export const runtime = "nodejs";
 
 type TableauFile = {
   id: string;
-  name: string;
+  name: string; // nom AVEC extension
   url: string;
 };
 
@@ -56,19 +56,21 @@ export default async function ClassementsPage() {
           toursRaw
             .filter((t) => t.isFolder)
             .map(async (tour) => {
-              // 🔥 Tous les enfants du tour
               const tourChildren = await getDriveChildren(tour.id);
 
               // 📄 fichiers à la racine du tour
               const fichiers: TableauFile[] = tourChildren
-                .filter((f) => !f.isFolder && f.url)
+                .filter(
+                  (f): f is { id: string; name: string; url: string; isFolder: false } =>
+                    !f.isFolder && typeof f.url === "string",
+                )
                 .map((f) => ({
                   id: f.id,
-                  name: f.name.replace(/\.(pdf|jpg|jpeg|png)$/i, ""),
-                  url: f.url!,
+                  name: f.name,
+                  url: f.url,
                 }));
 
-              // 📁 sous-dossiers = tableaux
+              // 📁 tableaux
               const tableaux: Tableau[] = await Promise.all(
                 tourChildren
                   .filter((child) => child.isFolder)
@@ -76,11 +78,14 @@ export default async function ClassementsPage() {
                     const filesRaw = await getDriveChildren(tableau.id);
 
                     const fichiersTableau: TableauFile[] = filesRaw
-                      .filter((f) => !f.isFolder && f.url)
+                      .filter(
+                        (f): f is { id: string; name: string; url: string; isFolder: false } =>
+                          !f.isFolder && typeof f.url === "string",
+                      )
                       .map((f) => ({
                         id: f.id,
-                        name: f.name.replace(/\.(pdf|jpg|jpeg|png)$/i, ""),
-                        url: f.url!,
+                        name: f.name,
+                        url: f.url,
                       }));
 
                     return {
@@ -94,8 +99,8 @@ export default async function ClassementsPage() {
               return {
                 id: tour.id,
                 name: tour.name,
-                fichiers, // ✅ fichiers racine du tour
-                tableaux, // ✅ tableaux
+                fichiers,
+                tableaux,
               };
             }),
         );
