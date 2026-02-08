@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, Gift, Home, Mail, Scale, Table2, Trophy, X } from "lucide-react";
+import { Gift, Home, Mail, Scale, Table2, Trophy, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -9,7 +9,6 @@ import { SidebarItem } from "@/components/SidebarItem";
 const navigationItems = [
   { href: "/", label: "Accueil", icon: Home },
   { href: "/trophee", label: "Le Trophée", icon: Trophy },
-  { href: "/saison-2024-2025", label: "Saison 2024–2025", icon: CalendarDays },
   { href: "/tableaux", label: "Tableaux & Règlement", icon: Table2 },
   { href: "/classements", label: "Classements", icon: Scale },
   { href: "/recompenses", label: "Récompenses", icon: Gift },
