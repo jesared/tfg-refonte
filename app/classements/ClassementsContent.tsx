@@ -53,7 +53,6 @@ function sortToursDesc(a: { name: string }, b: { name: string }) {
     const match = name.match(/tour\s*(\d+)/i);
     return match ? parseInt(match[1], 10) : 0;
   };
-
   return extract(b.name) - extract(a.name);
 }
 
@@ -61,26 +60,11 @@ function isImageFile(name: string) {
   return /\.(jpg|jpeg|png)$/i.test(name);
 }
 
-function getSeasonImages(saison: Saison): TableauFile[] {
-  const images: TableauFile[] = [];
-
-  for (const tour of saison.tours) {
-    // images à la racine du tour
-    images.push(...tour.fichiers.filter((f) => isImageFile(f.name)));
-
-    // images dans les tableaux
-    for (const tableau of tour.tableaux) {
-      images.push(...tableau.fichiers.filter((f) => isImageFile(f.name)));
-    }
-  }
-
-  return images;
-}
 function sortSaisonsDesc(a: Saison, b: Saison) {
   const getStartYear = (name: string) => parseInt(name.split("/")[0], 10) || 0;
-
   return getStartYear(b.name) - getStartYear(a.name);
 }
+
 function preloadImage(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
@@ -116,81 +100,27 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
             ) : (
               <Accordion type="single" collapsible className="space-y-2">
                 {[...saison.tours].sort(sortToursDesc).map((tour) => (
-                  <AccordionItem key={tour.id} value={tour.id}>
+                  <AccordionItem key={tour.id} value={`${saison.id}-${tour.id}`}>
                     <AccordionTrigger className="font-semibold">{tour.name}</AccordionTrigger>
 
-                    <AccordionContent>
-                      {/* 📄 fichiers à la racine du tour */}
-                      {tour.fichiers.length > 0 && (
-                        <div>
-                          <h5 className="text-sm font-medium mb-2 flex items-center gap-2">
-                            <Folder className="h-4 w-4 text-tfg-purple" />
-                            Documents
-                          </h5>
+                    <AccordionContent
+                      className="
+                        overflow-hidden
+                        data-[state=open]:animate-accordion-down
+                        data-[state=closed]:animate-accordion-up
+                      "
+                    >
+                      <div className="pt-4 space-y-4">
+                        {/* 📄 fichiers à la racine du tour */}
+                        {tour.fichiers.length > 0 && (
+                          <div>
+                            <h5 className="text-sm font-medium mb-2 flex items-center gap-2">
+                              <Folder className="h-4 w-4 text-tfg-purple" />
+                              Documents
+                            </h5>
 
-                          <ul className="space-y-3 pl-6">
-                            {tour.fichiers.map((file) => (
-                              <li key={file.id}>
-                                {isImageFile(file.name) ? (
-                                  <>
-                                    <div className="flex items-center gap-2 text-sm font-medium text-tfg-purple">
-                                      <Image className="h-4 w-4" />
-                                      Affiche
-                                    </div>
-
-                                    <div
-                                      className="mt-2 pl-6 cursor-zoom-in"
-                                      onClick={async () => {
-                                        const src = `https://drive.google.com/thumbnail?id=${file.id}&sz=w2000`;
-
-                                        try {
-                                          await preloadImage(src); // 👈 PRÉCHARGEMENT
-                                          setFullscreenImage({
-                                            fileId: file.id,
-                                            alt: file.name,
-                                          });
-                                        } catch {
-                                          console.warn("Image non disponible");
-                                        }
-                                      }}
-                                    >
-                                      <DriveImage
-                                        fileId={file.id}
-                                        alt={file.name}
-                                        className="max-h-16 w-auto rounded-md border hover:shadow-lg transition"
-                                      />
-                                    </div>
-                                  </>
-                                ) : (
-                                  <a
-                                    href={file.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-2 text-sm text-tfg-purple hover:underline"
-                                  >
-                                    <File className="h-4 w-4" />
-                                    {file.name}
-                                  </a>
-                                )}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      {/* 📁 tableaux */}
-                      {tour.tableaux.map((tableau) => (
-                        <div key={tableau.id} className="pl-2">
-                          <h6 className="flex items-center gap-2 text-sm font-semibold mb-1">
-                            <Folder className="h-4 w-4 text-slate-500" />
-                            {tableau.name}
-                          </h6>
-
-                          {tableau.fichiers.length === 0 ? (
-                            <p className="text-xs text-muted-foreground pl-6">Aucun fichier.</p>
-                          ) : (
                             <ul className="space-y-3 pl-6">
-                              {tableau.fichiers.map((file) => (
+                              {tour.fichiers.map((file) => (
                                 <li key={file.id}>
                                   {isImageFile(file.name) ? (
                                     <>
@@ -203,9 +133,8 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
                                         className="mt-2 pl-6 cursor-zoom-in"
                                         onClick={async () => {
                                           const src = `https://drive.google.com/thumbnail?id=${file.id}&sz=w2000`;
-
                                           try {
-                                            await preloadImage(src); // 👈 PRÉCHARGEMENT
+                                            await preloadImage(src);
                                             setFullscreenImage({
                                               fileId: file.id,
                                               alt: file.name,
@@ -236,9 +165,70 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
                                 </li>
                               ))}
                             </ul>
-                          )}
-                        </div>
-                      ))}
+                          </div>
+                        )}
+
+                        {/* 📁 tableaux */}
+                        {tour.tableaux.map((tableau) => (
+                          <div key={tableau.id} className="pl-2">
+                            <h6 className="flex items-center gap-2 text-sm font-semibold mb-1">
+                              <Folder className="h-4 w-4 text-slate-500" />
+                              {tableau.name}
+                            </h6>
+
+                            {tableau.fichiers.length === 0 ? (
+                              <p className="text-xs text-muted-foreground pl-6">Aucun fichier.</p>
+                            ) : (
+                              <ul className="space-y-3 pl-6">
+                                {tableau.fichiers.map((file) => (
+                                  <li key={file.id}>
+                                    {isImageFile(file.name) ? (
+                                      <>
+                                        <div className="flex items-center gap-2 text-sm font-medium text-tfg-purple">
+                                          <Image className="h-4 w-4" />
+                                          Affiche
+                                        </div>
+
+                                        <div
+                                          className="mt-2 pl-6 cursor-zoom-in"
+                                          onClick={async () => {
+                                            const src = `https://drive.google.com/thumbnail?id=${file.id}&sz=w2000`;
+                                            try {
+                                              await preloadImage(src);
+                                              setFullscreenImage({
+                                                fileId: file.id,
+                                                alt: file.name,
+                                              });
+                                            } catch {
+                                              console.warn("Image non disponible");
+                                            }
+                                          }}
+                                        >
+                                          <DriveImage
+                                            fileId={file.id}
+                                            alt={file.name}
+                                            className="max-h-16 w-auto rounded-md border hover:shadow-lg transition"
+                                          />
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <a
+                                        href={file.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-2 text-sm text-tfg-purple hover:underline"
+                                      >
+                                        <File className="h-4 w-4" />
+                                        {file.name}
+                                      </a>
+                                    )}
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </AccordionContent>
                   </AccordionItem>
                 ))}
@@ -247,6 +237,8 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
           </CardContent>
         </Card>
       ))}
+
+      {/* FULLSCREEN IMAGE */}
       {fullscreenImage && (
         <div
           className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
