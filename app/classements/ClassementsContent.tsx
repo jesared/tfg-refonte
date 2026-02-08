@@ -119,13 +119,7 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
                   <AccordionItem key={tour.id} value={tour.id}>
                     <AccordionTrigger className="font-semibold">{tour.name}</AccordionTrigger>
 
-                    <AccordionContent
-                      className="
-   overflow-hidden
-    data-[state=open]:animate-accordion-down
-    data-[state=closed]:animate-accordion-up
-  "
-                    >
+                    <AccordionContent>
                       {/* 📄 fichiers à la racine du tour */}
                       {tour.fichiers.length > 0 && (
                         <div>
