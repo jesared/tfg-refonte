@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { SidebarItem } from "@/components/SidebarItem";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const navigationItems = [
   { href: "/", label: "Accueil", icon: Home },
@@ -46,15 +47,18 @@ export function Sidebar() {
             <span className="text-xs text-slate-500">Challenge régional de tennis de table</span>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setIsOpen(true)}
-            className="inline-flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm"
-            aria-expanded={isOpen}
-            aria-controls="mobile-sidebar"
-          >
-            Menu
-          </button>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <button
+              type="button"
+              onClick={() => setIsOpen(true)}
+              className="inline-flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm"
+              aria-expanded={isOpen}
+              aria-controls="mobile-sidebar"
+            >
+              Menu
+            </button>
+          </div>
         </div>
       </header>
 
@@ -120,7 +124,10 @@ export function Sidebar() {
           ))}
         </nav>
 
-        <div className="mt-auto pt-8 text-xs text-white/50">Trophée François Grieder</div>
+        <div className="mt-auto space-y-3 pt-8">
+          <ThemeToggle />
+          <div className="text-xs text-white/50">Trophée François Grieder</div>
+        </div>
       </aside>
     </>
   );

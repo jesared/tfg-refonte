@@ -25,8 +25,23 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" className="h-full">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function () {
+  try {
+    var stored = localStorage.getItem("theme");
+    var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    var theme = stored === "light" || stored === "dark" ? stored : (prefersDark ? "dark" : "light");
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    document.documentElement.style.colorScheme = theme;
+  } catch (e) {}
+})();`,
+          }}
+        />
+      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} min-h-full bg-white antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} min-h-full bg-background text-foreground antialiased`}
       >
         <div className="min-h-full">
           <div className="md:flex">
