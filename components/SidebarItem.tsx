@@ -24,17 +24,17 @@ export function SidebarItem({
       onClick={onSelect}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+        "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ease-out",
         active
-          ? "bg-primary/15 text-primary"
-          : "text-muted-foreground hover:bg-muted hover:text-foreground",
+          ? "bg-accent/15 text-accent"
+          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
       )}
     >
       {active && <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-accent" />}
 
       <Icon
         className={cn(
-          "h-4 w-4",
+          "h-4 w-4 transition-all duration-200 ease-out",
           active ? "text-accent" : "text-muted-foreground group-hover:text-foreground",
         )}
       />
