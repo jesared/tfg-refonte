@@ -24,22 +24,32 @@ export function SidebarItem({
       onClick={onSelect}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+        "group relative flex items-center gap-3 overflow-hidden rounded-xl border px-3 py-2.5 text-sm font-medium transition-all duration-200",
         active
-          ? "bg-primary/15 text-primary"
-          : "text-muted-foreground hover:bg-muted hover:text-foreground",
+          ? "border-primary/35 bg-gradient-to-r from-primary/20 via-primary/10 to-accent/10 text-foreground shadow-[0_12px_26px_hsl(var(--primary)/0.18)]"
+          : "border-transparent text-muted-foreground hover:border-border/80 hover:bg-muted/70 hover:text-foreground",
       )}
     >
-      {active && <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-accent" />}
-
-      <Icon
+      <span
         className={cn(
-          "h-4 w-4",
-          active ? "text-accent" : "text-muted-foreground group-hover:text-foreground",
+          "flex h-8 w-8 items-center justify-center rounded-lg transition-colors",
+          active
+            ? "bg-primary/25 text-primary"
+            : "bg-muted/70 text-muted-foreground group-hover:text-foreground",
         )}
-      />
+      >
+        <Icon className="h-4 w-4" />
+      </span>
 
       <span>{label}</span>
+
+      <span
+        aria-hidden="true"
+        className={cn(
+          "absolute inset-y-1 right-1 w-1 rounded-full transition-opacity",
+          active ? "bg-accent opacity-100" : "opacity-0",
+        )}
+      />
     </Link>
   );
 }
