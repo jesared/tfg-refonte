@@ -115,7 +115,7 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
                         {tour.fichiers.length > 0 && (
                           <div>
                             <h5 className="text-sm font-medium mb-2 flex items-center gap-2">
-                              <Folder className="h-4 w-4 text-tfg-purple" />
+                              <Folder className="h-4 w-4 text-primary" />
                               Documents
                             </h5>
 
@@ -124,7 +124,7 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
                                 <li key={file.id}>
                                   {isImageFile(file.name) ? (
                                     <>
-                                      <div className="flex items-center gap-2 text-sm font-medium text-tfg-purple">
+                                      <div className="flex items-center gap-2 text-sm font-medium text-primary">
                                         <Image className="h-4 w-4" />
                                         Affiche
                                       </div>
@@ -156,7 +156,7 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
                                       href={file.url}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="flex items-center gap-2 text-sm text-tfg-purple hover:underline"
+                                      className="flex items-center gap-2 text-sm text-primary hover:underline"
                                     >
                                       <File className="h-4 w-4" />
                                       {file.name}
@@ -172,7 +172,7 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
                         {tour.tableaux.map((tableau) => (
                           <div key={tableau.id} className="pl-2">
                             <h6 className="flex items-center gap-2 text-sm font-semibold mb-1">
-                              <Folder className="h-4 w-4 text-slate-500" />
+                              <Folder className="h-4 w-4 text-muted-foreground" />
                               {tableau.name}
                             </h6>
 
@@ -184,7 +184,7 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
                                   <li key={file.id}>
                                     {isImageFile(file.name) ? (
                                       <>
-                                        <div className="flex items-center gap-2 text-sm font-medium text-tfg-purple">
+                                        <div className="flex items-center gap-2 text-sm font-medium text-primary">
                                           <Image className="h-4 w-4" />
                                           Affiche
                                         </div>
@@ -216,7 +216,7 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
                                         href={file.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex items-center gap-2 text-sm text-tfg-purple hover:underline"
+                                        className="flex items-center gap-2 text-sm text-primary hover:underline"
                                       >
                                         <File className="h-4 w-4" />
                                         {file.name}
@@ -253,7 +253,7 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
 
           <button
             onClick={() => setFullscreenImage(null)}
-            className="absolute top-4 right-4 text-white text-sm bg-black/60 hover:bg-black/80 px-3 py-1 rounded"
+            className="absolute top-4 right-4 text-primary-foreground text-sm bg-black/60 hover:bg-black/80 px-3 py-1 rounded"
           >
             Fermer ✕
           </button>
