@@ -45,7 +45,7 @@ export default function RootLayout({
         <div className="min-h-full">
           <div className="md:flex">
             <Sidebar />
-            <div className="flex-1 md:pl-64">
+            <div className="flex-1 md:pl-72">
               <main className="px-4 py-6 sm:px-6 lg:px-8">{children}</main>
             </div>
           </div>
