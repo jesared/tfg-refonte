@@ -21,7 +21,7 @@ export default function ContactPage() {
 
           <p className="text-lg leading-8 text-foreground/90">
             Une question concernant le Trophée François Grieder, le classement général ou
-            l'organisation des tournois ? L’équipe du challenge est à votre disposition.
+            l&apos;organisation des tournois ? L’équipe du challenge est à votre disposition.
           </p>
         </header>
 
