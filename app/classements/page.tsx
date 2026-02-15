@@ -116,7 +116,7 @@ export default async function ClassementsPage() {
   return (
     <div className="max-w-5xl mx-auto space-y-10">
       <header>
-        <h1 className="text-4xl font-bold text-tfg-purple">Classements & Résultats</h1>
+        <h1 className="text-4xl font-bold text-primary">Classements & Résultats</h1>
         <p className="text-muted-foreground mt-2">
           Classements officiels du Trophée François Grieder
         </p>
