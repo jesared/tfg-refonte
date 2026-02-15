@@ -54,8 +54,11 @@ const rankingDownloads = [
 ];
 
 export default function Home() {
-  const facebookPageUrl = "https://www.facebook.com/tropheefgrieder";
+  const facebookPageUrl = "https://www.facebook.com/tropheefrancoisgrieder";
   const shareUrl = "https://trophee-francois-grieder.fr";
+  const facebookFeedUrl = `https://www.facebook.com/plugins/page.php?href=${encodeURIComponent(
+    facebookPageUrl,
+  )}&tabs=timeline&width=500&height=620&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true`;
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 sm:gap-10">
@@ -118,7 +121,7 @@ export default function Home() {
           <h3 className="text-lg font-semibold text-slate-900">En résumé</h3>
           <ul className="mt-4 space-y-4 text-base text-slate-700">
             <li className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
-              Tournois qualificatifs ouverts jusqu'à fin mars.
+              Tournois qualificatifs ouverts jusqu&apos;à fin mars.
             </li>
             <li className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
               Classements mis à jour après chaque rencontre.
@@ -278,12 +281,59 @@ export default function Home() {
                     className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:text-slate-900"
                     href={ranking.href}
                   >
-                    Ouvrir l'aperçu
+                    Ouvrir l&apos;aperçu
                   </a>
                 </div>
               </div>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="grid gap-6 rounded-3xl border border-slate-200 bg-white px-5 py-7 shadow-sm sm:px-8 sm:py-10 lg:grid-cols-[1fr_1.1fr]">
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">
+            Actualités Facebook
+          </h2>
+          <p className="text-sm leading-relaxed text-slate-600">
+            Les dernières publications de la page officielle sont intégrées directement sur le
+            site. Cela permet de centraliser les annonces (tournois, résultats, photos) sans
+            ressaisie.
+          </p>
+          <ul className="space-y-2 text-sm text-slate-700">
+            <li>• Les mises à jour apparaissent automatiquement dès publication sur Facebook.</li>
+            <li>• Les visiteurs peuvent ouvrir la publication d&apos;origine en un clic.</li>
+            <li>• En cas de blocage des cookies, un lien direct reste disponible.</li>
+          </ul>
+          <div className="flex flex-wrap gap-3 pt-2">
+            <a
+              href={facebookPageUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-full bg-[#1877F2] px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:opacity-90"
+            >
+              Ouvrir la page Facebook
+            </a>
+            <a
+              href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:text-slate-900"
+            >
+              Partager le site
+            </a>
+          </div>
+        </div>
+
+        <div className="min-h-[620px] overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+          <iframe
+            title="Fil d'actualités Facebook"
+            src={facebookFeedUrl}
+            width="100%"
+            height="620"
+            style={{ border: "none", overflow: "hidden" }}
+            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+          />
         </div>
       </section>
     </main>
