@@ -74,8 +74,8 @@ export function Sidebar() {
         role="dialog"
         aria-modal="true"
       >
-        <div className="flex items-center justify-between">
-          <div className="text-sm font-semibold text-foreground">Navigation</div>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="text-sm font-semibold text-foreground">Trophée François Grieder</div>
           <button
             type="button"
             onClick={() => setIsOpen(false)}
@@ -86,7 +86,7 @@ export function Sidebar() {
           </button>
         </div>
 
-        <nav className="mt-6 space-y-2">
+        <nav className="space-y-2">
           {navigationItems.map((item) => (
             <SidebarItem
               key={item.href}
@@ -101,9 +101,9 @@ export function Sidebar() {
       </div>
 
       <aside className="hidden border-r border-border bg-card md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col md:px-6 md:py-8">
-        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Navigation</div>
+        <div className="mb-4 text-center text-sm font-semibold text-foreground">Trophée François Grieder</div>
 
-        <nav className="mt-6 space-y-2">
+        <nav className="space-y-2">
           {navigationItems.map((item) => (
             <SidebarItem
               key={item.href}
