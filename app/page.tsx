@@ -1,3 +1,5 @@
+import { Home as HomeIcon } from "lucide-react";
+
 export default function Home() {
   const facebookPageUrl = "https://www.facebook.com/tropheefrancoisgrieder";
   const shareUrl = "https://trophee-francois-grieder.fr";
@@ -9,7 +11,7 @@ export default function Home() {
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 sm:gap-10">
       <section className="rounded-3xl border border-border bg-card px-5 py-7 shadow-sm sm:px-8 sm:py-10">
         <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
-          <span className="text-lg">🏠</span>
+          <HomeIcon className="h-5 w-5" aria-hidden="true" />
           <span>Accueil</span>
         </div>
 
