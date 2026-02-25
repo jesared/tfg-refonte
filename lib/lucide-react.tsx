@@ -186,3 +186,45 @@ export const MapPin = createIcon(
     <circle cx="12" cy="10" r="2.5" />
   </>,
 );
+
+export const User = createIcon(
+  "User",
+  <>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 20a8 8 0 0 1 16 0" />
+  </>,
+);
+
+export const UserRound = createIcon(
+  "UserRound",
+  <>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M6 20a6 6 0 0 1 12 0" />
+  </>,
+);
+
+export const UserCircle2 = createIcon(
+  "UserCircle2",
+  <>
+    <circle cx="12" cy="12" r="9" />
+    <circle cx="12" cy="10" r="3" />
+    <path d="M7 17a5 5 0 0 1 10 0" />
+  </>,
+);
+
+export const LogOut = createIcon(
+  "LogOut",
+  <>
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <polyline points="16 17 21 12 16 7" />
+    <line x1="21" y1="12" x2="9" y2="12" />
+  </>,
+);
+
+export const ShieldCheck = createIcon(
+  "ShieldCheck",
+  <>
+    <path d="M12 3l7 3v6c0 5-3.5 8.5-7 9-3.5-.5-7-4-7-9V6l7-3Z" />
+    <polyline points="9 12 11 14 15 10" />
+  </>,
+);

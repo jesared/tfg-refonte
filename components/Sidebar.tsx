@@ -104,6 +104,11 @@ export function Sidebar() {
             />
           ))}
         </nav>
+
+        <div className="mt-6 space-y-3 border-t border-border pt-4">
+          <ThemeToggle />
+          <LoginButton />
+        </div>
       </div>
 
       {/* ===== DESKTOP SIDEBAR ===== */}
