@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import type { Role } from "@prisma/client";
 import NextAuth, { type NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
@@ -10,8 +11,6 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-
-      // ⚠️ Permet de lier automatiquement un email existant
       allowDangerousEmailAccountLinking: true,
     }),
   ],
@@ -30,7 +29,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, user }) {
       if (session.user) {
         session.user.id = user.id;
-        session.user.role = (user as any).role ?? "USER";
+        session.user.role = user.role as Role;
       }
       return session;
     },
