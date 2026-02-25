@@ -18,14 +18,14 @@ const navigationItems = [
 ];
 
 const isItemActive = (pathname: string, href: string) => {
-  if (href === "/") {
-    return pathname === "/";
-  }
+  if (href === "/") return pathname === "/";
   return pathname.startsWith(href);
 };
 
 export function Sidebar() {
   const pathname = usePathname();
+  const safePathname = pathname ?? ""; // 🔒 sécurisation TS
+
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
@@ -37,6 +37,7 @@ export function Sidebar() {
 
   return (
     <>
+      {/* ===== MOBILE HEADER ===== */}
       <header className="border-b border-border bg-card md:hidden">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex flex-col">
@@ -61,6 +62,7 @@ export function Sidebar() {
         </div>
       </header>
 
+      {/* ===== MOBILE OVERLAY ===== */}
       <div
         className={`fixed inset-0 z-40 bg-black/50 transition-opacity md:hidden ${
           isOpen ? "opacity-100" : "pointer-events-none opacity-0"
@@ -69,6 +71,7 @@ export function Sidebar() {
         aria-hidden="true"
       />
 
+      {/* ===== MOBILE SIDEBAR ===== */}
       <div
         id="mobile-sidebar"
         className={`fixed inset-y-0 left-0 z-50 w-72 border-r border-border bg-card px-6 py-6 shadow-lg transition-transform md:hidden ${
@@ -77,45 +80,44 @@ export function Sidebar() {
         role="dialog"
         aria-modal="true"
       >
-        <div className="flex items-center justify-between">
-          <div className="text-sm font-semibold text-foreground">Navigation</div>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="text-sm font-semibold text-foreground">Trophée François Grieder</div>
           <button
             type="button"
             onClick={() => setIsOpen(false)}
             className="rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
             aria-label="Fermer le menu"
           >
-            <X className="h-4 w-4" aria-hidden="true" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        <nav className="mt-6 space-y-2">
+        <nav className="space-y-2">
           {navigationItems.map((item) => (
             <SidebarItem
               key={item.href}
               href={item.href}
               label={item.label}
               icon={item.icon}
-              active={isItemActive(pathname, item.href)}
+              active={isItemActive(safePathname, item.href)}
               onSelect={() => setIsOpen(false)}
             />
           ))}
         </nav>
       </div>
 
+      {/* ===== DESKTOP SIDEBAR ===== */}
       <aside className="hidden border-r border-border bg-card md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col md:px-6 md:py-8">
-        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Navigation
-        </div>
+        <div className="mb-6 text-sm font-semibold text-foreground">Trophée François Grieder</div>
 
-        <nav className="mt-6 space-y-2">
+        <nav className="space-y-2">
           {navigationItems.map((item) => (
             <SidebarItem
               key={item.href}
               href={item.href}
               label={item.label}
               icon={item.icon}
-              active={isItemActive(pathname, item.href)}
+              active={isItemActive(safePathname, item.href)}
             />
           ))}
         </nav>
@@ -123,7 +125,7 @@ export function Sidebar() {
         <div className="mt-auto space-y-3 pt-8">
           <ThemeToggle />
           <LoginButton />
-          <div className="text-xs text-muted-foreground">Trophée François Grieder</div>
+          <div className="text-xs text-muted-foreground">© {new Date().getFullYear()} TFG</div>
         </div>
       </aside>
     </>
