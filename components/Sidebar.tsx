@@ -1,6 +1,6 @@
 "use client";
 
-import { Gift, Home, Mail, Scale, Table2, Trophy, X } from "lucide-react";
+import { Gift, Home, Mail, Scale, ShieldCheck, Table2, Trophy, User, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -15,6 +15,11 @@ const navigationItems = [
   { href: "/classements", label: "Classements", icon: Scale },
   { href: "/recompenses", label: "Récompenses", icon: Gift },
   { href: "/contact", label: "Contact", icon: Mail },
+];
+
+const adminItems = [
+  { href: "/admin", label: "Tableau de bord", icon: ShieldCheck },
+  { href: "/admin/utilisateurs", label: "Utilisateurs", icon: User },
 ];
 
 const isItemActive = (pathname: string, href: string) => {
@@ -103,6 +108,24 @@ export function Sidebar() {
               onSelect={() => setIsOpen(false)}
             />
           ))}
+
+          <div className="pt-4">
+            <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Admin
+            </p>
+            <div className="space-y-2">
+              {adminItems.map((item) => (
+                <SidebarItem
+                  key={item.href}
+                  href={item.href}
+                  label={item.label}
+                  icon={item.icon}
+                  active={isItemActive(safePathname, item.href)}
+                  onSelect={() => setIsOpen(false)}
+                />
+              ))}
+            </div>
+          </div>
         </nav>
 
         <div className="mt-6 space-y-3 border-t border-border pt-4">
@@ -125,6 +148,23 @@ export function Sidebar() {
               active={isItemActive(safePathname, item.href)}
             />
           ))}
+
+          <div className="pt-4">
+            <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Admin
+            </p>
+            <div className="space-y-2">
+              {adminItems.map((item) => (
+                <SidebarItem
+                  key={item.href}
+                  href={item.href}
+                  label={item.label}
+                  icon={item.icon}
+                  active={isItemActive(safePathname, item.href)}
+                />
+              ))}
+            </div>
+          </div>
         </nav>
 
         <div className="mt-auto space-y-3 pt-8">
