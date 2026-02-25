@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import type { Role } from "@prisma/client";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import NextAuth, { type NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
@@ -17,6 +18,7 @@ export const authOptions: NextAuthOptions = {
           email: profile.email?.toLowerCase() ?? null,
           image: profile.picture,
           emailVerified: profile.email_verified ? new Date() : null,
+          role: "USER" as Role,
         };
       },
 
@@ -42,7 +44,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, user }) {
       if (session.user) {
         session.user.id = user.id;
-        session.user.role = (user as { role?: string }).role ?? "USER";
+        session.user.role = (user as { role?: Role }).role ?? "USER";
       }
       return session;
     },
