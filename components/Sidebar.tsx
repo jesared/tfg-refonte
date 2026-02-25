@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { SidebarItem } from "@/components/SidebarItem";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import LoginButton from "./LoginButton";
 
 const navigationItems = [
   { href: "/", label: "Accueil", icon: Home },
@@ -40,7 +41,9 @@ export function Sidebar() {
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex flex-col">
             <span className="text-sm font-semibold text-foreground">Trophée François Grieder</span>
-            <span className="text-xs text-muted-foreground">Challenge régional de tennis de table</span>
+            <span className="text-xs text-muted-foreground">
+              Challenge régional de tennis de table
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -101,7 +104,9 @@ export function Sidebar() {
       </div>
 
       <aside className="hidden border-r border-border bg-card md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col md:px-6 md:py-8">
-        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Navigation</div>
+        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Navigation
+        </div>
 
         <nav className="mt-6 space-y-2">
           {navigationItems.map((item) => (
@@ -117,6 +122,7 @@ export function Sidebar() {
 
         <div className="mt-auto space-y-3 pt-8">
           <ThemeToggle />
+          <LoginButton />
           <div className="text-xs text-muted-foreground">Trophée François Grieder</div>
         </div>
       </aside>
