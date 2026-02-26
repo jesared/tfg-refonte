@@ -1,3 +1,4 @@
+import type { FacebookPost } from "@prisma/client";
 import type { Metadata } from "next";
 
 import { FacebookPostCard } from "@/components/FacebookPostCard";
@@ -9,12 +10,34 @@ export const metadata: Metadata = {
     "Retrouvez les dernières actualités Facebook du Trophée François Grieder, publiées en temps réel.",
 };
 
-export default async function ActualitesPage() {
-  const posts = await prisma.facebookPost.findMany({
+type FacebookPostWithFindMany = {
+  findMany: (args: {
+    orderBy: { createdAt: "desc" };
+    take: number;
+  }) => Promise<FacebookPost[]>;
+};
+
+async function getLatestPosts() {
+  const facebookPostModel = (prisma as unknown as {
+    facebookPost?: FacebookPostWithFindMany;
+  }).facebookPost;
+
+  if (!facebookPostModel) {
+    return [];
+  }
+
+  return facebookPostModel.findMany({
     orderBy: {
       createdAt: "desc",
     },
+    take: 6,
   });
+}
+
+export default async function ActualitesPage() {
+  const posts = await getLatestPosts();
+
+  const facebookPageUrl = "https://www.facebook.com/tropheefrancoisgrieder";
 
   return (
     <main className="min-h-screen bg-card px-6 py-16 text-foreground">
@@ -45,6 +68,17 @@ export default async function ActualitesPage() {
             </p>
           </section>
         )}
+
+        <div className="flex justify-center">
+          <a
+            href={facebookPageUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+          >
+            Voir plus de publications sur Facebook
+          </a>
+        </div>
       </div>
     </main>
   );

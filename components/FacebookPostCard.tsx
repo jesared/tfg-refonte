@@ -5,20 +5,16 @@ type FacebookPostCardProps = {
 };
 
 export function FacebookPostCard({ post }: FacebookPostCardProps) {
+  const imageSrc = post.image?.trim() || "/logo.png";
+
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-background shadow-sm">
-      {post.image ? (
-        <img
-          src={post.image}
-          alt="Illustration de la publication Facebook"
-          className="h-52 w-full object-cover"
-          loading="lazy"
-        />
-      ) : (
-        <div className="flex h-52 items-center justify-center bg-muted/50 px-6 text-center text-sm text-muted-foreground">
-          Publication sans image
-        </div>
-      )}
+      <img
+        src={imageSrc}
+        alt="Illustration de la publication Facebook"
+        className="h-52 w-full object-cover"
+        loading="lazy"
+      />
 
       <div className="flex flex-1 flex-col gap-4 p-5">
         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
