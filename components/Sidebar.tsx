@@ -1,6 +1,7 @@
 "use client";
 
 import { Gift, Home, Mail, Scale, ShieldCheck, Table2, Trophy, User, X } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -30,6 +31,8 @@ const isItemActive = (pathname: string, href: string) => {
 export function Sidebar() {
   const pathname = usePathname();
   const safePathname = pathname ?? ""; // 🔒 sécurisation TS
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "ADMIN";
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -109,23 +112,25 @@ export function Sidebar() {
             />
           ))}
 
-          <div className="pt-4">
-            <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Admin
-            </p>
-            <div className="space-y-2">
-              {adminItems.map((item) => (
-                <SidebarItem
-                  key={item.href}
-                  href={item.href}
-                  label={item.label}
-                  icon={item.icon}
-                  active={isItemActive(safePathname, item.href)}
-                  onSelect={() => setIsOpen(false)}
-                />
-              ))}
+          {isAdmin && (
+            <div className="pt-4">
+              <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Admin
+              </p>
+              <div className="space-y-2">
+                {adminItems.map((item) => (
+                  <SidebarItem
+                    key={item.href}
+                    href={item.href}
+                    label={item.label}
+                    icon={item.icon}
+                    active={isItemActive(safePathname, item.href)}
+                    onSelect={() => setIsOpen(false)}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </nav>
 
         <div className="mt-6 space-y-3 border-t border-border pt-4">
@@ -149,22 +154,24 @@ export function Sidebar() {
             />
           ))}
 
-          <div className="pt-4">
-            <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Admin
-            </p>
-            <div className="space-y-2">
-              {adminItems.map((item) => (
-                <SidebarItem
-                  key={item.href}
-                  href={item.href}
-                  label={item.label}
-                  icon={item.icon}
-                  active={isItemActive(safePathname, item.href)}
-                />
-              ))}
+          {isAdmin && (
+            <div className="pt-4">
+              <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Admin
+              </p>
+              <div className="space-y-2">
+                {adminItems.map((item) => (
+                  <SidebarItem
+                    key={item.href}
+                    href={item.href}
+                    label={item.label}
+                    icon={item.icon}
+                    active={isItemActive(safePathname, item.href)}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </nav>
 
         <div className="mt-auto space-y-3 pt-8">

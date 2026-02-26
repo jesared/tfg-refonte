@@ -1,5 +1,9 @@
 import { Check, ShieldCheck, User, UserCircle2 } from "lucide-react";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
 export const metadata: Metadata = {
   title: "Admin - Utilisateurs",
@@ -13,7 +17,13 @@ const users = [
   { name: "Nina Robert", role: "Lecture", status: "Suspendu" },
 ];
 
-export default function AdminUsersPage() {
+export default async function AdminUsersPage() {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user || session.user.role !== "ADMIN") {
+    redirect("/");
+  }
+
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-8">
       <header className="rounded-2xl border border-border bg-card px-6 py-7 shadow-sm">
