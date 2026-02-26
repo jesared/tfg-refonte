@@ -9,6 +9,8 @@ export const metadata: Metadata = {
     "Retrouvez les dernières actualités Facebook du Trophée François Grieder, publiées en temps réel.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function ActualitesPage() {
   const posts = await prisma.facebookPost.findMany({
     orderBy: {
