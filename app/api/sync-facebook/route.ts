@@ -35,7 +35,7 @@ const getImageUrl = (post: FacebookPostResponse): string | null => {
   return media?.image?.src ?? media?.source ?? null;
 };
 
-export async function GET() {
+async function syncFacebookPosts() {
   const accessToken = process.env.FACEBOOK_ACCESS_TOKEN;
   const pageId = process.env.FACEBOOK_PAGE_ID;
 
@@ -99,4 +99,12 @@ export async function GET() {
 
     return NextResponse.json({ error: "Failed to sync Facebook posts" }, { status: 500 });
   }
+}
+
+export async function GET() {
+  return syncFacebookPosts();
+}
+
+export async function POST() {
+  return syncFacebookPosts();
 }

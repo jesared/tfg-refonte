@@ -22,6 +22,7 @@ import LoginButton from "./LoginButton";
 
 const navigationItems = [
   { href: "/", label: "Accueil", icon: Home },
+  { href: "/actualites", label: "Actualités", icon: Table2 },
   { href: "/trophee", label: "Le Trophée", icon: Trophy },
   { href: "/tableaux", label: "Tableaux & Règlement", icon: Table2 },
   { href: "/classements", label: "Classements", icon: Scale },
