@@ -1,57 +1,45 @@
-import Image from "next/image";
+import type { FacebookPost } from "@prisma/client";
 
 type FacebookPostCardProps = {
-  message?: string;
-  image?: string;
-  permalink: string;
-  createdAt: Date;
+  post: FacebookPost;
 };
 
-export default function FacebookPostCard({
-  message,
-  image,
-  permalink,
-  createdAt,
-}: FacebookPostCardProps) {
-  const formattedDate = new Intl.DateTimeFormat("fr-FR", {
-    dateStyle: "long",
-    timeStyle: "short",
-  }).format(createdAt);
-
+export function FacebookPostCard({ post }: FacebookPostCardProps) {
   return (
-    <article className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm transition-transform duration-300 hover:scale-[1.01] hover:shadow-lg dark:border-slate-800 dark:bg-slate-900 dark:shadow-slate-950/40">
-      {image ? (
-        <div className="relative h-56 w-full bg-slate-100 dark:bg-slate-800">
-          <Image
-            src={image}
-            alt="Image de la publication Facebook"
-            fill
-            sizes="(max-width: 768px) 100vw, 50vw"
-            className="object-cover"
-          />
+    <article className="flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-background shadow-sm">
+      {post.image ? (
+        <img
+          src={post.image}
+          alt="Illustration de la publication Facebook"
+          className="h-52 w-full object-cover"
+          loading="lazy"
+        />
+      ) : (
+        <div className="flex h-52 items-center justify-center bg-muted/50 px-6 text-center text-sm text-muted-foreground">
+          Publication sans image
         </div>
-      ) : null}
+      )}
 
-      <div className="space-y-4 p-5">
-        <p className="text-sm text-slate-500 dark:text-slate-400">{formattedDate}</p>
+      <div className="flex flex-1 flex-col gap-4 p-5">
+        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+          {new Date(post.createdAt).toLocaleDateString("fr-FR", {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+          })}
+        </p>
 
-        {message ? (
-          <p className="line-clamp-4 text-sm leading-relaxed text-slate-700 dark:text-slate-200">
-            {message}
-          </p>
-        ) : (
-          <p className="text-sm italic text-slate-400 dark:text-slate-500">
-            Aucun message disponible.
-          </p>
-        )}
+        <p className="line-clamp-6 text-sm leading-6 text-foreground/90">
+          {post.message?.trim() || "Consultez la publication complète sur Facebook."}
+        </p>
 
         <a
-          href={permalink}
+          href={post.permalink}
           target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:ring-offset-slate-900"
+          rel="noreferrer"
+          className="mt-auto inline-flex w-fit rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
         >
-          Voir sur Facebook
+          Voir la publication
         </a>
       </div>
     </article>
