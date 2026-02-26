@@ -57,6 +57,7 @@ model FacebookPost {
   message   String?
   image     String?
   permalink String
+  type      String? 
   createdAt DateTime
   syncedAt  DateTime @default(now())
 }
