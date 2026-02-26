@@ -10,27 +10,17 @@ export const metadata: Metadata = {
     "Retrouvez les dernières actualités Facebook du Trophée François Grieder, publiées en temps réel.",
 };
 
-type FacebookPostWithFindMany = {
-  findMany: (args: {
-    orderBy: { createdAt: "desc" };
-    take: number;
-  }) => Promise<FacebookPost[]>;
-};
-
-async function getLatestPosts() {
-  const facebookPostModel = (prisma as unknown as {
-    facebookPost?: FacebookPostWithFindMany;
-  }).facebookPost;
-
-  if (!facebookPostModel) {
-    return [];
-  }
-
-  return facebookPostModel.findMany({
+async function getLatestPosts(): Promise<FacebookPost[]> {
+  return prisma.facebookPost.findMany({
+    where: {
+      type: {
+        not: null, // 🔥 On exclut définitivement les type null
+      },
+    },
     orderBy: {
       createdAt: "desc",
     },
-    take: 6,
+    take: 12,
   });
 }
 
