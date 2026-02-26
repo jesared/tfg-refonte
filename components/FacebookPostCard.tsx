@@ -5,16 +5,28 @@ type FacebookPostCardProps = {
 };
 
 export function FacebookPostCard({ post }: FacebookPostCardProps) {
-  const imageSrc = post.image?.trim() || "/default-actualite.svg";
+  const imageSrc = post.image?.trim() || null;
+  const displayText = post.message?.trim() || "Publication partagée";
 
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-background shadow-sm">
-      <img
-        src={imageSrc}
-        alt="Illustration de la publication Facebook"
-        className="h-52 w-full object-cover"
-        loading="lazy"
-      />
+      {imageSrc ? (
+        <img
+          src={imageSrc}
+          alt="Illustration de la publication Facebook"
+          className="h-52 w-full object-cover"
+          loading="lazy"
+        />
+      ) : (
+        <div className="flex h-52 w-full items-center justify-center bg-muted/50">
+          <img
+            src="/default-actualite.svg"
+            alt="Illustration par défaut"
+            className="h-20 w-20 opacity-70"
+            loading="lazy"
+          />
+        </div>
+      )}
 
       <div className="flex flex-1 flex-col gap-4 p-5">
         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
@@ -25,9 +37,7 @@ export function FacebookPostCard({ post }: FacebookPostCardProps) {
           })}
         </p>
 
-        <p className="line-clamp-6 text-sm leading-6 text-foreground/90">
-          {post.message?.trim() || "Consultez la publication complète sur Facebook."}
-        </p>
+        <p className="line-clamp-6 text-sm leading-6 text-foreground/90">{displayText}</p>
 
         <a
           href={post.permalink}

@@ -8,7 +8,6 @@ type FacebookPostResponse = {
   story?: string;
   created_time: string;
   permalink_url?: string;
-  full_picture?: string;
   attachments?: {
     data?: Array<{
       media?: {
@@ -17,22 +16,15 @@ type FacebookPostResponse = {
         };
         source?: string;
       };
-      subattachments?: {
-        data?: Array<{
-          media?: {
-            image?: {
-              src?: string;
-            };
-            source?: string;
-          };
-        }>;
-      };
     }>;
   };
 };
 
 type FacebookApiResponse = {
   data?: FacebookPostResponse[];
+  paging?: {
+    next?: string;
+  };
   error?: {
     message: string;
     type: string;
@@ -45,16 +37,8 @@ type FacebookApiResponse = {
 const getImageUrl = (post: FacebookPostResponse): string | null => {
   const firstAttachment = post.attachments?.data?.[0];
   const media = firstAttachment?.media;
-  const subAttachmentMedia = firstAttachment?.subattachments?.data?.[0]?.media;
 
-  return (
-    post.full_picture ??
-    media?.image?.src ??
-    media?.source ??
-    subAttachmentMedia?.image?.src ??
-    subAttachmentMedia?.source ??
-    null
-  );
+  return media?.image?.src ?? media?.source ?? null;
 };
 
 const getPermalink = (post: FacebookPostResponse): string => {
@@ -65,8 +49,14 @@ const getPermalink = (post: FacebookPostResponse): string => {
   return `https://www.facebook.com/${post.id}`;
 };
 
-const getDisplayMessage = (post: FacebookPostResponse): string | null => {
-  return post.message ?? post.story ?? null;
+const normalizeText = (value?: string): string | null => {
+  const trimmed = value?.trim();
+
+  return trimmed ? trimmed : null;
+};
+
+const getDisplayMessage = (post: FacebookPostResponse): string => {
+  return normalizeText(post.message) ?? normalizeText(post.story) ?? "Publication partagée";
 };
 
 const getFacebookErrorMessage = (payload: FacebookApiResponse, status: number): string => {
@@ -99,28 +89,27 @@ async function syncFacebookPosts() {
   }
 
   try {
-    const url = new URL(`https://graph.facebook.com/v19.0/${pageId}/feed`);
-    url.searchParams.set(
-      "fields",
-      "id,message,story,created_time,permalink_url,full_picture,attachments{media,subattachments{media}}",
-    );
-    url.searchParams.set("limit", "5");
-    url.searchParams.set("access_token", accessToken);
+    const fields = "id,created_time,message,story,permalink_url,attachments{media}";
+    const posts: FacebookPostResponse[] = [];
+    let nextUrl: string | null = `https://graph.facebook.com/v19.0/${pageId}/feed?fields=${encodeURIComponent(fields)}&limit=100&access_token=${encodeURIComponent(accessToken)}`;
 
-    const response = await fetch(url.toString(), {
-      method: "GET",
-      cache: "no-store",
-    });
+    while (nextUrl) {
+      const response = await fetch(nextUrl, {
+        method: "GET",
+        cache: "no-store",
+      });
 
-    const payload = (await response.json()) as FacebookApiResponse;
+      const payload = (await response.json()) as FacebookApiResponse;
 
-    if (!response.ok || payload.error) {
-      const message = getFacebookErrorMessage(payload, response.status);
+      if (!response.ok || payload.error) {
+        const message = getFacebookErrorMessage(payload, response.status);
 
-      return NextResponse.json({ error: message }, { status: 502 });
+        return NextResponse.json({ error: message }, { status: 502 });
+      }
+
+      posts.push(...(payload.data ?? []));
+      nextUrl = payload.paging?.next ?? null;
     }
-
-    const posts = payload.data ?? [];
 
     await Promise.all(
       posts.map(async (post) => {
