@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 
+import { SyncFacebookButton } from "@/components/admin/SyncFacebookButton";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
 export const metadata: Metadata = {
@@ -59,6 +60,18 @@ export default async function AdminPage() {
             <p className="mt-1 text-xs text-muted-foreground">{item.detail}</p>
           </article>
         ))}
+      </section>
+
+      <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold text-foreground">Synchronisation des contenus Facebook</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Déclenche une mise à jour manuelle des publications affichées sur le site.
+            </p>
+          </div>
+          <SyncFacebookButton user={session.user} />
+        </div>
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
