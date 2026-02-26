@@ -25,6 +25,7 @@ type FacebookApiResponse = {
     message: string;
     type: string;
     code: number;
+    error_subcode?: number;
     fbtrace_id?: string;
   };
 };
@@ -33,6 +34,24 @@ const getImageUrl = (post: FacebookPostResponse): string | null => {
   const media = post.attachments?.data?.[0]?.media;
 
   return media?.image?.src ?? media?.source ?? null;
+};
+
+const getFacebookErrorMessage = (payload: FacebookApiResponse, status: number): string => {
+  const apiError = payload.error;
+
+  if (!apiError) {
+    return `Facebook API request failed with status ${status}`;
+  }
+
+  if (apiError.code === 190) {
+    return "Token Facebook invalide ou expiré. Générez un token de page valide (permissions pages_read_engagement/pages_read_user_content), puis mettez à jour FACEBOOK_ACCESS_TOKEN.";
+  }
+
+  if (apiError.code === 10 || apiError.code === 200) {
+    return "Permissions Facebook insuffisantes. Vérifiez les droits du token (lecture de la page et des publications).";
+  }
+
+  return apiError.message;
 };
 
 async function syncFacebookPosts() {
@@ -63,8 +82,7 @@ async function syncFacebookPosts() {
     const payload = (await response.json()) as FacebookApiResponse;
 
     if (!response.ok || payload.error) {
-      const message =
-        payload.error?.message ?? `Facebook API request failed with status ${response.status}`;
+      const message = getFacebookErrorMessage(payload, response.status);
 
       return NextResponse.json({ error: message }, { status: 502 });
     }
