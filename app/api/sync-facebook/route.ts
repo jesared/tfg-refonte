@@ -25,6 +25,7 @@ type FacebookApiResponse = {
     message: string;
     type: string;
     code: number;
+    error_subcode?: number;
     fbtrace_id?: string;
   };
 };
@@ -35,7 +36,25 @@ const getImageUrl = (post: FacebookPostResponse): string | null => {
   return media?.image?.src ?? media?.source ?? null;
 };
 
-export async function GET() {
+const getFacebookErrorMessage = (payload: FacebookApiResponse, status: number): string => {
+  const apiError = payload.error;
+
+  if (!apiError) {
+    return `Facebook API request failed with status ${status}`;
+  }
+
+  if (apiError.code === 190) {
+    return "Token Facebook invalide ou expiré. Générez un token de page valide (permissions pages_read_engagement/pages_read_user_content), puis mettez à jour FACEBOOK_ACCESS_TOKEN.";
+  }
+
+  if (apiError.code === 10 || apiError.code === 200) {
+    return "Permissions Facebook insuffisantes. Vérifiez les droits du token (lecture de la page et des publications).";
+  }
+
+  return apiError.message;
+};
+
+async function syncFacebookPosts() {
   const accessToken = process.env.FACEBOOK_ACCESS_TOKEN;
   const pageId = process.env.FACEBOOK_PAGE_ID;
 
@@ -63,8 +82,7 @@ export async function GET() {
     const payload = (await response.json()) as FacebookApiResponse;
 
     if (!response.ok || payload.error) {
-      const message =
-        payload.error?.message ?? `Facebook API request failed with status ${response.status}`;
+      const message = getFacebookErrorMessage(payload, response.status);
 
       return NextResponse.json({ error: message }, { status: 502 });
     }
@@ -99,4 +117,12 @@ export async function GET() {
 
     return NextResponse.json({ error: "Failed to sync Facebook posts" }, { status: 500 });
   }
+}
+
+export async function GET() {
+  return syncFacebookPosts();
+}
+
+export async function POST() {
+  return syncFacebookPosts();
 }
