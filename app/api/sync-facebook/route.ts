@@ -10,9 +10,6 @@ type FacebookPostResponse = {
   attachments?: {
     data?: Array<{
       type?: string;
-      target?: {
-        id?: string;
-      };
       media?: {
         image?: {
           src?: string;
@@ -48,9 +45,8 @@ type FacebookApiResponse = {
 
 const normalize = (v?: string) => v?.trim() || null;
 
-const getText = (post: FacebookPostResponse): string | null => {
-  return normalize(post.message) ?? normalize(post.story);
-};
+const getText = (post: FacebookPostResponse): string | null =>
+  normalize(post.message) ?? normalize(post.story);
 
 const getImage = (post: FacebookPostResponse): string | null => {
   const first = post.attachments?.data?.[0];
@@ -64,13 +60,34 @@ const getImage = (post: FacebookPostResponse): string | null => {
   return null;
 };
 
-const hasRealContent = (post: FacebookPostResponse) => {
+const getType = (post: FacebookPostResponse): string => {
+  const type = post.attachments?.data?.[0]?.type;
+
+  if (type === "event") return "event";
+  if (type === "share") return "share";
+  if (type === "video") return "video";
+
+  return "post";
+};
+
+const isSystemStory = (post: FacebookPostResponse): boolean => {
+  const story = post.story?.toLowerCase() ?? "";
+
+  return (
+    story.includes("a actualisé son statut") ||
+    story.includes("a mis à jour") ||
+    story.includes("a changé") ||
+    story.includes("updated") ||
+    story.includes("profile picture")
+  );
+};
+
+const hasRealContent = (post: FacebookPostResponse): boolean => {
   return Boolean(getText(post) || getImage(post));
 };
 
-const getPermalink = (post: FacebookPostResponse) => {
-  return normalize(post.permalink_url) ?? `https://www.facebook.com/${post.id}`;
-};
+const getPermalink = (post: FacebookPostResponse) =>
+  normalize(post.permalink_url) ?? `https://www.facebook.com/${post.id}`;
 
 /* ----------------------------- */
 /* Sync */
@@ -86,10 +103,12 @@ async function syncFacebookPosts() {
 
   try {
     const fields =
-      "id,created_time,message,story,permalink_url,attachments{type,target,media,subattachments}";
+      "id,created_time,message,story,permalink_url,attachments{type,media,subattachments}";
 
     let nextUrl: string | null =
-      `https://graph.facebook.com/v25.0/${pageId}/feed?fields=${encodeURIComponent(fields)}&limit=100&access_token=${encodeURIComponent(token)}`;
+      `https://graph.facebook.com/v25.0/${pageId}/feed?fields=${encodeURIComponent(
+        fields,
+      )}&limit=50&access_token=${encodeURIComponent(token)}`;
 
     const allPosts: FacebookPostResponse[] = [];
 
@@ -108,24 +127,27 @@ async function syncFacebookPosts() {
       nextUrl = data.paging?.next ?? null;
     }
 
-    const filtered = allPosts.filter(hasRealContent);
+    // 🔥 FILTRE UX PROPRE
+    const filtered = allPosts.filter((post) => hasRealContent(post) && !isSystemStory(post));
 
     await Promise.all(
       filtered.map((post) =>
         prisma.facebookPost.upsert({
           where: { id: post.id },
           update: {
-            message: getText(post) ?? "Publication partagée",
+            message: getText(post) ?? "Publication",
             image: getImage(post),
             permalink: getPermalink(post),
+            type: getType(post),
             createdAt: new Date(post.created_time),
             syncedAt: new Date(),
           },
           create: {
             id: post.id,
-            message: getText(post) ?? "Publication partagée",
+            message: getText(post) ?? "Publication",
             image: getImage(post),
             permalink: getPermalink(post),
+            type: getType(post),
             createdAt: new Date(post.created_time),
           },
         }),
