@@ -5,8 +5,10 @@ import { prisma } from "@/lib/prisma";
 type FacebookPostResponse = {
   id: string;
   message?: string;
+  story?: string;
   created_time: string;
   permalink_url?: string;
+  full_picture?: string;
   attachments?: {
     data?: Array<{
       media?: {
@@ -46,12 +48,25 @@ const getImageUrl = (post: FacebookPostResponse): string | null => {
   const subAttachmentMedia = firstAttachment?.subattachments?.data?.[0]?.media;
 
   return (
+    post.full_picture ??
     media?.image?.src ??
     media?.source ??
     subAttachmentMedia?.image?.src ??
     subAttachmentMedia?.source ??
     null
   );
+};
+
+const getPermalink = (post: FacebookPostResponse): string => {
+  if (post.permalink_url?.trim()) {
+    return post.permalink_url;
+  }
+
+  return `https://www.facebook.com/${post.id}`;
+};
+
+const getDisplayMessage = (post: FacebookPostResponse): string | null => {
+  return post.message ?? post.story ?? null;
 };
 
 const getFacebookErrorMessage = (payload: FacebookApiResponse, status: number): string => {
@@ -87,7 +102,7 @@ async function syncFacebookPosts() {
     const url = new URL(`https://graph.facebook.com/v19.0/${pageId}/feed`);
     url.searchParams.set(
       "fields",
-      "id,message,created_time,permalink_url,attachments{media,subattachments{media}}",
+      "id,message,story,created_time,permalink_url,full_picture,attachments{media,subattachments{media}}",
     );
     url.searchParams.set("limit", "5");
     url.searchParams.set("access_token", accessToken);
@@ -112,17 +127,17 @@ async function syncFacebookPosts() {
         await prisma.facebookPost.upsert({
           where: { id: post.id },
           update: {
-            message: post.message ?? null,
+            message: getDisplayMessage(post),
             image: getImageUrl(post),
-            permalink: post.permalink_url ?? "",
+            permalink: getPermalink(post),
             createdAt: new Date(post.created_time),
             syncedAt: new Date(),
           },
           create: {
             id: post.id,
-            message: post.message ?? null,
+            message: getDisplayMessage(post),
             image: getImageUrl(post),
-            permalink: post.permalink_url ?? "",
+            permalink: getPermalink(post),
             createdAt: new Date(post.created_time),
           },
         });
