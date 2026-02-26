@@ -34,8 +34,8 @@ export function FacebookPostCard({ post }: FacebookPostCardProps) {
             <Image
               src="/default-actualite.svg"
               alt="Illustration par défaut"
-              width={80}
-              height={80}
+              width={320}
+              height={320}
               className="opacity-60"
             />
           </div>
