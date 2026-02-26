@@ -1,6 +1,17 @@
 "use client";
 
-import { Gift, Home, Mail, Scale, ShieldCheck, Table2, Trophy, User, X } from "lucide-react";
+import {
+  CalendarDays,
+  Gift,
+  Home,
+  Mail,
+  Scale,
+  ShieldCheck,
+  Table2,
+  Trophy,
+  User,
+  X,
+} from "lucide-react";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -20,6 +31,8 @@ const navigationItems = [
 
 const adminItems = [
   { href: "/admin", label: "Tableau de bord", icon: ShieldCheck },
+  { href: "/admin/tournois", label: "Validation tournois", icon: CalendarDays },
+  { href: "/admin/classements", label: "Publications classements", icon: Table2 },
   { href: "/admin/utilisateurs", label: "Utilisateurs", icon: User },
 ];
 
