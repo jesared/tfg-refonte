@@ -1,6 +1,5 @@
-import { NextResponse } from "next/server";
-
 import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
 
 type FacebookPostResponse = {
   id: string;
@@ -15,6 +14,15 @@ type FacebookPostResponse = {
           src?: string;
         };
         source?: string;
+      };
+      subattachments?: {
+        data?: Array<{
+          media?: {
+            image?: {
+              src?: string;
+            };
+          };
+        }>;
       };
     }>;
   };
@@ -34,11 +42,17 @@ type FacebookApiResponse = {
   };
 };
 
-const getImageUrl = (post: FacebookPostResponse): string | null => {
-  const firstAttachment = post.attachments?.data?.[0];
-  const media = firstAttachment?.media;
+/* ----------------------------- */
+/* Helpers */
+/* ----------------------------- */
 
-  return media?.image?.src ?? media?.source ?? null;
+const normalizeText = (value?: string): string | null => {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+};
+
+const getDisplayMessage = (post: FacebookPostResponse): string => {
+  return normalizeText(post.message) ?? normalizeText(post.story) ?? "Publication partagée";
 };
 
 const getPermalink = (post: FacebookPostResponse): string => {
@@ -49,14 +63,22 @@ const getPermalink = (post: FacebookPostResponse): string => {
   return `https://www.facebook.com/${post.id}`;
 };
 
-const normalizeText = (value?: string): string | null => {
-  const trimmed = value?.trim();
+const getImageUrl = (post: FacebookPostResponse): string | null => {
+  const first = post.attachments?.data?.[0];
+  if (!first) return null;
 
-  return trimmed ? trimmed : null;
-};
+  // Image classique
+  if (first.media?.image?.src) {
+    return first.media.image.src;
+  }
 
-const getDisplayMessage = (post: FacebookPostResponse): string => {
-  return normalizeText(post.message) ?? normalizeText(post.story) ?? "Publication partagée";
+  // Image via subattachments (partages, albums, etc.)
+  const sub = first.subattachments?.data?.[0];
+  if (sub?.media?.image?.src) {
+    return sub.media.image.src;
+  }
+
+  return null;
 };
 
 const getFacebookErrorMessage = (payload: FacebookApiResponse, status: number): string => {
@@ -67,15 +89,19 @@ const getFacebookErrorMessage = (payload: FacebookApiResponse, status: number): 
   }
 
   if (apiError.code === 190) {
-    return "Token Facebook invalide ou expiré. Générez un token de page valide (permissions pages_read_engagement/pages_read_user_content), puis mettez à jour FACEBOOK_ACCESS_TOKEN.";
+    return "Token Facebook invalide ou expiré. Générez un nouveau Page Access Token.";
   }
 
   if (apiError.code === 10 || apiError.code === 200) {
-    return "Permissions Facebook insuffisantes. Vérifiez les droits du token (lecture de la page et des publications).";
+    return "Permissions Facebook insuffisantes. Vérifiez les droits pages_read_engagement/pages_read_user_content.";
   }
 
   return apiError.message;
 };
+
+/* ----------------------------- */
+/* Sync Function */
+/* ----------------------------- */
 
 async function syncFacebookPosts() {
   const accessToken = process.env.FACEBOOK_ACCESS_TOKEN;
@@ -89,9 +115,13 @@ async function syncFacebookPosts() {
   }
 
   try {
-    const fields = "id,created_time,message,story,permalink_url,attachments{media}";
+    const fields = "id,created_time,message,story,permalink_url,attachments{media,subattachments}";
     const posts: FacebookPostResponse[] = [];
-    let nextUrl: string | null = `https://graph.facebook.com/v19.0/${pageId}/feed?fields=${encodeURIComponent(fields)}&limit=100&access_token=${encodeURIComponent(accessToken)}`;
+
+    let nextUrl: string | null =
+      `https://graph.facebook.com/v25.0/${pageId}/posts?fields=${encodeURIComponent(
+        fields,
+      )}&limit=100&access_token=${encodeURIComponent(accessToken)}`;
 
     while (nextUrl) {
       const response = await fetch(nextUrl, {
@@ -103,7 +133,6 @@ async function syncFacebookPosts() {
 
       if (!response.ok || payload.error) {
         const message = getFacebookErrorMessage(payload, response.status);
-
         return NextResponse.json({ error: message }, { status: 502 });
       }
 
@@ -140,6 +169,10 @@ async function syncFacebookPosts() {
     return NextResponse.json({ error: "Failed to sync Facebook posts" }, { status: 500 });
   }
 }
+
+/* ----------------------------- */
+/* Route Exports */
+/* ----------------------------- */
 
 export async function GET() {
   return syncFacebookPosts();
