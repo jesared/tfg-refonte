@@ -37,8 +37,6 @@ type FacebookApiResponse = {
     message: string;
     type: string;
     code: number;
-    error_subcode?: number;
-    fbtrace_id?: string;
   };
 };
 
@@ -51,8 +49,8 @@ const normalizeText = (value?: string): string | null => {
   return trimmed ? trimmed : null;
 };
 
-const getDisplayMessage = (post: FacebookPostResponse): string => {
-  return normalizeText(post.message) ?? normalizeText(post.story) ?? "Publication partagée";
+const getDisplayMessage = (post: FacebookPostResponse): string | null => {
+  return normalizeText(post.message) ?? normalizeText(post.story);
 };
 
 const getPermalink = (post: FacebookPostResponse): string => {
@@ -67,12 +65,10 @@ const getImageUrl = (post: FacebookPostResponse): string | null => {
   const first = post.attachments?.data?.[0];
   if (!first) return null;
 
-  // Image classique
   if (first.media?.image?.src) {
     return first.media.image.src;
   }
 
-  // Image via subattachments (partages, albums, etc.)
   const sub = first.subattachments?.data?.[0];
   if (sub?.media?.image?.src) {
     return sub.media.image.src;
@@ -81,22 +77,27 @@ const getImageUrl = (post: FacebookPostResponse): string | null => {
   return null;
 };
 
-const getFacebookErrorMessage = (payload: FacebookApiResponse, status: number): string => {
-  const apiError = payload.error;
+const hasRealContent = (post: FacebookPostResponse): boolean => {
+  const text = getDisplayMessage(post);
+  const image = getImageUrl(post);
 
-  if (!apiError) {
+  return Boolean(text || image);
+};
+
+const getFacebookErrorMessage = (payload: FacebookApiResponse, status: number): string => {
+  if (!payload.error) {
     return `Facebook API request failed with status ${status}`;
   }
 
-  if (apiError.code === 190) {
-    return "Token Facebook invalide ou expiré. Générez un nouveau Page Access Token.";
+  if (payload.error.code === 190) {
+    return "Token Facebook invalide ou expiré.";
   }
 
-  if (apiError.code === 10 || apiError.code === 200) {
-    return "Permissions Facebook insuffisantes. Vérifiez les droits pages_read_engagement/pages_read_user_content.";
+  if (payload.error.code === 10 || payload.error.code === 200) {
+    return "Permissions Facebook insuffisantes.";
   }
 
-  return apiError.message;
+  return payload.error.message;
 };
 
 /* ----------------------------- */
@@ -119,7 +120,7 @@ async function syncFacebookPosts() {
     const posts: FacebookPostResponse[] = [];
 
     let nextUrl: string | null =
-      `https://graph.facebook.com/v25.0/${pageId}/posts?fields=${encodeURIComponent(
+      `https://graph.facebook.com/v25.0/${pageId}/feed?fields=${encodeURIComponent(
         fields,
       )}&limit=100&access_token=${encodeURIComponent(accessToken)}`;
 
@@ -140,12 +141,15 @@ async function syncFacebookPosts() {
       nextUrl = payload.paging?.next ?? null;
     }
 
+    // 🔥 Filtrage intelligent ici
+    const filteredPosts = posts.filter(hasRealContent);
+
     await Promise.all(
-      posts.map(async (post) => {
+      filteredPosts.map(async (post) => {
         await prisma.facebookPost.upsert({
           where: { id: post.id },
           update: {
-            message: getDisplayMessage(post),
+            message: getDisplayMessage(post) ?? "Publication partagée",
             image: getImageUrl(post),
             permalink: getPermalink(post),
             createdAt: new Date(post.created_time),
@@ -153,7 +157,7 @@ async function syncFacebookPosts() {
           },
           create: {
             id: post.id,
-            message: getDisplayMessage(post),
+            message: getDisplayMessage(post) ?? "Publication partagée",
             image: getImageUrl(post),
             permalink: getPermalink(post),
             createdAt: new Date(post.created_time),
@@ -162,7 +166,11 @@ async function syncFacebookPosts() {
       }),
     );
 
-    return NextResponse.json({ success: true, count: posts.length });
+    return NextResponse.json({
+      success: true,
+      totalFetched: posts.length,
+      totalSaved: filteredPosts.length,
+    });
   } catch (error) {
     console.error("Error syncing Facebook posts:", error);
 
