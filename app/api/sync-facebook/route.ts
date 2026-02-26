@@ -37,22 +37,7 @@ type FacebookApiResponse = {
     message: string;
     type: string;
     code: number;
-    error_subcode?: number;
   };
-};
-
-type FacebookPageTokenResponse = {
-  data?: Array<{
-    id: string;
-    access_token?: string;
-  }>;
-  error?: FacebookApiResponse["error"];
-};
-
-type FacebookTokenExchangeResponse = {
-  access_token?: string;
-  token_type?: string;
-  error?: FacebookApiResponse["error"];
 };
 
 /* ----------------------------- */
@@ -105,17 +90,7 @@ const getFacebookErrorMessage = (payload: FacebookApiResponse, status: number): 
   }
 
   if (payload.error.code === 190) {
-    const subcode = payload.error.error_subcode;
-
-    if (subcode === 463) {
-      return "Token Facebook refusé (subcode 463). Il peut être expiré, révoqué, ou différent de celui réellement chargé en environnement. Vérifiez le token actif sur le serveur, puis régénérez le token user longue durée et le token page si nécessaire.";
-    }
-
-    if (subcode === 467) {
-      return "Token Facebook invalide car déconnecté (subcode 467). Reconnectez le compte Facebook puis régénérez les tokens.";
-    }
-
-    return `Token Facebook invalide ou expiré (subcode ${subcode ?? "inconnu"}). Vérifiez le token réellement chargé en environnement et ses permissions.`;
+    return "Token Facebook invalide ou expiré.";
   }
 
   if (payload.error.code === 10 || payload.error.code === 200) {
@@ -125,60 +100,17 @@ const getFacebookErrorMessage = (payload: FacebookApiResponse, status: number): 
   return payload.error.message;
 };
 
-const exchangeForLongLivedUserToken = async (
-  userToken: string,
-  appId: string,
-  appSecret: string,
-): Promise<string | null> => {
-  const url = new URL("https://graph.facebook.com/v25.0/oauth/access_token");
-  url.searchParams.set("grant_type", "fb_exchange_token");
-  url.searchParams.set("client_id", appId);
-  url.searchParams.set("client_secret", appSecret);
-  url.searchParams.set("fb_exchange_token", userToken);
-
-  const response = await fetch(url.toString(), { method: "GET", cache: "no-store" });
-  const payload = (await response.json()) as FacebookTokenExchangeResponse;
-
-  if (!response.ok || payload.error || !payload.access_token) {
-    return null;
-  }
-
-  return payload.access_token;
-};
-
-const getPageAccessToken = async (userToken: string, pageId: string): Promise<string | null> => {
-  const url = new URL("https://graph.facebook.com/v25.0/me/accounts");
-  url.searchParams.set("fields", "id,access_token");
-  url.searchParams.set("access_token", userToken);
-
-  const response = await fetch(url.toString(), { method: "GET", cache: "no-store" });
-  const payload = (await response.json()) as FacebookPageTokenResponse;
-
-  if (!response.ok || payload.error || !payload.data?.length) {
-    return null;
-  }
-
-  const page = payload.data.find((entry) => entry.id === pageId);
-  return page?.access_token ?? null;
-};
-
 /* ----------------------------- */
 /* Sync Function */
 /* ----------------------------- */
 
 async function syncFacebookPosts() {
-  const accessToken = process.env.FACEBOOK_PAGE_ACCESS_TOKEN ?? process.env.FACEBOOK_ACCESS_TOKEN;
-  const fallbackUserToken = process.env.FACEBOOK_ACCESS_TOKEN;
+  const accessToken = process.env.FACEBOOK_ACCESS_TOKEN;
   const pageId = process.env.FACEBOOK_PAGE_ID;
-  const appId = process.env.FACEBOOK_APP_ID;
-  const appSecret = process.env.FACEBOOK_APP_SECRET;
 
   if (!accessToken || !pageId) {
     return NextResponse.json(
-      {
-        error:
-          "Missing FACEBOOK_PAGE_ACCESS_TOKEN (or FACEBOOK_ACCESS_TOKEN) or FACEBOOK_PAGE_ID",
-      },
+      { error: "Missing FACEBOOK_ACCESS_TOKEN or FACEBOOK_PAGE_ID" },
       { status: 500 },
     );
   }
@@ -186,15 +118,11 @@ async function syncFacebookPosts() {
   try {
     const fields = "id,created_time,message,story,permalink_url,attachments{media,subattachments}";
     const posts: FacebookPostResponse[] = [];
-    let tokenToUse = accessToken;
-    let retryWithRefreshedToken = true;
 
-    const buildFeedUrl = (token: string): string =>
+    let nextUrl: string | null =
       `https://graph.facebook.com/v25.0/${pageId}/feed?fields=${encodeURIComponent(
         fields,
-      )}&limit=100&access_token=${encodeURIComponent(token)}`;
-
-    let nextUrl: string | null = buildFeedUrl(tokenToUse);
+      )}&limit=100&access_token=${encodeURIComponent(accessToken)}`;
 
     while (nextUrl) {
       const response = await fetch(nextUrl, {
@@ -205,32 +133,6 @@ async function syncFacebookPosts() {
       const payload = (await response.json()) as FacebookApiResponse;
 
       if (!response.ok || payload.error) {
-        const canRefreshToken =
-          payload.error?.code === 190 &&
-          retryWithRefreshedToken &&
-          Boolean(fallbackUserToken && appId && appSecret);
-
-        if (canRefreshToken && fallbackUserToken && appId && appSecret) {
-          retryWithRefreshedToken = false;
-
-          const longLivedToken = await exchangeForLongLivedUserToken(
-            fallbackUserToken,
-            appId,
-            appSecret,
-          );
-
-          if (longLivedToken) {
-            const refreshedPageToken = await getPageAccessToken(longLivedToken, pageId);
-
-            if (refreshedPageToken) {
-              tokenToUse = refreshedPageToken;
-              posts.length = 0;
-              nextUrl = buildFeedUrl(tokenToUse);
-              continue;
-            }
-          }
-        }
-
         const message = getFacebookErrorMessage(payload, response.status);
         return NextResponse.json({ error: message }, { status: 502 });
       }
