@@ -105,11 +105,17 @@ const getFacebookErrorMessage = (payload: FacebookApiResponse, status: number): 
   }
 
   if (payload.error.code === 190) {
-    if (payload.error.error_subcode === 463) {
-      return "Token Facebook expiré. Générez un nouveau token longue durée puis relancez la synchronisation.";
+    const subcode = payload.error.error_subcode;
+
+    if (subcode === 463) {
+      return "Token Facebook refusé (subcode 463). Il peut être expiré, révoqué, ou différent de celui réellement chargé en environnement. Vérifiez le token actif sur le serveur, puis régénérez le token user longue durée et le token page si nécessaire.";
     }
 
-    return "Token Facebook invalide ou expiré.";
+    if (subcode === 467) {
+      return "Token Facebook invalide car déconnecté (subcode 467). Reconnectez le compte Facebook puis régénérez les tokens.";
+    }
+
+    return `Token Facebook invalide ou expiré (subcode ${subcode ?? "inconnu"}). Vérifiez le token réellement chargé en environnement et ses permissions.`;
   }
 
   if (payload.error.code === 10 || payload.error.code === 200) {
