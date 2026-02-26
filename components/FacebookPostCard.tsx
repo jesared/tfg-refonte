@@ -1,4 +1,5 @@
 import type { FacebookPost } from "@prisma/client";
+import Image from "next/image";
 
 type FacebookPostCardProps = {
   post: FacebookPost;
@@ -11,18 +12,24 @@ export function FacebookPostCard({ post }: FacebookPostCardProps) {
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-background shadow-sm">
       {imageSrc ? (
-        <img
-          src={imageSrc}
-          alt="Illustration de la publication Facebook"
-          className="h-52 w-full object-cover"
-          loading="lazy"
-        />
+        <div className="relative h-52 w-full">
+          <Image
+            src={imageSrc}
+            alt="Illustration de la publication Facebook"
+            fill
+            className="object-cover"
+            loading="lazy"
+            unoptimized
+          />
+        </div>
       ) : (
         <div className="flex h-52 w-full items-center justify-center bg-muted/50">
-          <img
+          <Image
             src="/default-actualite.svg"
             alt="Illustration par défaut"
-            className="h-20 w-20 opacity-70"
+            width={160}
+            height={160}
+            className="h-36 w-36 opacity-80 sm:h-40 sm:w-40"
             loading="lazy"
           />
         </div>
