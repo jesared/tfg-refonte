@@ -153,7 +153,16 @@ async function syncFacebookPosts() {
         }),
       ),
     );
+    // 🧹 SUPPRESSION MIRROIR
+    const facebookIds = filtered.map((post) => post.id);
 
+    await prisma.facebookPost.deleteMany({
+      where: {
+        id: {
+          notIn: facebookIds,
+        },
+      },
+    });
     return NextResponse.json({
       success: true,
       fetched: allPosts.length,
