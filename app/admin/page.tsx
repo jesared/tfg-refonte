@@ -1,5 +1,9 @@
 import { CalendarDays, Check, ShieldCheck, Trophy } from "lucide-react";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
 export const metadata: Metadata = {
   title: "Admin - Tableau de bord",
@@ -27,7 +31,13 @@ const stats = [
   },
 ];
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user || session.user.role !== "ADMIN") {
+    redirect("/");
+  }
+
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-8">
       <header className="rounded-2xl border border-border bg-card px-6 py-7 shadow-sm">
