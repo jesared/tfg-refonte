@@ -15,6 +15,16 @@ type FacebookPostResponse = {
         };
         source?: string;
       };
+      subattachments?: {
+        data?: Array<{
+          media?: {
+            image?: {
+              src?: string;
+            };
+            source?: string;
+          };
+        }>;
+      };
     }>;
   };
 };
@@ -31,9 +41,17 @@ type FacebookApiResponse = {
 };
 
 const getImageUrl = (post: FacebookPostResponse): string | null => {
-  const media = post.attachments?.data?.[0]?.media;
+  const firstAttachment = post.attachments?.data?.[0];
+  const media = firstAttachment?.media;
+  const subAttachmentMedia = firstAttachment?.subattachments?.data?.[0]?.media;
 
-  return media?.image?.src ?? media?.source ?? null;
+  return (
+    media?.image?.src ??
+    media?.source ??
+    subAttachmentMedia?.image?.src ??
+    subAttachmentMedia?.source ??
+    null
+  );
 };
 
 const getFacebookErrorMessage = (payload: FacebookApiResponse, status: number): string => {
@@ -66,10 +84,10 @@ async function syncFacebookPosts() {
   }
 
   try {
-    const url = new URL(`https://graph.facebook.com/v19.0/${pageId}/posts`);
+    const url = new URL(`https://graph.facebook.com/v19.0/${pageId}/feed`);
     url.searchParams.set(
       "fields",
-      "id,message,created_time,permalink_url,attachments{media}",
+      "id,message,created_time,permalink_url,attachments{media,subattachments{media}}",
     );
     url.searchParams.set("limit", "5");
     url.searchParams.set("access_token", accessToken);

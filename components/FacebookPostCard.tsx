@@ -5,7 +5,7 @@ type FacebookPostCardProps = {
 };
 
 export function FacebookPostCard({ post }: FacebookPostCardProps) {
-  const imageSrc = post.image?.trim() || "/logo.png";
+  const imageSrc = post.image?.trim() || "/default-actualite.svg";
 
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-background shadow-sm">
