@@ -7,42 +7,58 @@ type FacebookPostCardProps = {
 
 export function FacebookPostCard({ post }: FacebookPostCardProps) {
   const imageSrc = post.image?.trim() || null;
-  const displayText = post.message?.trim() || "Publication partagée";
+
+  const displayText =
+    post.message?.trim() ||
+    (post.type === "share" && "Publication partagée") ||
+    (post.type === "event" && "Nouvel événement publié") ||
+    "Publication";
+
+  const badgeLabel = post.type === "event" ? "Événement" : post.type === "share" ? "Partage" : null;
 
   return (
-    <article className="flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-background shadow-sm">
-      {imageSrc ? (
-        <div className="relative h-52 w-full">
+    <article className="flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-background shadow-sm transition hover:shadow-md">
+      {/* IMAGE */}
+      <div className="relative h-52 w-full">
+        {imageSrc ? (
           <Image
             src={imageSrc}
-            alt="Illustration de la publication Facebook"
+            alt="Illustration Facebook"
             fill
             className="object-cover"
-            loading="lazy"
-            unoptimized
+            sizes="(max-width: 768px) 100vw, 33vw"
+            priority={false}
           />
-        </div>
-      ) : (
-        <div className="flex h-52 w-full items-center justify-center bg-muted/50">
-          <Image
-            src="/default-actualite.svg"
-            alt="Illustration par défaut"
-            width={160}
-            height={160}
-            className="h-36 w-36 opacity-80 sm:h-40 sm:w-40"
-            loading="lazy"
-          />
-        </div>
-      )}
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-muted/50">
+            <Image
+              src="/default-actualite.svg"
+              alt="Illustration par défaut"
+              width={80}
+              height={80}
+              className="opacity-60"
+            />
+          </div>
+        )}
+      </div>
 
+      {/* CONTENT */}
       <div className="flex flex-1 flex-col gap-4 p-5">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-          {new Date(post.createdAt).toLocaleDateString("fr-FR", {
-            day: "2-digit",
-            month: "long",
-            year: "numeric",
-          })}
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            {new Date(post.createdAt).toLocaleDateString("fr-FR", {
+              day: "2-digit",
+              month: "long",
+              year: "numeric",
+            })}
+          </p>
+
+          {badgeLabel && (
+            <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+              {badgeLabel}
+            </span>
+          )}
+        </div>
 
         <p className="line-clamp-6 text-sm leading-6 text-foreground/90">{displayText}</p>
 
@@ -50,7 +66,7 @@ export function FacebookPostCard({ post }: FacebookPostCardProps) {
           href={post.permalink}
           target="_blank"
           rel="noreferrer"
-          className="mt-auto inline-flex w-fit rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+          className="mt-auto inline-flex w-fit rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90"
         >
           Voir la publication
         </a>
