@@ -36,16 +36,16 @@ async function updateTableaux(formData: FormData) {
     (tableau) => Number.isFinite(tableau.id) && tableau.title && tableau.points && tableau.start,
   );
 
-  const { usedTemporaryStorage } = await saveTableaux(tableaux);
+  const { usedTemporaryStorage, databaseAvailable } = await saveTableaux(tableaux);
   revalidatePath("/tableaux");
   revalidatePath("/admin/tableaux");
-  redirect(`/admin/tableaux?updated=1${usedTemporaryStorage ? "&storage=tmp" : ""}`);
+  redirect(`/admin/tableaux?updated=1${usedTemporaryStorage ? "&storage=tmp" : ""}${databaseAvailable ? "" : "&db=0"}`);
 }
 
 export default async function AdminTableauxPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ updated?: string; storage?: string }>;
+  searchParams?: Promise<{ updated?: string; storage?: string; db?: string }>;
 }) {
   const session = await getServerSession(authOptions);
 
@@ -57,6 +57,7 @@ export default async function AdminTableauxPage({
   const params = await searchParams;
   const isUpdated = params?.updated === "1";
   const usedTemporaryStorage = params?.storage === "tmp";
+  const databaseAvailable = params?.db !== "0";
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-5">
@@ -78,6 +79,19 @@ export default async function AdminTableauxPage({
         </p>
       )}
 
+
+      {isUpdated && !databaseAvailable && (
+        <p className="rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-200">
+          ⚠️ Les tableaux n&apos;ont pas pu être enregistrés en BDD (table introuvable, mapping incompatible, ou connexion indisponible).
+          Vérifiez la configuration de la base (ex: <code className="mx-1 rounded bg-background px-1 py-0.5 text-xs">DATABASE_URL</code>,
+          <code className="mx-1 rounded bg-background px-1 py-0.5 text-xs">TABLEAUX_DB_SCHEMA</code>,
+          <code className="mx-1 rounded bg-background px-1 py-0.5 text-xs">TABLEAUX_DB_TABLE</code>,
+          <code className="mx-1 rounded bg-background px-1 py-0.5 text-xs">TABLEAUX_DB_COL_ID</code>,
+          <code className="mx-1 rounded bg-background px-1 py-0.5 text-xs">TABLEAUX_DB_COL_TITLE</code>,
+          <code className="mx-1 rounded bg-background px-1 py-0.5 text-xs">TABLEAUX_DB_COL_POINTS</code>,
+          <code className="mx-1 rounded bg-background px-1 py-0.5 text-xs">TABLEAUX_DB_COL_START</code>).
+        </p>
+      )}
 
       {isUpdated && usedTemporaryStorage && (
         <p className="rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-200">
