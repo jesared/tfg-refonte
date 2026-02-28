@@ -1,5 +1,6 @@
-import { promises as fs } from "node:fs";
-import path from "node:path";
+import { unstable_noStore as noStore } from "next/cache";
+
+import { prisma } from "@/lib/prisma";
 
 export type Tableau = {
   id: number;
@@ -7,8 +8,6 @@ export type Tableau = {
   points: string;
   start: string;
 };
-
-const TABLEAUX_FILE_PATH = path.join(process.cwd(), "data", "tableaux.json");
 
 const defaultTableaux: Tableau[] = [
   { id: 1, title: "Tableau 1", points: "2000 à 1600 pts", start: "08h30" },
@@ -54,10 +53,27 @@ const sanitizeTableaux = (data: unknown): Tableau[] => {
   return tableaux.sort((a, b) => a.id - b.id);
 };
 
+async function ensureDefaultTableaux(): Promise<void> {
+  const count = await prisma.tableau.count();
+  if (count > 0) {
+    return;
+  }
+
+  await prisma.tableau.createMany({
+    data: defaultTableaux,
+  });
+}
+
 export async function getTableaux(): Promise<Tableau[]> {
+  noStore();
+
   try {
-    const raw = await fs.readFile(TABLEAUX_FILE_PATH, "utf-8");
-    return sanitizeTableaux(JSON.parse(raw));
+    await ensureDefaultTableaux();
+    const tableaux = await prisma.tableau.findMany({
+      orderBy: { id: "asc" },
+    });
+
+    return sanitizeTableaux(tableaux);
   } catch {
     return defaultTableaux;
   }
@@ -65,5 +81,11 @@ export async function getTableaux(): Promise<Tableau[]> {
 
 export async function saveTableaux(tableaux: Tableau[]): Promise<void> {
   const cleaned = sanitizeTableaux(tableaux);
-  await fs.writeFile(TABLEAUX_FILE_PATH, `${JSON.stringify(cleaned, null, 2)}\n`, "utf-8");
+
+  await prisma.$transaction([
+    prisma.tableau.deleteMany(),
+    prisma.tableau.createMany({
+      data: cleaned,
+    }),
+  ]);
 }

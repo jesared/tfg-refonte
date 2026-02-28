@@ -57,7 +57,15 @@ model FacebookPost {
   message   String?
   image     String?
   permalink String
-  type      String? 
+  type      String?
   createdAt DateTime
   syncedAt  DateTime @default(now())
+}
+
+model Tableau {
+  id        Int      @id
+  title     String
+  points    String
+  start     String
+  updatedAt DateTime @updatedAt
 }
