@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { noStore } from "next/cache";
+import { unstable_noStore as noStore } from "next/cache";
 
 export type AgendaTour = {
   id: number;
