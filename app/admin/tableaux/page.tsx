@@ -1,15 +1,16 @@
-import { Check, Table2 } from "lucide-react";
+import { Check, Table2, X } from "lucide-react";
 import type { Metadata } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 
+import { TableauxEditor } from "@/components/admin/tableaux-editor";
 import { getTableaux, saveTableaux } from "@/lib/tableaux";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
 export const metadata: Metadata = {
   title: "Admin - Tableaux",
-  description: "Modification des tableaux affichés sur le site public.",
+  description: "Gestion des tableaux côté administration.",
 };
 
 async function updateTableaux(formData: FormData) {
@@ -27,19 +28,23 @@ async function updateTableaux(formData: FormData) {
 
   const length = Math.min(ids.length, titles.length, points.length, starts.length);
 
-  const tableaux = Array.from({ length }, (_, index) => ({
+  const tableauxPayload = Array.from({ length }, (_, index) => ({
     id: Number(ids[index]),
     title: String(titles[index] ?? "").trim(),
     points: String(points[index] ?? "").trim(),
     start: String(starts[index] ?? "").trim(),
-  })).filter(
-    (tableau) => Number.isFinite(tableau.id) && tableau.title && tableau.points && tableau.start,
-  );
+  })).filter((item) => Number.isFinite(item.id) && item.id > 0 && item.title && item.points && item.start);
 
-  const { usedTemporaryStorage, databaseAvailable } = await saveTableaux(tableaux);
+  const result = await saveTableaux(tableauxPayload);
+
   revalidatePath("/tableaux");
   revalidatePath("/admin/tableaux");
-  redirect(`/admin/tableaux?updated=1${usedTemporaryStorage ? "&storage=tmp" : ""}${databaseAvailable ? "" : "&db=0"}`);
+
+  redirect(
+    `/admin/tableaux?updated=1${result.storage === "tmp" ? "&storage=tmp" : ""}${
+      result.databaseAvailable ? "" : "&db=0"
+    }`,
+  );
 }
 
 export default async function AdminTableauxPage({
@@ -53,100 +58,57 @@ export default async function AdminTableauxPage({
     redirect("/");
   }
 
-  const tableaux = await getTableaux();
+  const tableauxData = await getTableaux();
   const params = await searchParams;
+
   const isUpdated = params?.updated === "1";
   const usedTemporaryStorage = params?.storage === "tmp";
   const databaseAvailable = params?.db !== "0";
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-col gap-5">
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-5">
       <header className="rounded-2xl border border-border/70 bg-card/80 px-5 py-6 shadow-sm">
         <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
           <Table2 className="h-4 w-4" aria-hidden="true" />
           Administration
         </div>
-        <h1 className="mt-3 text-2xl font-semibold text-foreground">Modifier les tableaux</h1>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          Les modifications sont appliquées immédiatement sur la page publique
-          <span className="font-medium text-foreground"> /tableaux</span>.
+        <h1 className="mt-3 text-2xl font-semibold text-foreground">Gestion des tableaux</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Tu peux <span className="font-medium text-foreground">ajouter</span>, <span className="font-medium text-foreground">modifier</span> et
+          <span className="font-medium text-foreground"> supprimer</span> des tableaux puis enregistrer.
         </p>
       </header>
 
       {isUpdated && (
-        <p className="rounded-xl border border-emerald-300/60 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 dark:border-emerald-400/40 dark:bg-emerald-500/10 dark:text-emerald-200">
-          ✅ Tableaux mis à jour.
+        <p className="inline-flex items-center gap-2 rounded-xl border border-emerald-300/60 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 dark:border-emerald-400/40 dark:bg-emerald-500/10 dark:text-emerald-200">
+          <Check className="h-4 w-4" aria-hidden="true" />
+          Tableaux mis à jour.
         </p>
       )}
 
-
       {isUpdated && !databaseAvailable && (
-        <p className="rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-200">
-          ⚠️ Les tableaux n&apos;ont pas pu être enregistrés en BDD (table introuvable, mapping incompatible, ou connexion indisponible).
-          Vérifiez la configuration de la base (ex: <code className="mx-1 rounded bg-background px-1 py-0.5 text-xs">DATABASE_URL</code>,
-          <code className="mx-1 rounded bg-background px-1 py-0.5 text-xs">TABLEAUX_DB_SCHEMA</code>,
-          <code className="mx-1 rounded bg-background px-1 py-0.5 text-xs">TABLEAUX_DB_TABLE</code>,
-          <code className="mx-1 rounded bg-background px-1 py-0.5 text-xs">TABLEAUX_DB_COL_ID</code>,
-          <code className="mx-1 rounded bg-background px-1 py-0.5 text-xs">TABLEAUX_DB_COL_TITLE</code>,
-          <code className="mx-1 rounded bg-background px-1 py-0.5 text-xs">TABLEAUX_DB_COL_POINTS</code>,
-          <code className="mx-1 rounded bg-background px-1 py-0.5 text-xs">TABLEAUX_DB_COL_START</code>).
+        <p className="inline-flex items-center gap-2 rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-200">
+          <X className="h-4 w-4" aria-hidden="true" />
+          La BDD n&apos;est pas joignable : sauvegarde effectuée sur fichier.
         </p>
       )}
 
       {isUpdated && usedTemporaryStorage && (
-        <p className="rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-200">
-          ⚠️ Environnement en lecture seule détecté : les tableaux sont enregistrés temporairement.
-          Configurez <code className="mx-1 rounded bg-background px-1 py-0.5 text-xs">TABLEAUX_FILE_PATH</code>
-          vers un stockage persistant pour conserver les modifications.
+        <p className="inline-flex items-center gap-2 rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-200">
+          <X className="h-4 w-4" aria-hidden="true" />
+          Stockage temporaire utilisé (lecture seule détectée).
         </p>
       )}
 
       <form action={updateTableaux} className="space-y-4">
-        <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-          <div className="grid grid-cols-[72px_1fr_1fr_120px] gap-px bg-border/70 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            <p className="bg-muted/40 px-3 py-2.5">#</p>
-            <p className="bg-muted/40 px-3 py-2.5">Nom</p>
-            <p className="bg-muted/40 px-3 py-2.5">Plage de points</p>
-            <p className="bg-muted/40 px-3 py-2.5">Début</p>
-          </div>
-
-          <div className="divide-y divide-border/70">
-            {tableaux.map((tableau) => (
-              <div key={tableau.id} className="grid grid-cols-1 gap-3 px-3 py-3 sm:grid-cols-[72px_1fr_1fr_120px] sm:items-center">
-                <input type="hidden" name="id" value={tableau.id} />
-                <p className="text-sm font-semibold text-foreground">#{tableau.id}</p>
-                <input
-                  required
-                  name="title"
-                  defaultValue={tableau.title}
-                  aria-label={`Nom du tableau ${tableau.id}`}
-                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
-                />
-                <input
-                  required
-                  name="points"
-                  defaultValue={tableau.points}
-                  aria-label={`Plage de points du tableau ${tableau.id}`}
-                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
-                />
-                <input
-                  required
-                  name="start"
-                  defaultValue={tableau.start}
-                  aria-label={`Heure de début du tableau ${tableau.id}`}
-                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
-                />
-              </div>
-            ))}
-          </div>
-        </section>
+        <TableauxEditor initialTableaux={tableauxData} />
 
         <button
           type="submit"
           className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
         >
           <Check className="h-4 w-4" aria-hidden="true" />
-          Enregistrer les modifications
+          Enregistrer
         </button>
       </form>
     </main>
