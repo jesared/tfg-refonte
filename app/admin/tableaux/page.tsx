@@ -36,16 +36,16 @@ async function updateTableaux(formData: FormData) {
     (tableau) => Number.isFinite(tableau.id) && tableau.title && tableau.points && tableau.start,
   );
 
-  await saveTableaux(tableaux);
+  const { usedTemporaryStorage } = await saveTableaux(tableaux);
   revalidatePath("/tableaux");
   revalidatePath("/admin/tableaux");
-  redirect("/admin/tableaux?updated=1");
+  redirect(`/admin/tableaux?updated=1${usedTemporaryStorage ? "&storage=tmp" : ""}`);
 }
 
 export default async function AdminTableauxPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ updated?: string }>;
+  searchParams?: Promise<{ updated?: string; storage?: string }>;
 }) {
   const session = await getServerSession(authOptions);
 
@@ -56,6 +56,7 @@ export default async function AdminTableauxPage({
   const tableaux = await getTableaux();
   const params = await searchParams;
   const isUpdated = params?.updated === "1";
+  const usedTemporaryStorage = params?.storage === "tmp";
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-6">
@@ -74,6 +75,15 @@ export default async function AdminTableauxPage({
       {isUpdated && (
         <p className="rounded-xl border border-emerald-300/60 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 dark:border-emerald-400/40 dark:bg-emerald-500/10 dark:text-emerald-200">
           ✅ Tableaux mis à jour.
+        </p>
+      )}
+
+
+      {isUpdated && usedTemporaryStorage && (
+        <p className="rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-200">
+          ⚠️ Environnement en lecture seule détecté : les tableaux sont enregistrés temporairement.
+          Configurez <code className="mx-1 rounded bg-background px-1 py-0.5 text-xs">TABLEAUX_FILE_PATH</code>
+          vers un stockage persistant pour conserver les modifications.
         </p>
       )}
 
