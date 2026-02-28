@@ -276,6 +276,23 @@ const saveTableauxToDatabase = async (tableaux: Tableau[]): Promise<boolean> => 
 
   try {
     await prisma.$transaction(async (tx) => {
+      const existingRows = await tx.$queryRawUnsafe<Array<{ id: unknown }>>(
+        `SELECT ${quoteIdentifier(mapping.id)} AS id FROM ${tableRef}`,
+      );
+      const incomingIds = new Set(cleaned.map((tableau) => tableau.id));
+
+      for (const row of existingRows) {
+        const rowId = Number(row.id);
+        if (!Number.isFinite(rowId) || incomingIds.has(rowId)) {
+          continue;
+        }
+
+        await tx.$executeRawUnsafe(
+          `DELETE FROM ${tableRef} WHERE ${quoteIdentifier(mapping.id)} = $1`,
+          rowId,
+        );
+      }
+
       for (const tableau of cleaned) {
         const updated = await tx.$executeRawUnsafe(
           `UPDATE ${tableRef}
