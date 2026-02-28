@@ -127,6 +127,34 @@ async function fetchFacebookFeed(params: {
   return { allPosts };
 }
 
+async function fetchFacebookFeedWithFallbackTokens(params: {
+  pageId: string;
+  fields: string;
+  accessTokens: string[];
+}): Promise<{ allPosts: FacebookPostResponse[]; error?: FacebookGraphError }> {
+  let lastError: FacebookGraphError | undefined;
+
+  for (const token of params.accessTokens) {
+    const result = await fetchFacebookFeed({
+      pageId: params.pageId,
+      token,
+      fields: params.fields,
+    });
+
+    if (!result.error) {
+      return { allPosts: result.allPosts };
+    }
+
+    lastError = result.error;
+
+    if (!isTokenInvalidError(result.error)) {
+      break;
+    }
+  }
+
+  return { allPosts: [], error: lastError };
+}
+
 /* ----------------------------- */
 /* Sync */
 /* ----------------------------- */
@@ -148,24 +176,11 @@ async function syncFacebookPosts() {
     const fields =
       "id,is_published,created_time,message,story,permalink_url,attachments{type,media,subattachments}";
 
-    let allPosts: FacebookPostResponse[] = [];
-    let lastError: FacebookGraphError | undefined;
-
-    for (const token of accessTokens) {
-      const result = await fetchFacebookFeed({ pageId, token, fields });
-
-      if (!result.error) {
-        allPosts = result.allPosts;
-        lastError = undefined;
-        break;
-      }
-
-      lastError = result.error;
-
-      if (!isTokenInvalidError(result.error)) {
-        break;
-      }
-    }
+    const { allPosts, error: lastError } = await fetchFacebookFeedWithFallbackTokens({
+      pageId,
+      fields,
+      accessTokens,
+    });
 
     if (lastError) {
       return NextResponse.json(
