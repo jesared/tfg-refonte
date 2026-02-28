@@ -1,10 +1,13 @@
 "use client";
 
 import {
+  BarChart3,
   CalendarDays,
+  ClipboardList,
   Gift,
   Home,
   Mail,
+  Newspaper,
   Scale,
   ShieldCheck,
   Table2,
@@ -22,9 +25,9 @@ import LoginButton from "./LoginButton";
 
 const navigationItems = [
   { href: "/", label: "Accueil", icon: Home },
-  { href: "/actualites", label: "Actualités", icon: Table2 },
+  { href: "/actualites", label: "Actualités", icon: Newspaper },
   { href: "/trophee", label: "Le Trophée", icon: Trophy },
-  { href: "/tableaux", label: "Tableaux & Règlement", icon: Table2 },
+  { href: "/tableaux", label: "Tableaux & Règlement", icon: ClipboardList },
   { href: "/classements", label: "Classements", icon: Scale },
   { href: "/recompenses", label: "Récompenses", icon: Gift },
   { href: "/contact", label: "Contact", icon: Mail },
@@ -33,7 +36,7 @@ const navigationItems = [
 const adminItems = [
   { href: "/admin", label: "Tableau de bord", icon: ShieldCheck },
   { href: "/admin/tournois", label: "Validation tournois", icon: CalendarDays },
-  { href: "/admin/classements", label: "Publications classements", icon: Table2 },
+  { href: "/admin/classements", label: "Publications classements", icon: BarChart3 },
   { href: "/admin/tableaux", label: "Modifier tableaux", icon: Table2 },
   { href: "/admin/utilisateurs", label: "Utilisateurs", icon: User },
 ];
