@@ -2,11 +2,14 @@
 
 import {
   CalendarDays,
+  Check,
+  File,
   Gift,
   Home,
   Mail,
   Scale,
   ShieldCheck,
+  Swords,
   Table2,
   Trophy,
   User,
@@ -22,7 +25,7 @@ import LoginButton from "./LoginButton";
 
 const navigationItems = [
   { href: "/", label: "Accueil", icon: Home },
-  { href: "/actualites", label: "Actualités", icon: Table2 },
+  { href: "/actualites", label: "Actualités", icon: File },
   { href: "/trophee", label: "Le Trophée", icon: Trophy },
   { href: "/tableaux", label: "Tableaux & Règlement", icon: Table2 },
   { href: "/classements", label: "Classements", icon: Scale },
@@ -33,8 +36,8 @@ const navigationItems = [
 const adminItems = [
   { href: "/admin", label: "Tableau de bord", icon: ShieldCheck },
   { href: "/admin/tournois", label: "Validation tournois", icon: CalendarDays },
-  { href: "/admin/classements", label: "Publications classements", icon: Table2 },
-  { href: "/admin/tableaux", label: "Modifier tableaux", icon: Table2 },
+  { href: "/admin/classements", label: "Publications classements", icon: Check },
+  { href: "/admin/tableaux", label: "Modifier tableaux", icon: Swords },
   { href: "/admin/utilisateurs", label: "Utilisateurs", icon: User },
 ];
 
