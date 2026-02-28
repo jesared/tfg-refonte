@@ -1,5 +1,6 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { unstable_noStore as noStore } from "next/cache";
 
 export type Tableau = {
   id: number;
@@ -55,6 +56,8 @@ const sanitizeTableaux = (data: unknown): Tableau[] => {
 };
 
 export async function getTableaux(): Promise<Tableau[]> {
+  noStore();
+
   try {
     const raw = await fs.readFile(TABLEAUX_FILE_PATH, "utf-8");
     return sanitizeTableaux(JSON.parse(raw));
