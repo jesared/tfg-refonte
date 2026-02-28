@@ -1,6 +1,6 @@
-import { promises as fs } from "node:fs";
-import path from "node:path";
 import { unstable_noStore as noStore } from "next/cache";
+
+import { prisma } from "@/lib/prisma";
 
 export type Tableau = {
   id: number;
@@ -8,14 +8,6 @@ export type Tableau = {
   points: string;
   start: string;
 };
-
-export type SaveTableauxResult = {
-  usedTemporaryStorage: boolean;
-};
-
-const TABLEAUX_FILE_PATH = path.join(process.cwd(), "data", "tableaux.json");
-const TMP_TABLEAUX_FILE_PATH = "/tmp/tableaux.json";
-const ENV_TABLEAUX_FILE_PATH = process.env.TABLEAUX_FILE_PATH?.trim();
 
 const defaultTableaux: Tableau[] = [
   { id: 1, title: "Tableau 1", points: "2000 à 1600 pts", start: "08h30" },
@@ -61,32 +53,29 @@ const sanitizeTableaux = (data: unknown): Tableau[] => {
   return tableaux.sort((a, b) => a.id - b.id);
 };
 
-const getReadPaths = (): string[] => {
-  const paths = [ENV_TABLEAUX_FILE_PATH, TMP_TABLEAUX_FILE_PATH, TABLEAUX_FILE_PATH].filter(
-    (item): item is string => Boolean(item),
-  );
-
-  return [...new Set(paths)];
-};
-
-const isReadOnlyFsError = (error: unknown): boolean => {
-  if (!error || typeof error !== "object") {
-    return false;
+async function ensureDefaultTableaux(): Promise<void> {
+  const count = await prisma.tableau.count();
+  if (count > 0) {
+    return;
   }
 
-  return "code" in error && error.code === "EROFS";
-};
+  await prisma.tableau.createMany({
+    data: defaultTableaux,
+  });
+}
 
 export async function getTableaux(): Promise<Tableau[]> {
   noStore();
 
-  for (const filePath of getReadPaths()) {
-    try {
-      const raw = await fs.readFile(filePath, "utf-8");
-      return sanitizeTableaux(JSON.parse(raw));
-    } catch {
-      continue;
-    }
+  try {
+    await ensureDefaultTableaux();
+    const tableaux = await prisma.tableau.findMany({
+      orderBy: { id: "asc" },
+    });
+
+    return sanitizeTableaux(tableaux);
+  } catch {
+    return defaultTableaux;
   }
 
   return defaultTableaux;
@@ -94,18 +83,11 @@ export async function getTableaux(): Promise<Tableau[]> {
 
 export async function saveTableaux(tableaux: Tableau[]): Promise<SaveTableauxResult> {
   const cleaned = sanitizeTableaux(tableaux);
-  const payload = `${JSON.stringify(cleaned, null, 2)}\n`;
-  const primaryPath = ENV_TABLEAUX_FILE_PATH || TABLEAUX_FILE_PATH;
 
-  try {
-    await fs.writeFile(primaryPath, payload, "utf-8");
-    return { usedTemporaryStorage: false };
-  } catch (error) {
-    if (!isReadOnlyFsError(error)) {
-      throw error;
-    }
-  }
-
-  await fs.writeFile(TMP_TABLEAUX_FILE_PATH, payload, "utf-8");
-  return { usedTemporaryStorage: true };
+  await prisma.$transaction([
+    prisma.tableau.deleteMany(),
+    prisma.tableau.createMany({
+      data: cleaned,
+    }),
+  ]);
 }
