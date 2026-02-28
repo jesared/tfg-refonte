@@ -77,9 +77,11 @@ export async function getTableaux(): Promise<Tableau[]> {
   } catch {
     return defaultTableaux;
   }
+
+  return defaultTableaux;
 }
 
-export async function saveTableaux(tableaux: Tableau[]): Promise<void> {
+export async function saveTableaux(tableaux: Tableau[]): Promise<SaveTableauxResult> {
   const cleaned = sanitizeTableaux(tableaux);
 
   await prisma.$transaction([
