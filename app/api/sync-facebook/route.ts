@@ -132,13 +132,8 @@ async function fetchFacebookFeed(params: {
 /* ----------------------------- */
 
 async function syncFacebookPosts() {
-  const pageId = normalize(process.env.FACEBOOK_PAGE_ID);
-  const candidateTokens = [
-    normalize(process.env.FACEBOOK_PAGE_ACCESS_TOKEN),
-    normalize(process.env.FACEBOOK_ACCESS_TOKEN),
-  ].filter((token): token is string => Boolean(token));
-
-  const tokens = Array.from(new Set(candidateTokens));
+  const token = process.env.FACEBOOK_PAGE_ACCESS_TOKEN ?? process.env.FACEBOOK_ACCESS_TOKEN;
+  const pageId = process.env.FACEBOOK_PAGE_ID;
 
   if (!pageId || tokens.length === 0) {
     return NextResponse.json({ error: "Missing Facebook config" }, { status: 500 });
