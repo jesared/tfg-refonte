@@ -1,19 +1,19 @@
-import { Check, Table2, X } from "lucide-react";
+import { CalendarDays, Check, X } from "lucide-react";
 import type { Metadata } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 
-import { TableauxEditor } from "@/components/admin/tableaux-editor";
-import { getTableaux, saveTableaux } from "@/lib/tableaux";
+import { AgendaEditor } from "@/components/admin/agenda-editor";
+import { getAgendaTours, saveAgendaTours } from "@/lib/agenda";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
 export const metadata: Metadata = {
-  title: "Admin - Tableaux",
-  description: "Gestion des tableaux côté administration.",
+  title: "Admin - Agenda & salles",
+  description: "Gestion de la page agenda et salles côté administration.",
 };
 
-async function updateTableaux(formData: FormData) {
+async function updateAgenda(formData: FormData) {
   "use server";
 
   const session = await getServerSession(authOptions);
@@ -22,38 +22,47 @@ async function updateTableaux(formData: FormData) {
   }
 
   const ids = formData.getAll("id");
-  const titles = formData.getAll("title");
-  const points = formData.getAll("points");
-  const starts = formData.getAll("start");
+  const labels = formData.getAll("label");
+  const dates = formData.getAll("date");
+  const clubs = formData.getAll("club");
+  const cities = formData.getAll("city");
+  const venues = formData.getAll("venue");
+  const addresses = formData.getAll("address");
 
-  const tableauxPayload = Array.from({ length: ids.length }, (_, index) => ({
-    id: Number(ids[index]),
-    title: String(titles[index] ?? "").trim(),
-    points: String(points[index] ?? "").trim(),
-    start: String(starts[index] ?? "").trim(),
-  })).filter(
-    (item) => Number.isFinite(item.id) && item.id > 0 && item.title && item.points && item.start,
-  );
+  const tours = ids
+    .map((id, index) => ({
+      id: Number(id),
+      label: String(labels[index] ?? "").trim(),
+      date: String(dates[index] ?? "").trim(),
+      club: String(clubs[index] ?? "").trim(),
+      city: String(cities[index] ?? "").trim(),
+      venue: String(venues[index] ?? "").trim(),
+      address: String(addresses[index] ?? "").trim(),
+    }))
+    .filter(
+      (item) => item.label && item.date && item.club && item.city && item.venue && item.address,
+    );
 
-  let result: Awaited<ReturnType<typeof saveTableaux>> | null = null;
-
-  try {
-    result = await saveTableaux(tableauxPayload);
-  } catch {
-    redirect("/admin/tableaux?error=1");
+  if (tours.length === 0) {
+    redirect("/admin/agenda?error=1");
   }
 
-  revalidatePath("/tableaux");
-  revalidatePath("/admin/tableaux");
+  let result: Awaited<ReturnType<typeof saveAgendaTours>>;
 
-  redirect(
-    `/admin/tableaux?updated=1${result?.storage === "tmp" ? "&storage=tmp" : ""}${
-      result?.databaseAvailable ? "" : "&db=0"
-    }`,
-  );
+  try {
+    result = await saveAgendaTours(tours);
+  } catch {
+    redirect("/admin/agenda?error=1");
+  }
+
+  revalidatePath("/agenda");
+  revalidatePath("/salles");
+  revalidatePath("/admin/agenda");
+
+  redirect(`/admin/agenda?updated=1${result.usedTemporaryStorage ? "&storage=tmp" : ""}`);
 }
 
-export default async function AdminTableauxPage({
+export default async function AdminAgendaPage({
   searchParams,
 }: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -64,69 +73,52 @@ export default async function AdminTableauxPage({
     redirect("/");
   }
 
-  const tableauxData = await getTableaux();
+  const tours = await getAgendaTours();
   const params = await searchParams;
 
-  const updatedParam =
-    typeof params?.updated === "string"
-      ? params.updated
-      : typeof params?.ok === "string"
-        ? params.ok
-        : undefined;
+  const updatedParam = typeof params?.updated === "string" ? params.updated : undefined;
   const storageParam = typeof params?.storage === "string" ? params.storage : undefined;
-  const dbParam = typeof params?.db === "string" ? params.db : undefined;
   const errorParam = typeof params?.error === "string" ? params.error : undefined;
 
   const isUpdated = updatedParam === "1";
   const usedTemporaryStorage = storageParam === "tmp";
-  const databaseAvailable = dbParam !== "0";
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-5">
       <header className="rounded-2xl border border-border/70 bg-card/80 px-5 py-6 shadow-sm">
         <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-          <Table2 className="h-4 w-4" aria-hidden="true" />
+          <CalendarDays className="h-4 w-4" aria-hidden="true" />
           Administration
         </div>
-        <h1 className="mt-3 text-2xl font-semibold text-foreground">Gestion des tableaux</h1>
+        <h1 className="mt-3 text-2xl font-semibold text-foreground">Gestion agenda &amp; salles</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Tu peux <span className="font-medium text-foreground">ajouter</span>,{" "}
-          <span className="font-medium text-foreground">modifier</span> et
-          <span className="font-medium text-foreground"> supprimer</span> des tableaux puis
-          enregistrer.
+          Modifie les tours, dates, clubs et adresses affichés sur la page publique.
         </p>
       </header>
 
       {errorParam === "1" && (
         <p className="inline-flex items-center gap-2 rounded-xl border border-red-300/60 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-400/40 dark:bg-red-500/10 dark:text-red-200">
           <X className="h-4 w-4" aria-hidden="true" />
-          Erreur serveur lors de l&apos;enregistrement. Réessaie dans quelques secondes.
+          Erreur serveur lors de l&apos;enregistrement. Vérifie les champs puis réessaie.
         </p>
       )}
 
       {isUpdated && (
         <p className="inline-flex items-center gap-2 rounded-xl border border-emerald-300/60 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 dark:border-emerald-400/40 dark:bg-emerald-500/10 dark:text-emerald-200">
           <Check className="h-4 w-4" aria-hidden="true" />
-          Tableaux mis à jour.
-        </p>
-      )}
-
-      {isUpdated && !databaseAvailable && (
-        <p className="inline-flex items-center gap-2 rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-200">
-          <X className="h-4 w-4" aria-hidden="true" />
-          La BDD n&apos;est pas joignable : sauvegarde effectuée sur fichier.
+          Agenda &amp; salles mis à jour.
         </p>
       )}
 
       {isUpdated && usedTemporaryStorage && (
         <p className="inline-flex items-center gap-2 rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-200">
           <X className="h-4 w-4" aria-hidden="true" />
-          Stockage temporaire utilisé (lecture seule détectée).
+          Stockage temporaire utilisé (système de fichiers en lecture seule).
         </p>
       )}
 
-      <form action={updateTableaux} className="space-y-4">
-        <TableauxEditor initialTableaux={tableauxData} />
+      <form action={updateAgenda} className="space-y-4">
+        <AgendaEditor initialTours={tours} />
 
         <button
           type="submit"

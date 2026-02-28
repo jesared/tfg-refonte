@@ -1,0 +1,74 @@
+[
+  {
+    "id": 1,
+    "label": "Tour 1",
+    "date": "24 août 2025",
+    "club": "AS Gueux-Tinqueux",
+    "city": "Gueux",
+    "venue": "Complexe Sportif de Gueux",
+    "address": "Rue du Moutier, 51390 Gueux"
+  },
+  {
+    "id": 2,
+    "label": "Tour 2",
+    "date": "7 septembre 2025",
+    "club": "Olympique Rémois TT",
+    "city": "Reims",
+    "venue": "Complexe René Tys",
+    "address": "36 rue Léo Lagrange, 51100 Reims"
+  },
+  {
+    "id": 3,
+    "label": "Tour 3",
+    "date": "26 octobre 2025",
+    "club": "PPC Tagnon",
+    "city": "Tagnon",
+    "venue": "Ping Pong Club Tagnon",
+    "address": "Rue Gabriel Davenne, 08300 Tagnon"
+  },
+  {
+    "id": 4,
+    "label": "Tour 4",
+    "date": "7 décembre 2025",
+    "club": "PPC Epernay-Pivot",
+    "city": "Épernay",
+    "venue": "Gymnase Henri Viet",
+    "address": "Chemin de Beausoleil, 51200 Epernay"
+  },
+  {
+    "id": 5,
+    "label": "Tour 5",
+    "date": "21 décembre 2025",
+    "club": "SC Mesnil-sur-Oger",
+    "city": "Le Mesnil-sur-Oger",
+    "venue": "Salle du SC Mesnilois",
+    "address": "8 Avenue Eugène Guillaume, 51190 Le Mesnil sur Oger"
+  },
+  {
+    "id": 6,
+    "label": "Tour 6",
+    "date": "4 janvier 2026",
+    "club": "ASPTT Reims",
+    "city": "Reims",
+    "venue": "Gymnase Géo André",
+    "address": "Rue François Mauriac, 51100 Reims"
+  },
+  {
+    "id": 7,
+    "label": "Tour 7",
+    "date": "22 février 2026",
+    "club": "ASTT Taissy",
+    "city": "Taissy",
+    "venue": "Salle des sports de Taissy",
+    "address": "Esplanade Colbert, 51500 Taissy"
+  },
+  {
+    "id": 8,
+    "label": "Tour 8",
+    "date": "17 mai 2026",
+    "club": "ASPTT Châlons",
+    "city": "Châlons-en-Champagne",
+    "venue": "Gymnase Jean-François KIEZER",
+    "address": "15 rue Jacques Duclos, 51000 Châlons-en-Champagne"
+  }
+]

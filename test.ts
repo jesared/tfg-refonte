@@ -1,5 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
+async function main() {
+  const prisma = new PrismaClient();
+  await prisma.$disconnect();
+  console.log("Prisma fonctionne");
+}
 
-console.log("Prisma fonctionne");
+void main();
