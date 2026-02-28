@@ -2,7 +2,6 @@ import { Home as HomeIcon } from "lucide-react";
 
 export default function Home() {
   const facebookPageUrl = "https://www.facebook.com/tropheefrancoisgrieder";
-  const actualitesPageUrl = "/actualites";
   const shareUrl = "https://trophee-francois-grieder.fr";
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 sm:gap-10">
@@ -53,17 +52,10 @@ export default function Home() {
             accès direct aux actus du site et à la page Facebook.
           </p>
           <ul className="space-y-2 text-sm text-foreground/90">
-            <li>• Consultez les publications triées sur la page Actus.</li>
             <li>• Accédez à la page Facebook officielle en un clic.</li>
             <li>• Partagez facilement le site avec votre entourage.</li>
           </ul>
           <div className="flex flex-wrap gap-3 pt-2">
-            <a
-              href={actualitesPageUrl}
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary px-4 py-2 text-xs font-semibold text-secondary-foreground shadow-sm transition hover:bg-muted"
-            >
-              Voir la page Actus
-            </a>
             <a
               href={facebookPageUrl}
               target="_blank"
