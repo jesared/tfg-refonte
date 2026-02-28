@@ -42,14 +42,20 @@ async function updateTableaux(formData: FormData) {
     start: String(starts[index] ?? "").trim(),
   })).filter((item) => Number.isFinite(item.id) && item.id > 0 && item.title && item.points && item.start);
 
-  const result = await saveTableaux(tableauxPayload);
+  let result: Awaited<ReturnType<typeof saveTableaux>> | null = null;
+
+  try {
+    result = await saveTableaux(tableauxPayload);
+  } catch {
+    redirect("/admin/tableaux?error=1");
+  }
 
   revalidatePath("/tableaux");
   revalidatePath("/admin/tableaux");
 
   redirect(
-    `/admin/tableaux?updated=1${result.storage === "tmp" ? "&storage=tmp" : ""}${
-      result.databaseAvailable ? "" : "&db=0"
+    `/admin/tableaux?updated=1${result?.storage === "tmp" ? "&storage=tmp" : ""}${
+      result?.databaseAvailable ? "" : "&db=0"
     }`,
   );
 }
@@ -71,6 +77,7 @@ export default async function AdminTableauxPage({
   const updatedParam = typeof params?.updated === "string" ? params.updated : typeof params?.ok === "string" ? params.ok : undefined;
   const storageParam = typeof params?.storage === "string" ? params.storage : undefined;
   const dbParam = typeof params?.db === "string" ? params.db : undefined;
+  const errorParam = typeof params?.error === "string" ? params.error : undefined;
 
   const isUpdated = updatedParam === "1";
   const usedTemporaryStorage = storageParam === "tmp";
@@ -89,6 +96,13 @@ export default async function AdminTableauxPage({
           <span className="font-medium text-foreground"> supprimer</span> des tableaux puis enregistrer.
         </p>
       </header>
+
+      {errorParam === "1" && (
+        <p className="inline-flex items-center gap-2 rounded-xl border border-red-300/60 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-400/40 dark:bg-red-500/10 dark:text-red-200">
+          <X className="h-4 w-4" aria-hidden="true" />
+          Erreur serveur lors de l&apos;enregistrement. Réessaie dans quelques secondes.
+        </p>
+      )}
 
       {isUpdated && (
         <p className="inline-flex items-center gap-2 rounded-xl border border-emerald-300/60 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 dark:border-emerald-400/40 dark:bg-emerald-500/10 dark:text-emerald-200">
