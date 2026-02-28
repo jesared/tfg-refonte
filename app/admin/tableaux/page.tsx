@@ -26,7 +26,14 @@ async function updateTableaux(formData: FormData) {
   const points = formData.getAll("points");
   const starts = formData.getAll("start");
 
-  const length = Math.min(ids.length, titles.length, points.length, starts.length);
+  const tableaux = ids
+    .map((id, index) => ({
+      id: Number(id),
+      title: String(titles[index] ?? "").trim(),
+      points: String(points[index] ?? "").trim(),
+      start: String(starts[index] ?? "").trim(),
+    }))
+    .filter((item) => Number.isFinite(item.id) && item.title && item.points && item.start);
 
   const tableauxPayload = Array.from({ length }, (_, index) => ({
     id: Number(ids[index]),
@@ -50,7 +57,7 @@ async function updateTableaux(formData: FormData) {
 export default async function AdminTableauxPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ updated?: string; storage?: string; db?: string }>;
+  searchParams?: Promise<{ ok?: string }>;
 }) {
   const session = await getServerSession(authOptions);
 
