@@ -43,6 +43,14 @@ type FacebookApiResponse = {
   error?: FacebookGraphError;
 };
 
+type FacebookAccountsApiResponse = {
+  data?: Array<{
+    id?: string;
+    access_token?: string;
+  }>;
+  error?: FacebookGraphError;
+};
+
 /* ----------------------------- */
 /* Helpers */
 /* ----------------------------- */
@@ -95,6 +103,41 @@ const getPermalink = (post: FacebookPostResponse) =>
 
 const isTokenInvalidError = (error?: FacebookGraphError) => error?.code === 190;
 
+async function fetchPageAccessTokenFromUserToken(params: {
+  pageId: string;
+  userToken: string;
+}): Promise<{ token?: string; error?: FacebookGraphError }> {
+  const url = `https://graph.facebook.com/v25.0/me/accounts?fields=id,access_token&limit=200&access_token=${encodeURIComponent(
+    params.userToken,
+  )}`;
+
+  const res = await fetch(url, { cache: "no-store" });
+  const data = (await res.json()) as FacebookAccountsApiResponse;
+
+  if (!res.ok || data.error) {
+    return {
+      error: data.error ?? {
+        message: "Facebook error",
+        code: res.status,
+      },
+    };
+  }
+
+  const matched = data.data?.find((account) => normalize(account.id) === params.pageId);
+  const token = normalize(matched?.access_token);
+
+  if (!token) {
+    return {
+      error: {
+        message: `Page ${params.pageId} not found in /me/accounts response`,
+        code: 404,
+      },
+    };
+  }
+
+  return { token };
+}
+
 async function fetchFacebookFeed(params: {
   pageId: string;
   token: string;
@@ -133,20 +176,31 @@ async function fetchFacebookFeed(params: {
 
 async function syncFacebookPosts() {
   const pageId = normalize(process.env.FACEBOOK_PAGE_ID);
-  const candidateTokens = [
-    normalize(process.env.FACEBOOK_PAGE_ACCESS_TOKEN),
-    normalize(process.env.FACEBOOK_ACCESS_TOKEN),
-  ].filter((token): token is string => Boolean(token));
+  const pageToken = normalize(process.env.FACEBOOK_PAGE_ACCESS_TOKEN);
+  const userToken = normalize(process.env.FACEBOOK_ACCESS_TOKEN);
 
-  const accessTokens: string[] = Array.from(new Set(candidateTokens));
-
-  if (!pageId || accessTokens.length === 0) {
+  if (!pageId || (!pageToken && !userToken)) {
     return NextResponse.json({ error: "Missing Facebook config" }, { status: 500 });
   }
 
   try {
     const fields =
       "id,is_published,created_time,message,story,permalink_url,attachments{type,media,subattachments}";
+
+    let derivedPageToken: string | null = null;
+
+    if (userToken) {
+      const pageTokenResult = await fetchPageAccessTokenFromUserToken({ pageId, userToken });
+
+      if (pageTokenResult.token) {
+        derivedPageToken = pageTokenResult.token;
+      }
+    }
+
+    const candidateTokens = [pageToken, derivedPageToken, userToken].filter(
+      (token): token is string => Boolean(token),
+    );
+    const accessTokens: string[] = Array.from(new Set(candidateTokens));
 
     let allPosts: FacebookPostResponse[] = [];
     let lastError: FacebookGraphError | undefined;
@@ -159,6 +213,7 @@ async function syncFacebookPosts() {
         lastError = undefined;
         break;
       }
+    }
 
       lastError = result.error;
 
