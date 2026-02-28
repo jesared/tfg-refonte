@@ -2,6 +2,8 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { unstable_noStore as noStore } from "next/cache";
 
+import { prisma } from "@/lib/prisma";
+
 export type Tableau = {
   id: number;
   title: string;
@@ -43,18 +45,193 @@ const sanitizeTableaux = (data: unknown): Tableau[] => {
     return defaultTableaux;
   }
 
-  const tableaux = data.filter(isTableau).map((tableau) => ({
-    id: tableau.id,
-    title: tableau.title.trim(),
-    points: tableau.points.trim(),
-    start: tableau.start.trim(),
-  }));
+  const tableaux = data
+    .filter(isTableau)
+    .map((tableau) => ({
+      id: tableau.id,
+      title: tableau.title.trim(),
+      points: tableau.points.trim(),
+      start: tableau.start.trim(),
+    }))
+    .filter((tableau) => tableau.title && tableau.points && tableau.start);
 
   if (tableaux.length === 0) {
     return defaultTableaux;
   }
 
   return tableaux.sort((a, b) => a.id - b.id);
+};
+
+type TableauDbMapping = {
+  schemaName: string;
+  tableName: string;
+  id: string;
+  title: string;
+  points: string;
+  start: string;
+};
+
+const TABLEAU_DB_KEY_ALIASES: Record<"id" | "title" | "points" | "start", string[]> = {
+  id: ["id"],
+  title: ["title", "nom", "name", "intitule", "libelle"],
+  points: ["points", "plagepoints", "plage_points", "range", "classement", "pointrange"],
+  start: ["start", "heuredebut", "heure_debut", "starttime", "horaire", "debut"],
+};
+
+const TABLE_CANDIDATES = ["Tableau", "tableau", "tableaux"];
+
+const quoteIdentifier = (identifier: string): string => `"${identifier.replaceAll('"', '""')}"`;
+
+const quoteTable = (schemaName: string, tableName: string): string =>
+  `${quoteIdentifier(schemaName)}.${quoteIdentifier(tableName)}`;
+
+const normalize = (value: string): string => value.trim().toLowerCase();
+
+const resolveTableauDbMapping = async (): Promise<TableauDbMapping | null> => {
+  try {
+    const rows = await prisma.$queryRaw<
+      Array<{ table_schema: string; table_name: string; column_name: string }>
+    >`
+      SELECT table_schema, table_name, column_name
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+    `;
+
+    if (rows.length === 0) {
+      return null;
+    }
+
+    const candidateSet = new Set(TABLE_CANDIDATES.map((name) => normalize(name)));
+    const grouped = new Map<string, { schemaName: string; tableName: string; columns: string[] }>();
+
+    for (const row of rows) {
+      const tableKey = `${row.table_schema}.${row.table_name}`;
+      const current = grouped.get(tableKey);
+      if (!current) {
+        grouped.set(tableKey, {
+          schemaName: row.table_schema,
+          tableName: row.table_name,
+          columns: [row.column_name],
+        });
+      } else {
+        current.columns.push(row.column_name);
+      }
+    }
+
+    const tableCandidates = [...grouped.values()].filter((table) =>
+      candidateSet.has(normalize(table.tableName)),
+    );
+
+    if (tableCandidates.length === 0) {
+      return null;
+    }
+
+    const pickColumn = (columns: string[], aliases: string[]): string | null => {
+      const aliasSet = new Set(aliases.map((alias) => normalize(alias)));
+      for (const column of columns) {
+        if (aliasSet.has(normalize(column))) {
+          return column;
+        }
+      }
+      return null;
+    };
+
+    for (const table of tableCandidates) {
+      const mapping = {
+        schemaName: table.schemaName,
+        tableName: table.tableName,
+        id: pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.id),
+        title: pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.title),
+        points: pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.points),
+        start: pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.start),
+      };
+
+      if (mapping.id && mapping.title && mapping.points && mapping.start) {
+        return {
+          schemaName: mapping.schemaName,
+          tableName: mapping.tableName,
+          id: mapping.id,
+          title: mapping.title,
+          points: mapping.points,
+          start: mapping.start,
+        };
+      }
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+const getTableauxFromDatabase = async (): Promise<Tableau[] | null> => {
+  const mapping = await resolveTableauDbMapping();
+
+  if (!mapping) {
+    return null;
+  }
+
+  try {
+    const tableRef = quoteTable(mapping.schemaName, mapping.tableName);
+    const rows = await prisma.$queryRawUnsafe<Array<Record<string, unknown>>>(
+      `SELECT ${quoteIdentifier(mapping.id)} AS id, ${quoteIdentifier(mapping.title)} AS title, ${quoteIdentifier(mapping.points)} AS points, ${quoteIdentifier(mapping.start)} AS start FROM ${tableRef} ORDER BY ${quoteIdentifier(mapping.id)} ASC`,
+    );
+
+    return sanitizeTableaux(
+      rows.map((row) => ({
+        id: Number(row.id),
+        title: String(row.title ?? ""),
+        points: String(row.points ?? ""),
+        start: String(row.start ?? ""),
+      })),
+    );
+  } catch {
+    return null;
+  }
+};
+
+const saveTableauxToDatabase = async (tableaux: Tableau[]): Promise<boolean> => {
+  const mapping = await resolveTableauDbMapping();
+
+  if (!mapping) {
+    return false;
+  }
+
+  const cleaned = sanitizeTableaux(tableaux);
+  const tableRef = quoteTable(mapping.schemaName, mapping.tableName);
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      for (const tableau of cleaned) {
+        const updated = await tx.$executeRawUnsafe(
+          `UPDATE ${tableRef}
+           SET ${quoteIdentifier(mapping.title)} = $1,
+               ${quoteIdentifier(mapping.points)} = $2,
+               ${quoteIdentifier(mapping.start)} = $3
+           WHERE ${quoteIdentifier(mapping.id)} = $4`,
+          tableau.title,
+          tableau.points,
+          tableau.start,
+          tableau.id,
+        );
+
+        if (updated === 0) {
+          await tx.$executeRawUnsafe(
+            `INSERT INTO ${tableRef} (${quoteIdentifier(mapping.id)}, ${quoteIdentifier(mapping.title)}, ${quoteIdentifier(mapping.points)}, ${quoteIdentifier(mapping.start)})
+             VALUES ($1, $2, $3, $4)`,
+            tableau.id,
+            tableau.title,
+            tableau.points,
+            tableau.start,
+          );
+        }
+      }
+    });
+
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 const getReadPaths = (): string[] => {
@@ -76,6 +253,11 @@ const isReadOnlyFsError = (error: unknown): boolean => {
 export async function getTableaux(): Promise<Tableau[]> {
   noStore();
 
+  const dbTableaux = await getTableauxFromDatabase();
+  if (dbTableaux) {
+    return dbTableaux;
+  }
+
   for (const filePath of getReadPaths()) {
     try {
       const raw = await fs.readFile(filePath, "utf-8");
@@ -89,6 +271,11 @@ export async function getTableaux(): Promise<Tableau[]> {
 }
 
 export async function saveTableaux(tableaux: Tableau[]): Promise<{ usedTemporaryStorage: boolean }> {
+  const savedInDatabase = await saveTableauxToDatabase(tableaux);
+  if (savedInDatabase) {
+    return { usedTemporaryStorage: false };
+  }
+
   const cleaned = sanitizeTableaux(tableaux);
   const payload = `${JSON.stringify(cleaned, null, 2)}\n`;
   const primaryPath = ENV_TABLEAUX_FILE_PATH || TABLEAUX_FILE_PATH;
