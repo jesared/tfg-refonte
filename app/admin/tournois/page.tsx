@@ -1,4 +1,11 @@
-import { CalendarDays, Check, ChevronRight, ShieldCheck, Table2 } from "lucide-react";
+import {
+  CalendarDays,
+  Check,
+  ChevronRight,
+  ShieldCheck,
+  Table2,
+  Trophy,
+} from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -32,10 +39,18 @@ const pendingImports = [
   },
 ];
 
-const checks = [
+const circuitPillars = [
+  "Même logique de tableaux sur l'ensemble du circuit.",
+  "Barème identique pour garantir l'équité sportive.",
+  "Contrôle manuel avant publication des points.",
+  "Historique partagé pour le suivi de saison.",
+];
+
+const operationalChecks = [
   "Vérifier la cohérence des catégories et des points attribués.",
   "Contrôler les doubles inscriptions avant fusion des résultats.",
   "Exporter les anomalies pour correction par les clubs organisateurs.",
+  "Valider les tournois complets avant diffusion des classements.",
 ];
 
 export default async function AdminTournoisPage() {
@@ -50,13 +65,50 @@ export default async function AdminTournoisPage() {
       <header className="rounded-2xl border border-border bg-card px-6 py-7 shadow-sm">
         <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
           <CalendarDays className="h-4 w-4" aria-hidden="true" />
-          Suivi des imports
+          Pilotage du circuit
         </div>
         <h1 className="mt-4 text-3xl font-semibold text-foreground">Validation des tournois</h1>
-        <p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">
-          Vue de contrôle pour traiter rapidement les résultats reçus et sécuriser leur publication.
+        <p className="mt-3 max-w-3xl text-sm text-muted-foreground sm:text-base">
+          Espace de supervision inspiré du fonctionnement du Trophée François Grieder : un cadre
+          commun, des contrôles réguliers et une publication fiable des performances sur toute la
+          saison.
         </p>
       </header>
+
+      <section className="grid gap-4 md:grid-cols-3">
+        <article className="rounded-xl border border-border bg-card p-5 shadow-sm md:col-span-2">
+          <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+            <Trophy className="h-4 w-4 text-primary" aria-hidden="true" />
+            Logique du trophée appliquée aux imports
+          </div>
+          <ul className="list-disc space-y-2 pl-5 text-sm text-foreground/90">
+            {circuitPillars.map((pillar) => (
+              <li key={pillar}>{pillar}</li>
+            ))}
+          </ul>
+        </article>
+
+        <article className="rounded-xl border border-border bg-card p-5 shadow-sm">
+          <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+            <Trophy className="h-4 w-4 text-primary" aria-hidden="true" />
+            État du mois
+          </div>
+          <dl className="space-y-3 text-sm">
+            <div className="rounded-lg border border-border px-3 py-2">
+              <dt className="text-muted-foreground">Tournois reçus</dt>
+              <dd className="text-xl font-semibold text-foreground">12</dd>
+            </div>
+            <div className="rounded-lg border border-border px-3 py-2">
+              <dt className="text-muted-foreground">Prêts à publier</dt>
+              <dd className="text-xl font-semibold text-foreground">7</dd>
+            </div>
+            <div className="rounded-lg border border-border px-3 py-2">
+              <dt className="text-muted-foreground">Anomalies ouvertes</dt>
+              <dd className="text-xl font-semibold text-foreground">5</dd>
+            </div>
+          </dl>
+        </article>
+      </section>
 
       <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
@@ -103,7 +155,7 @@ export default async function AdminTournoisPage() {
             Checklist opérationnelle
           </div>
           <ul className="space-y-3 text-sm text-foreground/90">
-            {checks.map((item) => (
+            {operationalChecks.map((item) => (
               <li key={item}>• {item}</li>
             ))}
           </ul>
