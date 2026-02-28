@@ -1,5 +1,6 @@
 import type { FacebookPost } from "@prisma/client";
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { FacebookPostCard } from "@/components/FacebookPostCard";
 import { prisma } from "@/lib/prisma";
@@ -7,21 +8,60 @@ import { prisma } from "@/lib/prisma";
 export const metadata: Metadata = {
   title: "Actualités du Trophée François Grieder",
   description:
-    "Retrouvez les dernières actualités Facebook du Trophée François Grieder, publiées en temps réel.",
+    "Retrouvez les dernières actualités du Trophée François Grieder via Facebook et les pages officielles du site.",
 };
 
+type AlternativeNewsItem = {
+  title: string;
+  description: string;
+  href: string;
+  linkLabel: string;
+};
+
+const alternativeNewsItems: AlternativeNewsItem[] = [
+  {
+    title: "Infos tournoi",
+    description: "Consultez les prochaines étapes et les informations pratiques du Trophée.",
+    href: "/trophee",
+    linkLabel: "Voir la page Trophée",
+  },
+  {
+    title: "Tableaux & résultats",
+    description: "Suivez les tableaux en cours et les résultats mis à jour sur le site.",
+    href: "/tableaux",
+    linkLabel: "Accéder aux tableaux",
+  },
+  {
+    title: "Classements",
+    description: "Retrouvez les classements officiels sans attendre une publication Facebook.",
+    href: "/classements",
+    linkLabel: "Voir les classements",
+  },
+  {
+    title: "Contact organisateurs",
+    description: "Besoin d'une info urgente ? Contactez directement l'équipe du Trophée.",
+    href: "/contact",
+    linkLabel: "Aller à la page contact",
+  },
+];
+
 async function getLatestPosts(): Promise<FacebookPost[]> {
-  return prisma.facebookPost.findMany({
-    where: {
-      type: {
-        not: null, // 🔥 On exclut définitivement les type null
+  try {
+    return await prisma.facebookPost.findMany({
+      where: {
+        type: {
+          not: null,
+        },
       },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-    take: 12,
-  });
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 12,
+    });
+  } catch (error) {
+    console.error("Impossible de récupérer les actualités Facebook", error);
+    return [];
+  }
 }
 
 export default async function ActualitesPage() {
@@ -54,8 +94,32 @@ export default async function ActualitesPage() {
           <section className="rounded-3xl border border-border bg-muted/40 p-8 text-center shadow-sm">
             <h2 className="text-xl font-semibold">Aucune actualité disponible pour le moment</h2>
             <p className="mt-2 text-sm text-muted-foreground sm:text-base">
-              Les publications Facebook apparaîtront ici dès leur synchronisation.
+              Les publications Facebook apparaîtront ici dès leur synchronisation. En attendant,
+              utilisez les autres canaux ci-dessous pour suivre les informations du Trophée.
             </p>
+          </section>
+        )}
+
+        {posts.length === 0 && (
+          <section className="space-y-4">
+            <h2 className="text-2xl font-semibold">Autres moyens de suivre l&apos;actualité</h2>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {alternativeNewsItems.map((item) => (
+                <article
+                  key={item.title}
+                  className="rounded-2xl border border-border bg-background p-6 shadow-sm"
+                >
+                  <h3 className="text-lg font-semibold">{item.title}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">{item.description}</p>
+                  <Link
+                    href={item.href}
+                    className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline"
+                  >
+                    {item.linkLabel}
+                  </Link>
+                </article>
+              ))}
+            </div>
           </section>
         )}
 
@@ -66,7 +130,7 @@ export default async function ActualitesPage() {
             rel="noreferrer"
             className="inline-flex items-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
           >
-            Voir plus de publications sur Facebook
+            Voir la page Facebook officielle
           </a>
         </div>
       </div>
