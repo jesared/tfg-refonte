@@ -72,13 +72,21 @@ type TableauDbMapping = {
 };
 
 const TABLEAU_DB_KEY_ALIASES: Record<"id" | "title" | "points" | "start", string[]> = {
-  id: ["id"],
-  title: ["title", "nom", "name", "intitule", "libelle"],
-  points: ["points", "plagepoints", "plage_points", "range", "classement", "pointrange"],
-  start: ["start", "heuredebut", "heure_debut", "starttime", "horaire", "debut"],
+  id: ["id", "numero", "position", "rang"],
+  title: ["title", "nom", "name", "intitule", "libelle", "tableau", "categorie"],
+  points: [
+    "points",
+    "plagepoints",
+    "plage_points",
+    "range",
+    "classement",
+    "pointrange",
+    "point_min_max",
+  ],
+  start: ["start", "heuredebut", "heure_debut", "starttime", "horaire", "debut", "heure"],
 };
 
-const TABLE_CANDIDATES = ["Tableau", "tableau", "tableaux"];
+const TABLE_CANDIDATES = ["Tableau", "tableau", "tableaux", "Tableaux", "tableauxtournoi"];
 
 const quoteIdentifier = (identifier: string): string => `"${identifier.replaceAll('"', '""')}"`;
 
@@ -118,13 +126,9 @@ const resolveTableauDbMapping = async (): Promise<TableauDbMapping | null> => {
       }
     }
 
-    const tableCandidates = [...grouped.values()].filter((table) =>
+    const namedTableCandidates = [...grouped.values()].filter((table) =>
       candidateSet.has(normalize(table.tableName)),
     );
-
-    if (tableCandidates.length === 0) {
-      return null;
-    }
 
     const pickColumn = (columns: string[], aliases: string[]): string | null => {
       const aliasSet = new Set(aliases.map((alias) => normalize(alias)));
@@ -136,26 +140,60 @@ const resolveTableauDbMapping = async (): Promise<TableauDbMapping | null> => {
       return null;
     };
 
-    for (const table of tableCandidates) {
+    const mappedTables = [...grouped.values()]
+      .map((table) => {
+        const mapping = {
+          schemaName: table.schemaName,
+          tableName: table.tableName,
+          id: pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.id),
+          title: pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.title),
+          points: pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.points),
+          start: pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.start),
+        };
+
+        if (mapping.id && mapping.title && mapping.points && mapping.start) {
+          return {
+            schemaName: mapping.schemaName,
+            tableName: mapping.tableName,
+            id: mapping.id,
+            title: mapping.title,
+            points: mapping.points,
+            start: mapping.start,
+          };
+        }
+
+        return null;
+      })
+      .filter((item): item is TableauDbMapping => item !== null);
+
+    const prioritized = [
+      ...namedTableCandidates.map((table) => `${table.schemaName}.${table.tableName}`),
+    ];
+
+    for (const table of mappedTables) {
+      if (prioritized.includes(`${table.schemaName}.${table.tableName}`)) {
+        return table;
+      }
+    }
+
+    for (const table of mappedTables) {
       const mapping = {
         schemaName: table.schemaName,
         tableName: table.tableName,
-        id: pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.id),
-        title: pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.title),
-        points: pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.points),
-        start: pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.start),
+        id: table.id,
+        title: table.title,
+        points: table.points,
+        start: table.start,
       };
 
-      if (mapping.id && mapping.title && mapping.points && mapping.start) {
-        return {
-          schemaName: mapping.schemaName,
-          tableName: mapping.tableName,
-          id: mapping.id,
-          title: mapping.title,
-          points: mapping.points,
-          start: mapping.start,
-        };
-      }
+      return {
+        schemaName: mapping.schemaName,
+        tableName: mapping.tableName,
+        id: mapping.id,
+        title: mapping.title,
+        points: mapping.points,
+        start: mapping.start,
+      };
     }
 
     return null;
