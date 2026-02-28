@@ -7,6 +7,7 @@ import {
   Gift,
   Home,
   Mail,
+  MapPin,
   Scale,
   ShieldCheck,
   Swords,
@@ -29,6 +30,7 @@ const navigationItems = [
   { href: "/trophee", label: "Le Trophée", icon: Trophy },
   { href: "/tableaux", label: "Tableaux & Règlement", icon: Table2 },
   { href: "/classements", label: "Classements", icon: Scale },
+  { href: "/salles", label: "Salles & adresses", icon: MapPin },
   { href: "/recompenses", label: "Récompenses", icon: Gift },
   { href: "/contact", label: "Contact", icon: Mail },
 ];
