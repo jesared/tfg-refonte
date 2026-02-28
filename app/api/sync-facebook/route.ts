@@ -179,6 +179,14 @@ async function syncFacebookPosts() {
   const userToken = normalize(process.env.FACEBOOK_ACCESS_TOKEN);
 
   if (!pageId || (!pageToken && !userToken)) {
+  const candidateTokens = [
+    normalize(process.env.FACEBOOK_PAGE_ACCESS_TOKEN),
+    normalize(process.env.FACEBOOK_ACCESS_TOKEN),
+  ].filter((token): token is string => Boolean(token));
+
+  const accessTokens: string[] = Array.from(new Set(candidateTokens));
+
+  if (!pageId || accessTokens.length === 0) {
     return NextResponse.json({ error: "Missing Facebook config" }, { status: 500 });
   }
 
@@ -210,8 +218,24 @@ async function syncFacebookPosts() {
       if (!result.error) {
         allPosts = result.allPosts;
         lastError = undefined;
+    let allPosts: FacebookPostResponse[] = [];
+    let lastError: FacebookGraphError | undefined;
+
+    for (const token of accessTokens) {
+      const result = await fetchFacebookFeed({ pageId, token, fields });
+
+      if (!result.error) {
+        allPosts = result.allPosts;
+        lastError = undefined;
         break;
       }
+
+      lastError = result.error;
+
+      if (!isTokenInvalidError(result.error)) {
+        break;
+      }
+    }
 
       lastError = result.error;
     }
