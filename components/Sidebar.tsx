@@ -6,7 +6,6 @@ import {
   Gift,
   Home,
   Mail,
-  MapPin,
   Scale,
   ShieldCheck,
   Swords,
@@ -26,10 +25,9 @@ import LoginButton from "./LoginButton";
 const navigationItems = [
   { href: "/", label: "Accueil", icon: Home },
   { href: "/trophee", label: "Le Trophée", icon: Trophy },
-  { href: "/agenda", label: "Agenda", icon: CalendarDays },
+  { href: "/agenda", label: "Agenda & salles", icon: CalendarDays },
   { href: "/tableaux", label: "Tableaux & Règlement", icon: Table2 },
   { href: "/classements", label: "Classements", icon: Scale },
-  { href: "/salles", label: "Salles & adresses", icon: MapPin },
   { href: "/recompenses", label: "Récompenses", icon: Gift },
   { href: "/contact", label: "Contact", icon: Mail },
 ];
