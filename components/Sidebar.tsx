@@ -28,6 +28,7 @@ const navigationItems = [
   { href: "/", label: "Accueil", icon: Home },
   { href: "/actualites", label: "Actualités", icon: File },
   { href: "/trophee", label: "Le Trophée", icon: Trophy },
+  { href: "/agenda", label: "Agenda", icon: CalendarDays },
   { href: "/tableaux", label: "Tableaux & Règlement", icon: Table2 },
   { href: "/classements", label: "Classements", icon: Scale },
   { href: "/salles", label: "Salles & adresses", icon: MapPin },
