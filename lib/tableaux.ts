@@ -16,6 +16,10 @@ const TMP_TABLEAUX_FILE_PATH = "/tmp/tableaux.json";
 const ENV_TABLEAUX_FILE_PATH = process.env.TABLEAUX_FILE_PATH?.trim();
 const ENV_TABLEAUX_DB_SCHEMA = process.env.TABLEAUX_DB_SCHEMA?.trim();
 const ENV_TABLEAUX_DB_TABLE = process.env.TABLEAUX_DB_TABLE?.trim();
+const ENV_TABLEAUX_DB_COL_ID = process.env.TABLEAUX_DB_COL_ID?.trim();
+const ENV_TABLEAUX_DB_COL_TITLE = process.env.TABLEAUX_DB_COL_TITLE?.trim();
+const ENV_TABLEAUX_DB_COL_POINTS = process.env.TABLEAUX_DB_COL_POINTS?.trim();
+const ENV_TABLEAUX_DB_COL_START = process.env.TABLEAUX_DB_COL_START?.trim();
 
 const defaultTableaux: Tableau[] = [
   { id: 1, title: "Tableau 1", points: "2000 à 1600 pts", start: "08h30" },
@@ -74,7 +78,7 @@ type TableauDbMapping = {
 };
 
 const TABLEAU_DB_KEY_ALIASES: Record<"id" | "title" | "points" | "start", string[]> = {
-  id: ["id", "numero", "position", "rang"],
+  id: ["id", "numero", "position", "rang", "tableauid", "tableau_id", "numerotableau", "numero_tableau"],
   title: ["title", "nom", "name", "intitule", "libelle", "tableau", "categorie"],
   points: [
     "points",
@@ -96,6 +100,20 @@ const quoteTable = (schemaName: string, tableName: string): string =>
   `${quoteIdentifier(schemaName)}.${quoteIdentifier(tableName)}`;
 
 const normalize = (value: string): string => value.trim().toLowerCase();
+
+const resolveForcedColumn = (columns: string[], forcedName: string | undefined): string | null => {
+  if (!forcedName) {
+    return null;
+  }
+
+  for (const column of columns) {
+    if (normalize(column) === normalize(forcedName)) {
+      return column;
+    }
+  }
+
+  return null;
+};
 
 const resolveTableauDbMapping = async (): Promise<TableauDbMapping | null> => {
   try {
@@ -154,10 +172,18 @@ const resolveTableauDbMapping = async (): Promise<TableauDbMapping | null> => {
         const mapping = {
           schemaName: table.schemaName,
           tableName: table.tableName,
-          id: pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.id),
-          title: pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.title),
-          points: pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.points),
-          start: pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.start),
+          id:
+            resolveForcedColumn(table.columns, ENV_TABLEAUX_DB_COL_ID) ||
+            pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.id),
+          title:
+            resolveForcedColumn(table.columns, ENV_TABLEAUX_DB_COL_TITLE) ||
+            pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.title),
+          points:
+            resolveForcedColumn(table.columns, ENV_TABLEAUX_DB_COL_POINTS) ||
+            pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.points),
+          start:
+            resolveForcedColumn(table.columns, ENV_TABLEAUX_DB_COL_START) ||
+            pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.start),
         };
 
         if (mapping.id && mapping.title && mapping.points && mapping.start) {
@@ -277,7 +303,8 @@ const saveTableauxToDatabase = async (tableaux: Tableau[]): Promise<boolean> => 
     });
 
     return true;
-  } catch {
+  } catch (error) {
+    console.error("[tableaux] Database save failed", error);
     return false;
   }
 };
@@ -318,10 +345,10 @@ export async function getTableaux(): Promise<Tableau[]> {
   return defaultTableaux;
 }
 
-export async function saveTableaux(tableaux: Tableau[]): Promise<{ usedTemporaryStorage: boolean; databaseAvailable: boolean }> {
+export async function saveTableaux(tableaux: Tableau[]): Promise<{ usedTemporaryStorage: boolean; databaseAvailable: boolean; storage: "database" | "file" | "tmp" }> {
   const savedInDatabase = await saveTableauxToDatabase(tableaux);
   if (savedInDatabase) {
-    return { usedTemporaryStorage: false, databaseAvailable: true };
+    return { usedTemporaryStorage: false, databaseAvailable: true, storage: "database" };
   }
 
   const cleaned = sanitizeTableaux(tableaux);
@@ -330,7 +357,7 @@ export async function saveTableaux(tableaux: Tableau[]): Promise<{ usedTemporary
 
   try {
     await fs.writeFile(primaryPath, payload, "utf-8");
-    return { usedTemporaryStorage: false, databaseAvailable: false };
+    return { usedTemporaryStorage: false, databaseAvailable: false, storage: "file" };
   } catch (error) {
     if (!isReadOnlyFsError(error)) {
       throw error;
@@ -338,5 +365,5 @@ export async function saveTableaux(tableaux: Tableau[]): Promise<{ usedTemporary
   }
 
   await fs.writeFile(TMP_TABLEAUX_FILE_PATH, payload, "utf-8");
-  return { usedTemporaryStorage: true, databaseAvailable: false };
+  return { usedTemporaryStorage: true, databaseAvailable: false, storage: "tmp" };
 }

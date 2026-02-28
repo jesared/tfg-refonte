@@ -85,7 +85,11 @@ export default async function AdminTableauxPage({
           ⚠️ Les tableaux n&apos;ont pas pu être enregistrés en BDD (table introuvable, mapping incompatible, ou connexion indisponible).
           Vérifiez la configuration de la base (ex: <code className="mx-1 rounded bg-background px-1 py-0.5 text-xs">DATABASE_URL</code>,
           <code className="mx-1 rounded bg-background px-1 py-0.5 text-xs">TABLEAUX_DB_SCHEMA</code>,
-          <code className="mx-1 rounded bg-background px-1 py-0.5 text-xs">TABLEAUX_DB_TABLE</code>).
+          <code className="mx-1 rounded bg-background px-1 py-0.5 text-xs">TABLEAUX_DB_TABLE</code>,
+          <code className="mx-1 rounded bg-background px-1 py-0.5 text-xs">TABLEAUX_DB_COL_ID</code>,
+          <code className="mx-1 rounded bg-background px-1 py-0.5 text-xs">TABLEAUX_DB_COL_TITLE</code>,
+          <code className="mx-1 rounded bg-background px-1 py-0.5 text-xs">TABLEAUX_DB_COL_POINTS</code>,
+          <code className="mx-1 rounded bg-background px-1 py-0.5 text-xs">TABLEAUX_DB_COL_START</code>).
         </p>
       )}
 
