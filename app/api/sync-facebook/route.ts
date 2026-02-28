@@ -213,6 +213,7 @@ async function syncFacebookPosts() {
         lastError = undefined;
         break;
       }
+    }
 
       lastError = result.error;
 
