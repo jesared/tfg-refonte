@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 type FacebookPostResponse = {
   id: string;
+  is_published?: boolean;
   message?: string;
   story?: string;
   created_time: string;
@@ -82,9 +83,9 @@ const isSystemStory = (post: FacebookPostResponse): boolean => {
   );
 };
 
-const hasRealContent = (post: FacebookPostResponse): boolean => {
-  return Boolean(getText(post) || getImage(post));
-};
+const hasRealContent = (post: FacebookPostResponse): boolean => Boolean(getText(post) || getImage(post));
+
+const isPublishedPost = (post: FacebookPostResponse): boolean => post.is_published !== false;
 
 const getPermalink = (post: FacebookPostResponse) =>
   normalize(post.permalink_url) ?? `https://www.facebook.com/${post.id}`;
@@ -103,7 +104,7 @@ async function syncFacebookPosts() {
 
   try {
     const fields =
-      "id,created_time,message,story,permalink_url,attachments{type,media,subattachments}";
+      "id,is_published,created_time,message,story,permalink_url,attachments{type,media,subattachments}";
 
     let nextUrl: string | null =
       `https://graph.facebook.com/v25.0/${pageId}/feed?fields=${encodeURIComponent(
@@ -128,7 +129,9 @@ async function syncFacebookPosts() {
     }
 
     // 🔥 FILTRE UX PROPRE
-    const filtered = allPosts.filter((post) => hasRealContent(post) && !isSystemStory(post));
+    const filtered = allPosts.filter(
+      (post) => isPublishedPost(post) && hasRealContent(post) && !isSystemStory(post),
+    );
 
     await Promise.all(
       filtered.map((post) =>
