@@ -14,6 +14,8 @@ export type Tableau = {
 const TABLEAUX_FILE_PATH = path.join(process.cwd(), "data", "tableaux.json");
 const TMP_TABLEAUX_FILE_PATH = "/tmp/tableaux.json";
 const ENV_TABLEAUX_FILE_PATH = process.env.TABLEAUX_FILE_PATH?.trim();
+const ENV_TABLEAUX_DB_SCHEMA = process.env.TABLEAUX_DB_SCHEMA?.trim();
+const ENV_TABLEAUX_DB_TABLE = process.env.TABLEAUX_DB_TABLE?.trim();
 
 const defaultTableaux: Tableau[] = [
   { id: 1, title: "Tableau 1", points: "2000 à 1600 pts", start: "08h30" },
@@ -72,13 +74,21 @@ type TableauDbMapping = {
 };
 
 const TABLEAU_DB_KEY_ALIASES: Record<"id" | "title" | "points" | "start", string[]> = {
-  id: ["id"],
-  title: ["title", "nom", "name", "intitule", "libelle"],
-  points: ["points", "plagepoints", "plage_points", "range", "classement", "pointrange"],
-  start: ["start", "heuredebut", "heure_debut", "starttime", "horaire", "debut"],
+  id: ["id", "numero", "position", "rang"],
+  title: ["title", "nom", "name", "intitule", "libelle", "tableau", "categorie"],
+  points: [
+    "points",
+    "plagepoints",
+    "plage_points",
+    "range",
+    "classement",
+    "pointrange",
+    "point_min_max",
+  ],
+  start: ["start", "heuredebut", "heure_debut", "starttime", "horaire", "debut", "heure"],
 };
 
-const TABLE_CANDIDATES = ["Tableau", "tableau", "tableaux"];
+const TABLE_CANDIDATES = ["Tableau", "tableau", "tableaux", "Tableaux", "tableauxtournoi"];
 
 const quoteIdentifier = (identifier: string): string => `"${identifier.replaceAll('"', '""')}"`;
 
@@ -94,7 +104,7 @@ const resolveTableauDbMapping = async (): Promise<TableauDbMapping | null> => {
     >`
       SELECT table_schema, table_name, column_name
       FROM information_schema.columns
-      WHERE table_schema = 'public'
+      WHERE table_schema NOT IN ('pg_catalog', 'information_schema')
     `;
 
     if (rows.length === 0) {
@@ -118,13 +128,16 @@ const resolveTableauDbMapping = async (): Promise<TableauDbMapping | null> => {
       }
     }
 
-    const tableCandidates = [...grouped.values()].filter((table) =>
+    const forcedTableCandidates = ENV_TABLEAUX_DB_TABLE
+      ? [...grouped.values()].filter((table) =>
+          normalize(table.tableName) === normalize(ENV_TABLEAUX_DB_TABLE) &&
+          (!ENV_TABLEAUX_DB_SCHEMA || normalize(table.schemaName) === normalize(ENV_TABLEAUX_DB_SCHEMA)),
+        )
+      : [];
+
+    const namedTableCandidates = [...grouped.values()].filter((table) =>
       candidateSet.has(normalize(table.tableName)),
     );
-
-    if (tableCandidates.length === 0) {
-      return null;
-    }
 
     const pickColumn = (columns: string[], aliases: string[]): string | null => {
       const aliasSet = new Set(aliases.map((alias) => normalize(alias)));
@@ -136,26 +149,61 @@ const resolveTableauDbMapping = async (): Promise<TableauDbMapping | null> => {
       return null;
     };
 
-    for (const table of tableCandidates) {
+    const mappedTables = [...grouped.values()]
+      .map((table) => {
+        const mapping = {
+          schemaName: table.schemaName,
+          tableName: table.tableName,
+          id: pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.id),
+          title: pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.title),
+          points: pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.points),
+          start: pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.start),
+        };
+
+        if (mapping.id && mapping.title && mapping.points && mapping.start) {
+          return {
+            schemaName: mapping.schemaName,
+            tableName: mapping.tableName,
+            id: mapping.id,
+            title: mapping.title,
+            points: mapping.points,
+            start: mapping.start,
+          };
+        }
+
+        return null;
+      })
+      .filter((item): item is TableauDbMapping => item !== null);
+
+    const prioritized = [
+      ...forcedTableCandidates.map((table) => `${table.schemaName}.${table.tableName}`),
+      ...namedTableCandidates.map((table) => `${table.schemaName}.${table.tableName}`),
+    ];
+
+    for (const table of mappedTables) {
+      if (prioritized.includes(`${table.schemaName}.${table.tableName}`)) {
+        return table;
+      }
+    }
+
+    for (const table of mappedTables) {
       const mapping = {
         schemaName: table.schemaName,
         tableName: table.tableName,
-        id: pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.id),
-        title: pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.title),
-        points: pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.points),
-        start: pickColumn(table.columns, TABLEAU_DB_KEY_ALIASES.start),
+        id: table.id,
+        title: table.title,
+        points: table.points,
+        start: table.start,
       };
 
-      if (mapping.id && mapping.title && mapping.points && mapping.start) {
-        return {
-          schemaName: mapping.schemaName,
-          tableName: mapping.tableName,
-          id: mapping.id,
-          title: mapping.title,
-          points: mapping.points,
-          start: mapping.start,
-        };
-      }
+      return {
+        schemaName: mapping.schemaName,
+        tableName: mapping.tableName,
+        id: mapping.id,
+        title: mapping.title,
+        points: mapping.points,
+        start: mapping.start,
+      };
     }
 
     return null;
@@ -270,10 +318,10 @@ export async function getTableaux(): Promise<Tableau[]> {
   return defaultTableaux;
 }
 
-export async function saveTableaux(tableaux: Tableau[]): Promise<{ usedTemporaryStorage: boolean }> {
+export async function saveTableaux(tableaux: Tableau[]): Promise<{ usedTemporaryStorage: boolean; databaseAvailable: boolean }> {
   const savedInDatabase = await saveTableauxToDatabase(tableaux);
   if (savedInDatabase) {
-    return { usedTemporaryStorage: false };
+    return { usedTemporaryStorage: false, databaseAvailable: true };
   }
 
   const cleaned = sanitizeTableaux(tableaux);
@@ -282,7 +330,7 @@ export async function saveTableaux(tableaux: Tableau[]): Promise<{ usedTemporary
 
   try {
     await fs.writeFile(primaryPath, payload, "utf-8");
-    return { usedTemporaryStorage: false };
+    return { usedTemporaryStorage: false, databaseAvailable: false };
   } catch (error) {
     if (!isReadOnlyFsError(error)) {
       throw error;
@@ -290,5 +338,5 @@ export async function saveTableaux(tableaux: Tableau[]): Promise<{ usedTemporary
   }
 
   await fs.writeFile(TMP_TABLEAUX_FILE_PATH, payload, "utf-8");
-  return { usedTemporaryStorage: true };
+  return { usedTemporaryStorage: true, databaseAvailable: false };
 }
