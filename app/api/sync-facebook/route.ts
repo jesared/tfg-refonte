@@ -29,15 +29,18 @@ type FacebookPostResponse = {
   };
 };
 
+type FacebookGraphError = {
+  message: string;
+  code: number;
+  error_subcode?: number;
+};
+
 type FacebookApiResponse = {
   data?: FacebookPostResponse[];
   paging?: {
     next?: string;
   };
-  error?: {
-    message: string;
-    code: number;
-  };
+  error?: FacebookGraphError;
 };
 
 /* ----------------------------- */
@@ -90,15 +93,54 @@ const isPublishedPost = (post: FacebookPostResponse): boolean => post.is_publish
 const getPermalink = (post: FacebookPostResponse) =>
   normalize(post.permalink_url) ?? `https://www.facebook.com/${post.id}`;
 
+const isTokenInvalidError = (error?: FacebookGraphError) => error?.code === 190;
+
+async function fetchFacebookFeed(params: {
+  pageId: string;
+  token: string;
+  fields: string;
+}): Promise<{ allPosts: FacebookPostResponse[]; error?: FacebookGraphError }> {
+  let nextUrl: string | null = `https://graph.facebook.com/v25.0/${params.pageId}/feed?fields=${encodeURIComponent(
+    params.fields,
+  )}&limit=50&access_token=${encodeURIComponent(params.token)}`;
+
+  const allPosts: FacebookPostResponse[] = [];
+
+  while (nextUrl) {
+    const res = await fetch(nextUrl, { cache: "no-store" });
+    const data = (await res.json()) as FacebookApiResponse;
+
+    if (!res.ok || data.error) {
+      return {
+        allPosts,
+        error: data.error ?? {
+          message: "Facebook error",
+          code: res.status,
+        },
+      };
+    }
+
+    allPosts.push(...(data.data ?? []));
+    nextUrl = data.paging?.next ?? null;
+  }
+
+  return { allPosts };
+}
+
 /* ----------------------------- */
 /* Sync */
 /* ----------------------------- */
 
 async function syncFacebookPosts() {
-  const token = process.env.FACEBOOK_ACCESS_TOKEN;
-  const pageId = process.env.FACEBOOK_PAGE_ID;
+  const pageId = normalize(process.env.FACEBOOK_PAGE_ID);
+  const candidateTokens = [
+    normalize(process.env.FACEBOOK_PAGE_ACCESS_TOKEN),
+    normalize(process.env.FACEBOOK_ACCESS_TOKEN),
+  ].filter((token): token is string => Boolean(token));
 
-  if (!token || !pageId) {
+  const tokens = Array.from(new Set(candidateTokens));
+
+  if (!pageId || tokens.length === 0) {
     return NextResponse.json({ error: "Missing Facebook config" }, { status: 500 });
   }
 
@@ -106,26 +148,34 @@ async function syncFacebookPosts() {
     const fields =
       "id,is_published,created_time,message,story,permalink_url,attachments{type,media,subattachments}";
 
-    let nextUrl: string | null =
-      `https://graph.facebook.com/v25.0/${pageId}/feed?fields=${encodeURIComponent(
-        fields,
-      )}&limit=50&access_token=${encodeURIComponent(token)}`;
+    let allPosts: FacebookPostResponse[] = [];
+    let lastError: FacebookGraphError | undefined;
 
-    const allPosts: FacebookPostResponse[] = [];
+    for (const token of tokens) {
+      const result = await fetchFacebookFeed({ pageId, token, fields });
 
-    while (nextUrl) {
-      const res = await fetch(nextUrl, { cache: "no-store" });
-      const data = (await res.json()) as FacebookApiResponse;
-
-      if (!res.ok || data.error) {
-        return NextResponse.json(
-          { error: data.error?.message ?? "Facebook error" },
-          { status: 502 },
-        );
+      if (!result.error) {
+        allPosts = result.allPosts;
+        lastError = undefined;
+        break;
       }
 
-      allPosts.push(...(data.data ?? []));
-      nextUrl = data.paging?.next ?? null;
+      lastError = result.error;
+
+      if (!isTokenInvalidError(result.error)) {
+        break;
+      }
+    }
+
+    if (lastError) {
+      return NextResponse.json(
+        {
+          error: lastError.message ?? "Facebook error",
+          code: lastError.code ?? null,
+          subcode: lastError.error_subcode ?? null,
+        },
+        { status: 502 },
+      );
     }
 
     // 🔥 FILTRE UX PROPRE
