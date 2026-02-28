@@ -59,14 +59,14 @@ export default async function AdminTableauxPage({
   const usedTemporaryStorage = params?.storage === "tmp";
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-6">
-      <header className="rounded-2xl border border-border bg-card px-6 py-7 shadow-sm">
+    <main className="mx-auto flex w-full max-w-4xl flex-col gap-5">
+      <header className="rounded-2xl border border-border/70 bg-card/80 px-5 py-6 shadow-sm">
         <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
           <Table2 className="h-4 w-4" aria-hidden="true" />
           Administration
         </div>
-        <h1 className="mt-4 text-3xl font-semibold text-foreground">Modifier les tableaux</h1>
-        <p className="mt-2 text-sm text-muted-foreground sm:text-base">
+        <h1 className="mt-3 text-2xl font-semibold text-foreground">Modifier les tableaux</h1>
+        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
           Les modifications sont appliquées immédiatement sur la page publique
           <span className="font-medium text-foreground"> /tableaux</span>.
         </p>
@@ -88,47 +88,44 @@ export default async function AdminTableauxPage({
       )}
 
       <form action={updateTableaux} className="space-y-4">
-        {tableaux.map((tableau) => (
-          <section
-            key={tableau.id}
-            className="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5"
-          >
-            <input type="hidden" name="id" value={tableau.id} />
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-base font-semibold text-foreground">Tableau #{tableau.id}</h2>
-            </div>
+        <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+          <div className="grid grid-cols-[72px_1fr_1fr_120px] gap-px bg-border/70 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <p className="bg-muted/40 px-3 py-2.5">#</p>
+            <p className="bg-muted/40 px-3 py-2.5">Nom</p>
+            <p className="bg-muted/40 px-3 py-2.5">Plage de points</p>
+            <p className="bg-muted/40 px-3 py-2.5">Début</p>
+          </div>
 
-            <div className="grid gap-3 md:grid-cols-3">
-              <label className="space-y-1 text-sm">
-                <span className="text-muted-foreground">Nom</span>
+          <div className="divide-y divide-border/70">
+            {tableaux.map((tableau) => (
+              <div key={tableau.id} className="grid grid-cols-1 gap-3 px-3 py-3 sm:grid-cols-[72px_1fr_1fr_120px] sm:items-center">
+                <input type="hidden" name="id" value={tableau.id} />
+                <p className="text-sm font-semibold text-foreground">#{tableau.id}</p>
                 <input
                   required
                   name="title"
                   defaultValue={tableau.title}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-foreground"
+                  aria-label={`Nom du tableau ${tableau.id}`}
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
                 />
-              </label>
-              <label className="space-y-1 text-sm">
-                <span className="text-muted-foreground">Plage de points</span>
                 <input
                   required
                   name="points"
                   defaultValue={tableau.points}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-foreground"
+                  aria-label={`Plage de points du tableau ${tableau.id}`}
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
                 />
-              </label>
-              <label className="space-y-1 text-sm">
-                <span className="text-muted-foreground">Heure de début</span>
                 <input
                   required
                   name="start"
                   defaultValue={tableau.start}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-foreground"
+                  aria-label={`Heure de début du tableau ${tableau.id}`}
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
                 />
-              </label>
-            </div>
-          </section>
-        ))}
+              </div>
+            ))}
+          </div>
+        </section>
 
         <button
           type="submit"
