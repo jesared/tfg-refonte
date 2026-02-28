@@ -9,10 +9,6 @@ export type Tableau = {
   start: string;
 };
 
-export type SaveTableauxResult = {
-  usedTemporaryStorage: boolean;
-};
-
 const TABLEAUX_FILE_PATH = path.join(process.cwd(), "data", "tableaux.json");
 const TMP_TABLEAUX_FILE_PATH = "/tmp/tableaux.json";
 const ENV_TABLEAUX_FILE_PATH = process.env.TABLEAUX_FILE_PATH?.trim();
@@ -92,7 +88,7 @@ export async function getTableaux(): Promise<Tableau[]> {
   return defaultTableaux;
 }
 
-export async function saveTableaux(tableaux: Tableau[]): Promise<SaveTableauxResult> {
+export async function saveTableaux(tableaux: Tableau[]): Promise<{ usedTemporaryStorage: boolean }> {
   const cleaned = sanitizeTableaux(tableaux);
   const payload = `${JSON.stringify(cleaned, null, 2)}\n`;
   const primaryPath = ENV_TABLEAUX_FILE_PATH || TABLEAUX_FILE_PATH;
