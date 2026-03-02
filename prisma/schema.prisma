@@ -61,3 +61,12 @@ model FacebookPost {
   createdAt DateTime
   syncedAt  DateTime @default(now())
 }
+
+
+model AgendaSetting {
+  key       String   @id
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
