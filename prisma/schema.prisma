@@ -61,7 +61,13 @@ model FacebookPost {
   createdAt DateTime
   syncedAt  DateTime @default(now())
 }
-
+model Tableau {
+  id        Int      @id
+  title     String
+  points    String
+  start     String
+  updatedAt DateTime @updatedAt
+}
 
 model AgendaSetting {
   key       String   @id
