@@ -43,14 +43,18 @@ async function updateTableaux(formData: FormData) {
     redirect("/admin/tableaux?error=1");
   }
 
+  if (!result || result.storage !== "database") {
+    redirect(
+      `/admin/tableaux?error=1${result?.storage === "tmp" ? "&storage=tmp" : ""}${
+        result?.databaseAvailable ? "" : "&db=0"
+      }`,
+    );
+  }
+
   revalidatePath("/tableaux");
   revalidatePath("/admin/tableaux");
 
-  redirect(
-    `/admin/tableaux?updated=1${result?.storage === "tmp" ? "&storage=tmp" : ""}${
-      result?.databaseAvailable ? "" : "&db=0"
-    }`,
-  );
+  redirect("/admin/tableaux?updated=1");
 }
 
 export default async function AdminTableauxPage({
@@ -79,7 +83,6 @@ export default async function AdminTableauxPage({
 
   const isUpdated = updatedParam === "1";
   const usedTemporaryStorage = storageParam === "tmp";
-  const databaseAvailable = dbParam !== "0";
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-5">
@@ -111,17 +114,17 @@ export default async function AdminTableauxPage({
         </p>
       )}
 
-      {isUpdated && !databaseAvailable && (
+      {!isUpdated && dbParam === "0" && (
         <p className="inline-flex items-center gap-2 rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-200">
           <X className="h-4 w-4" aria-hidden="true" />
-          La BDD n&apos;est pas joignable : sauvegarde effectuée sur fichier.
+          La BDD n&apos;est pas joignable : l&apos;enregistrement a échoué (aucune validation).
         </p>
       )}
 
-      {isUpdated && usedTemporaryStorage && (
+      {!isUpdated && usedTemporaryStorage && (
         <p className="inline-flex items-center gap-2 rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-200">
           <X className="h-4 w-4" aria-hidden="true" />
-          Stockage temporaire utilisé (lecture seule détectée).
+          Stockage temporaire détecté (lecture seule) : la BDD n&apos;a pas été mise à jour.
         </p>
       )}
 
