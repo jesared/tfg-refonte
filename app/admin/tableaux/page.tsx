@@ -54,11 +54,7 @@ async function updateTableaux(formData: FormData) {
   revalidatePath("/tableaux");
   revalidatePath("/admin/tableaux");
 
-  redirect(
-    `/admin/tableaux?updated=1${result?.storage === "tmp" ? "&storage=tmp" : ""}${
-      result?.databaseAvailable ? "" : "&db=0"
-    }`,
-  );
+  redirect("/admin/tableaux?updated=1");
 }
 
 export default async function AdminTableauxPage({
