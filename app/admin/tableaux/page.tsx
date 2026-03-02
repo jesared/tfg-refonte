@@ -43,18 +43,26 @@ async function updateTableaux(formData: FormData) {
     redirect("/admin/tableaux?error=1");
   }
 
-  if (!result || result.storage !== "database") {
-    redirect(
-      `/admin/tableaux?error=1${result?.storage === "tmp" ? "&storage=tmp" : ""}${
-        result?.databaseAvailable ? "" : "&db=0"
-      }`,
-    );
-  }
-
   revalidatePath("/tableaux");
   revalidatePath("/admin/tableaux");
 
-  redirect("/admin/tableaux?updated=1");
+  if (!result) {
+    redirect("/admin/tableaux?error=1");
+  }
+
+  const query = new URLSearchParams({
+    updated: "1",
+  });
+
+  if (!result.databaseAvailable) {
+    query.set("db", "0");
+  }
+
+  if (result.storage === "tmp") {
+    query.set("storage", "tmp");
+  }
+
+  redirect(`/admin/tableaux?${query.toString()}`);
 }
 
 export default async function AdminTableauxPage({
@@ -114,17 +122,17 @@ export default async function AdminTableauxPage({
         </p>
       )}
 
-      {!isUpdated && dbParam === "0" && (
+      {dbParam === "0" && (
         <p className="inline-flex items-center gap-2 rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-200">
           <X className="h-4 w-4" aria-hidden="true" />
-          La BDD n&apos;est pas joignable : l&apos;enregistrement a échoué (aucune validation).
+          La BDD n&apos;est pas joignable : les données ont été enregistrées en mode dégradé.
         </p>
       )}
 
-      {!isUpdated && usedTemporaryStorage && (
+      {usedTemporaryStorage && (
         <p className="inline-flex items-center gap-2 rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-200">
           <X className="h-4 w-4" aria-hidden="true" />
-          Stockage temporaire détecté (lecture seule) : la BDD n&apos;a pas été mise à jour.
+          Stockage temporaire détecté (lecture seule) : les changements peuvent être perdus au redémarrage.
         </p>
       )}
 
