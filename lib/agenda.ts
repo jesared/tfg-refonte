@@ -57,7 +57,9 @@ const isReadOnlyFsError = (error: unknown): boolean => {
 export async function getAgendaTours(): Promise<AgendaTour[]> {
   noStore();
 
-  for (const filePath of [AGENDA_FILE_PATH, TMP_AGENDA_FILE_PATH]) {
+  // Read temporary storage first so admin updates remain visible when
+  // persistent storage is read-only (EROFS).
+  for (const filePath of [TMP_AGENDA_FILE_PATH, AGENDA_FILE_PATH]) {
     try {
       const raw = await fs.readFile(filePath, "utf-8");
       return sanitizeTours(JSON.parse(raw));
