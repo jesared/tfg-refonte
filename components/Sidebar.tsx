@@ -19,6 +19,12 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { SidebarItem } from "@/components/SidebarItem";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import LoginButton from "./LoginButton";
 
@@ -54,6 +60,10 @@ export function Sidebar() {
   const isAdmin = session?.user?.role === "ADMIN";
 
   const [isOpen, setIsOpen] = useState(false);
+
+  const isAdminPathActive = safePathname.startsWith("/admin");
+  const [mobileAdminAccordion, setMobileAdminAccordion] = useState<string | undefined>(undefined);
+  const [desktopAdminAccordion, setDesktopAdminAccordion] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
@@ -132,23 +142,33 @@ export function Sidebar() {
           ))}
 
           {isAdmin && (
-            <div className="pt-4">
-              <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Admin
-              </p>
-              <div className="space-y-2">
-                {adminItems.map((item) => (
-                  <SidebarItem
-                    key={item.href}
-                    href={item.href}
-                    label={item.label}
-                    icon={item.icon}
-                    active={isItemActive(safePathname, item.href)}
-                    onSelect={() => setIsOpen(false)}
-                  />
-                ))}
-              </div>
-            </div>
+            <Accordion
+              type="single"
+              collapsible
+              value={isAdminPathActive ? "admin" : mobileAdminAccordion}
+              onValueChange={setMobileAdminAccordion}
+              className="pt-4"
+            >
+              <AccordionItem value="admin" className="border-b-0">
+                <AccordionTrigger className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
+                  Admin
+                </AccordionTrigger>
+                <AccordionContent className="pt-2">
+                  <div className="space-y-2">
+                    {adminItems.map((item) => (
+                      <SidebarItem
+                        key={item.href}
+                        href={item.href}
+                        label={item.label}
+                        icon={item.icon}
+                        active={isItemActive(safePathname, item.href)}
+                        onSelect={() => setIsOpen(false)}
+                      />
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           )}
         </nav>
 
@@ -174,22 +194,32 @@ export function Sidebar() {
           ))}
 
           {isAdmin && (
-            <div className="pt-4">
-              <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Admin
-              </p>
-              <div className="space-y-2">
-                {adminItems.map((item) => (
-                  <SidebarItem
-                    key={item.href}
-                    href={item.href}
-                    label={item.label}
-                    icon={item.icon}
-                    active={isItemActive(safePathname, item.href)}
-                  />
-                ))}
-              </div>
-            </div>
+            <Accordion
+              type="single"
+              collapsible
+              value={isAdminPathActive ? "admin" : desktopAdminAccordion}
+              onValueChange={setDesktopAdminAccordion}
+              className="pt-4"
+            >
+              <AccordionItem value="admin" className="border-b-0">
+                <AccordionTrigger className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
+                  Admin
+                </AccordionTrigger>
+                <AccordionContent className="pt-2">
+                  <div className="space-y-2">
+                    {adminItems.map((item) => (
+                      <SidebarItem
+                        key={item.href}
+                        href={item.href}
+                        label={item.label}
+                        icon={item.icon}
+                        active={isItemActive(safePathname, item.href)}
+                      />
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           )}
         </nav>
 
