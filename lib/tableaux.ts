@@ -239,6 +239,24 @@ const resolveTableauDbMapping = async (): Promise<TableauDbMapping | null> => {
 };
 
 const getTableauxFromDatabase = async (): Promise<Tableau[] | null> => {
+  try {
+    const directRows = await prisma.tableau.findMany({
+      orderBy: { id: "asc" },
+      select: {
+        id: true,
+        title: true,
+        points: true,
+        start: true,
+      },
+    });
+
+    if (directRows.length > 0) {
+      return sanitizeTableaux(directRows);
+    }
+  } catch {
+    // Fallback to dynamic SQL mapping for legacy/external schemas.
+  }
+
   const mapping = await resolveTableauDbMapping();
 
   if (!mapping) {
@@ -265,13 +283,47 @@ const getTableauxFromDatabase = async (): Promise<Tableau[] | null> => {
 };
 
 const saveTableauxToDatabase = async (tableaux: Tableau[]): Promise<boolean> => {
+  const cleaned = sanitizeTableaux(tableaux);
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const incomingIds = cleaned.map((tableau) => tableau.id);
+
+      await tx.tableau.deleteMany({
+        where: {
+          id: { notIn: incomingIds.length > 0 ? incomingIds : [-1] },
+        },
+      });
+
+      for (const tableau of cleaned) {
+        await tx.tableau.upsert({
+          where: { id: tableau.id },
+          update: {
+            title: tableau.title,
+            points: tableau.points,
+            start: tableau.start,
+          },
+          create: {
+            id: tableau.id,
+            title: tableau.title,
+            points: tableau.points,
+            start: tableau.start,
+          },
+        });
+      }
+    });
+
+    return true;
+  } catch {
+    // Fallback to dynamic SQL mapping for legacy/external schemas.
+  }
+
   const mapping = await resolveTableauDbMapping();
 
   if (!mapping) {
     return false;
   }
 
-  const cleaned = sanitizeTableaux(tableaux);
   const tableRef = quoteTable(mapping.schemaName, mapping.tableName);
 
   try {
