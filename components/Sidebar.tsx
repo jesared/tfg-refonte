@@ -62,8 +62,11 @@ export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
 
   const isAdminPathActive = safePathname.startsWith("/admin");
+  const isSitePathActive = !isAdminPathActive;
   const [mobileAdminAccordion, setMobileAdminAccordion] = useState<string | undefined>(undefined);
+  const [mobileSiteAccordion, setMobileSiteAccordion] = useState<string | undefined>(undefined);
   const [desktopAdminAccordion, setDesktopAdminAccordion] = useState<string | undefined>(undefined);
+  const [desktopSiteAccordion, setDesktopSiteAccordion] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
@@ -130,16 +133,32 @@ export function Sidebar() {
         </div>
 
         <nav className="space-y-2">
-          {navigationItems.map((item) => (
-            <SidebarItem
-              key={item.href}
-              href={item.href}
-              label={item.label}
-              icon={item.icon}
-              active={isItemActive(safePathname, item.href)}
-              onSelect={() => setIsOpen(false)}
-            />
-          ))}
+          <Accordion
+            type="single"
+            collapsible
+            value={isSitePathActive ? "site" : mobileSiteAccordion}
+            onValueChange={setMobileSiteAccordion}
+          >
+            <AccordionItem value="site" className="border-b-0">
+              <AccordionTrigger className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
+                Menu du site
+              </AccordionTrigger>
+              <AccordionContent className="pt-2">
+                <div className="space-y-2">
+                  {navigationItems.map((item) => (
+                    <SidebarItem
+                      key={item.href}
+                      href={item.href}
+                      label={item.label}
+                      icon={item.icon}
+                      active={isItemActive(safePathname, item.href)}
+                      onSelect={() => setIsOpen(false)}
+                    />
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
 
           {isAdmin && (
             <Accordion
@@ -183,15 +202,31 @@ export function Sidebar() {
         <div className="mb-6 text-sm font-semibold text-foreground">Trophée François Grieder</div>
 
         <nav className="space-y-2">
-          {navigationItems.map((item) => (
-            <SidebarItem
-              key={item.href}
-              href={item.href}
-              label={item.label}
-              icon={item.icon}
-              active={isItemActive(safePathname, item.href)}
-            />
-          ))}
+          <Accordion
+            type="single"
+            collapsible
+            value={isSitePathActive ? "site" : desktopSiteAccordion}
+            onValueChange={setDesktopSiteAccordion}
+          >
+            <AccordionItem value="site" className="border-b-0">
+              <AccordionTrigger className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
+                Menu du site
+              </AccordionTrigger>
+              <AccordionContent className="pt-2">
+                <div className="space-y-2">
+                  {navigationItems.map((item) => (
+                    <SidebarItem
+                      key={item.href}
+                      href={item.href}
+                      label={item.label}
+                      icon={item.icon}
+                      active={isItemActive(safePathname, item.href)}
+                    />
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
 
           {isAdmin && (
             <Accordion
