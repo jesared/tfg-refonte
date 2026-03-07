@@ -61,12 +61,6 @@ export function Sidebar() {
 
   const [isOpen, setIsOpen] = useState(false);
 
-  const isAdminPathActive = safePathname.startsWith("/admin");
-  const isSitePathActive = !isAdminPathActive;
-  const [mobileAdminAccordion, setMobileAdminAccordion] = useState<string | undefined>(undefined);
-  const [mobileSiteAccordion, setMobileSiteAccordion] = useState<string | undefined>(undefined);
-  const [desktopAdminAccordion, setDesktopAdminAccordion] = useState<string | undefined>(undefined);
-  const [desktopSiteAccordion, setDesktopSiteAccordion] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
@@ -136,8 +130,7 @@ export function Sidebar() {
           <Accordion
             type="single"
             collapsible
-            value={isSitePathActive ? "site" : mobileSiteAccordion}
-            onValueChange={setMobileSiteAccordion}
+            defaultValue="site"
           >
             <AccordionItem value="site" className="border-b-0">
               <AccordionTrigger className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
@@ -164,8 +157,7 @@ export function Sidebar() {
             <Accordion
               type="single"
               collapsible
-              value={isAdminPathActive ? "admin" : mobileAdminAccordion}
-              onValueChange={setMobileAdminAccordion}
+              defaultValue="admin"
               className="pt-4"
             >
               <AccordionItem value="admin" className="border-b-0">
@@ -205,8 +197,7 @@ export function Sidebar() {
           <Accordion
             type="single"
             collapsible
-            value={isSitePathActive ? "site" : desktopSiteAccordion}
-            onValueChange={setDesktopSiteAccordion}
+            defaultValue="site"
           >
             <AccordionItem value="site" className="border-b-0">
               <AccordionTrigger className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
@@ -232,8 +223,7 @@ export function Sidebar() {
             <Accordion
               type="single"
               collapsible
-              value={isAdminPathActive ? "admin" : desktopAdminAccordion}
-              onValueChange={setDesktopAdminAccordion}
+              defaultValue="admin"
               className="pt-4"
             >
               <AccordionItem value="admin" className="border-b-0">
