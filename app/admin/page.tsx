@@ -12,22 +12,46 @@ export const metadata: Metadata = {
 
 const stats = [
   {
-    label: "Tournois suivis",
-    value: "18",
+    label: "Tours agenda publiés",
+    value: "9",
     detail: "Saison 2025-2026",
     icon: CalendarDays,
   },
   {
-    label: "Joueurs classés",
-    value: "412",
-    detail: "Toutes catégories",
+    label: "Tableaux actifs",
+    value: "14",
+    detail: "Synchronisés côté public",
     icon: Trophy,
   },
   {
-    label: "Actions en attente",
-    value: "7",
-    detail: "Validation manuelle",
+    label: "Actions admin à planifier",
+    value: "6",
+    detail: "Qualité + sécurité",
     icon: ShieldCheck,
+  },
+];
+
+const improvementTracks = [
+  {
+    title: "Agenda & salles",
+    ideas: [
+      "Ajouter un mode brouillon/publication pour préparer les changements sans impacter le site.",
+      "Détecter automatiquement les doublons de salle, de date ou de club au moment de l'enregistrement.",
+    ],
+  },
+  {
+    title: "Tableaux",
+    ideas: [
+      "Proposer un aperçu avant publication pour contrôler le rendu exact de la page publique.",
+      "Ajouter une validation des points (format + cohérence) avec messages d'erreur ligne par ligne.",
+    ],
+  },
+  {
+    title: "Utilisateurs",
+    ideas: [
+      "Créer un journal d'audit consultable depuis l'admin pour chaque changement de rôle.",
+      "Mettre en place des rôles intermédiaires (éditeur/validateur) pour limiter les droits admin complets.",
+    ],
   },
 ];
 
@@ -44,7 +68,8 @@ export default async function AdminPage() {
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Admin</p>
         <h1 className="mt-3 text-3xl font-semibold text-foreground">Tableau de bord</h1>
         <p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">
-          Espace interne pour suivre les indicateurs du challenge et préparer les prochaines actions.
+          Espace interne pour suivre les indicateurs essentiels et prioriser les améliorations des
+          pages d&apos;administration.
         </p>
       </header>
 
@@ -64,13 +89,20 @@ export default async function AdminPage() {
       <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
           <Check className="h-4 w-4 text-primary" aria-hidden="true" />
-          Prochaines améliorations proposées
+          Propositions d&apos;amélioration prioritaires
         </div>
-        <ul className="mt-4 space-y-3 text-sm text-foreground/90">
-          <li>• Ajouter un filtre par département pour le suivi des résultats.</li>
-          <li>• Créer une page de validation rapide des tournois importés.</li>
-          <li>• Connecter un export CSV des classements mensuels.</li>
-        </ul>
+        <div className="mt-4 grid gap-4 lg:grid-cols-3">
+          {improvementTracks.map((track) => (
+            <article key={track.title} className="rounded-xl border border-border/70 bg-muted/20 p-4">
+              <h2 className="text-sm font-semibold text-foreground">{track.title}</h2>
+              <ul className="mt-3 space-y-2 text-sm text-foreground/90">
+                {track.ideas.map((idea) => (
+                  <li key={idea}>• {idea}</li>
+                ))}
+              </ul>
+            </article>
+          ))}
+        </div>
       </section>
     </main>
   );

@@ -147,6 +147,16 @@ export default async function AdminTableauxPage({
           Enregistrer
         </button>
       </form>
+
+      <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-foreground">Propositions d&apos;amélioration</h2>
+        <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-muted-foreground">
+          <li>Ajouter des modèles de tableaux réutilisables (jeunes, seniors, vétérans).</li>
+          <li>Mettre en place un contrôle automatique des incohérences de points avant sauvegarde.</li>
+          <li>Proposer un historique des versions pour revenir à une publication précédente en un clic.</li>
+        </ul>
+      </section>
+
     </main>
   );
 }

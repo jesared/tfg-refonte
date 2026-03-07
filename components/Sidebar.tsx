@@ -2,7 +2,6 @@
 
 import {
   CalendarDays,
-  Check,
   Gift,
   Home,
   Mail,
@@ -40,8 +39,6 @@ const navigationItems = [
 
 const adminItems = [
   { href: "/admin", label: "Tableau de bord", icon: ShieldCheck },
-  { href: "/admin/tournois", label: "Validation tournois", icon: CalendarDays },
-  { href: "/admin/classements", label: "Publications classements", icon: Check },
   { href: "/admin/agenda", label: "Modifier agenda & salles", icon: CalendarDays },
   { href: "/admin/tableaux", label: "Modifier tableaux", icon: Swords },
   { href: "/admin/utilisateurs", label: "Utilisateurs", icon: User },

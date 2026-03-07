@@ -128,6 +128,16 @@ export default async function AdminAgendaPage({
           Enregistrer
         </button>
       </form>
+
+      <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-foreground">Propositions d&apos;amélioration</h2>
+        <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-muted-foreground">
+          <li>Ajouter une alerte si deux tours partagent la même date pour éviter les conflits calendrier.</li>
+          <li>Prévoir un import CSV des tours pour accélérer la saisie en début de saison.</li>
+          <li>Afficher un aperçu public en lecture seule avant validation finale.</li>
+        </ul>
+      </section>
+
     </main>
   );
 }
