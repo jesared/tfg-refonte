@@ -26,7 +26,9 @@ export default async function TableauxPage() {
           <span>Tableaux &amp; règlement</span>
         </div>
         <div className="space-y-3">
-          <h1 className="text-3xl font-semibold text-foreground sm:text-4xl">Catégories de compétition</h1>
+          <h1 className="text-3xl font-semibold text-foreground sm:text-4xl">
+            Catégories de compétition
+          </h1>
           <p className="text-base text-muted-foreground sm:text-lg">
             Retrouvez les catégories, leurs plages de points et les horaires de début.
             L&apos;affichage est pensé pour être lisible sur mobile avant tout.
@@ -49,13 +51,12 @@ export default async function TableauxPage() {
               hour: "2-digit",
               minute: "2-digit",
             });
-            const tours = group
-              .map((item) => item.tournament.tour)
-              .sort((a, b) => a - b)
-              .join(", ");
 
             return (
-              <article key={sample.nom} className="rounded-2xl border border-border bg-card px-4 py-4 shadow-sm">
+              <article
+                key={sample.nom}
+                className="rounded-2xl border border-border bg-card px-4 py-4 shadow-sm"
+              >
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="text-lg font-semibold text-foreground">{sample.nom}</h3>
                   <span className="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
@@ -64,16 +65,16 @@ export default async function TableauxPage() {
                 </div>
                 <dl className="mt-4 space-y-3 text-sm">
                   <div>
-                    <dt className="text-xs uppercase tracking-wide text-muted-foreground">Plage de points</dt>
+                    <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+                      Plage de points
+                    </dt>
                     <dd className="mt-1 font-medium text-foreground">{points}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs uppercase tracking-wide text-muted-foreground">Heure de début</dt>
+                    <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+                      Heure de début
+                    </dt>
                     <dd className="mt-1 font-medium text-foreground">{start}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs uppercase tracking-wide text-muted-foreground">Tours disponibles</dt>
-                    <dd className="mt-1 font-medium text-foreground">{tours || "-"}</dd>
                   </div>
                 </dl>
               </article>
@@ -116,8 +117,8 @@ export default async function TableauxPage() {
             <div className="rounded-2xl border border-border bg-muted/40 px-4 py-3">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Composition</p>
               <p className="mt-2 font-medium text-foreground">
-                Le nombre de joueurs peut être ajusté selon les inscrits (poules de 2 au lieu de
-                3, ou de 3 au lieu de 4).
+                Le nombre de joueurs peut être ajusté selon les inscrits (poules de 2 au lieu de 3,
+                ou de 3 au lieu de 4).
               </p>
             </div>
             <div className="rounded-2xl border border-border bg-muted/40 px-4 py-3">
@@ -129,8 +130,8 @@ export default async function TableauxPage() {
             <div className="rounded-2xl border border-border bg-muted/40 px-4 py-3">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Qualification</p>
               <p className="mt-2 font-medium text-foreground">
-                Qualification selon le tableau : tous qualifiés en 5–6, 3 qualifiés sur 4 en
-                15–22, sinon 2 qualifiés sur 3.
+                Qualification selon le tableau : tous qualifiés en 5–6, 3 qualifiés sur 4 en 15–22,
+                sinon 2 qualifiés sur 3.
               </p>
             </div>
           </div>

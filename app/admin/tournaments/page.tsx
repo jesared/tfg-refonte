@@ -1,9 +1,9 @@
 import { CalendarDays, Check, ShieldCheck, Trophy } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { getServerSession } from "next-auth";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
 
 export default async function TournamentsPage() {
   const session = await getServerSession(authOptions);
