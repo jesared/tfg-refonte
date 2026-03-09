@@ -75,22 +75,26 @@ export function CategoryActions({
         <Button asChild variant="outline" size="sm" className="h-8 px-2 text-xs">
           <Link href={`/admin/categories/${categoryId}/edit`}>Modifier</Link>
         </Button>
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           disabled={loading}
           onClick={handleDuplicate}
-          className="inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-2 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-8 px-2 text-xs"
         >
           {loading ? "Duplication..." : "Dupliquer"}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="destructive"
+          size="sm"
           disabled={loading}
           onClick={handleDelete}
-          className="inline-flex h-8 items-center justify-center rounded-md bg-destructive px-2 text-xs font-medium text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-8 px-2 text-xs"
         >
           {loading ? "Suppression..." : "Supprimer"}
-        </button>
+        </Button>
       </div>
       {error && <p className="max-w-64 text-right text-xs text-red-600">{error}</p>}
     </div>
