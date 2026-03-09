@@ -83,9 +83,14 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
   const minPoints = parseOptionalInt(body?.minPoints);
   const maxPoints = parseOptionalInt(body?.maxPoints);
-  const maxJoueurs = parseOptionalInt(body?.maxJoueurs);
+  const hasMaxJoueursField = Object.prototype.hasOwnProperty.call(body ?? {}, "maxJoueurs");
+  const maxJoueurs = hasMaxJoueursField ? parseOptionalInt(body?.maxJoueurs) : null;
 
-  if ([minPoints, maxPoints, maxJoueurs].some((value) => Number.isNaN(value))) {
+  if ([minPoints, maxPoints].some((value) => Number.isNaN(value))) {
+    return NextResponse.json({ error: "Invalid numeric fields" }, { status: 400 });
+  }
+
+  if (hasMaxJoueursField && Number.isNaN(maxJoueurs)) {
     return NextResponse.json({ error: "Invalid numeric fields" }, { status: 400 });
   }
 
@@ -110,11 +115,55 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
             : null,
           minPoints,
           maxPoints,
-          maxJoueurs,
         },
       }),
     ),
   );
 
-  return NextResponse.json({ updated: updates.length });
+  if (hasMaxJoueursField) {
+    await prisma.category.update({
+      where: { id },
+      data: { maxJoueurs },
+    });
+  }
+
+  return NextResponse.json({ updated: updates.length, maxJoueursUpdatedForRound: hasMaxJoueursField });
+}
+
+
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user || session.user.role !== "ADMIN") {
+    return forbiddenResponse();
+  }
+
+  const { id } = await params;
+
+  const category = await prisma.category.findUnique({ where: { id }, select: { nom: true } });
+
+  if (!category) {
+    return NextResponse.json({ error: "Category not found" }, { status: 404 });
+  }
+
+  const linkedRegistrations = await prisma.registration.count({
+    where: {
+      category: {
+        nom: category.nom,
+      },
+    },
+  });
+
+  if (linkedRegistrations > 0) {
+    return NextResponse.json(
+      { error: "Impossible de supprimer cette catégorie car des inscriptions existent." },
+      { status: 400 },
+    );
+  }
+
+  const deleted = await prisma.category.deleteMany({
+    where: { nom: category.nom },
+  });
+
+  return NextResponse.json({ deleted: deleted.count });
 }

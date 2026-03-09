@@ -10,12 +10,13 @@ type FormState = {
   heureFin: string;
   minPoints: string;
   maxPoints: string;
-  maxJoueurs: string;
+  maxJoueurs?: string;
 };
 
 export function EditCategoryForm({
   category,
   backHref,
+  allowEditMaxJoueurs,
 }: {
   category: {
     id: string;
@@ -27,6 +28,7 @@ export function EditCategoryForm({
     maxJoueurs: number | null;
   };
   backHref: string;
+  allowEditMaxJoueurs: boolean;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -37,7 +39,7 @@ export function EditCategoryForm({
     heureFin: category.heureFin ?? "",
     minPoints: category.minPoints?.toString() ?? "",
     maxPoints: category.maxPoints?.toString() ?? "",
-    maxJoueurs: category.maxJoueurs?.toString() ?? "",
+    ...(allowEditMaxJoueurs ? { maxJoueurs: category.maxJoueurs?.toString() ?? "" } : {}),
   });
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -45,10 +47,12 @@ export function EditCategoryForm({
     setLoading(true);
     setError(null);
 
+    const payload = allowEditMaxJoueurs ? form : { ...form, maxJoueurs: undefined };
+
     const response = await fetch(`/api/categories/${category.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
@@ -96,7 +100,7 @@ export function EditCategoryForm({
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className={`grid gap-4 ${allowEditMaxJoueurs ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
         <div>
           <label className="mb-1 block text-sm font-medium text-foreground">Min points</label>
           <input
@@ -115,22 +119,24 @@ export function EditCategoryForm({
             className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
           />
         </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium text-foreground">Max joueurs</label>
-          <input
-            type="number"
-            value={form.maxJoueurs}
-            onChange={(e) => setForm((prev) => ({ ...prev, maxJoueurs: e.target.value }))}
-            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
-          />
-        </div>
+        {allowEditMaxJoueurs && (
+          <div>
+            <label className="mb-1 block text-sm font-medium text-foreground">Max joueurs (tour courant)</label>
+            <input
+              type="number"
+              value={form.maxJoueurs ?? ""}
+              onChange={(e) => setForm((prev) => ({ ...prev, maxJoueurs: e.target.value }))}
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+            />
+          </div>
+        )}
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       <div className="flex gap-3">
         <button type="submit" disabled={loading} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-          {loading ? "Mise à jour..." : "Modifier pour tous les tours"}
+          {loading ? "Mise à jour..." : "Enregistrer"}
         </button>
         <Link href={backHref} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground">
           Annuler
