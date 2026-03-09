@@ -1,5 +1,6 @@
 import { Providers } from "@/components/Providers";
 import { Sidebar } from "@/components/Sidebar";
+import { AppBreadcrumb } from "@/components/app-breadcrumb";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -43,7 +44,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="min-h-full md:flex">
             <Sidebar />
             <div className="flex-1 md:pl-64">
-              <main className="px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+              <main className="px-4 py-6 sm:px-6 lg:px-8">
+                <AppBreadcrumb />
+                <div className="mt-4">{children}</div>
+              </main>
             </div>
           </div>
         </Providers>

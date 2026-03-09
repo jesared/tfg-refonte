@@ -1,19 +1,10 @@
 import { Check, Table2, X } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 
 import { TableauxEditor } from "@/components/admin/tableaux-editor";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { getTableaux, saveTableaux } from "@/lib/tableaux";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
@@ -103,20 +94,6 @@ export default async function AdminTableauxPage({
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-5">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href="/admin">Administration</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Tableaux</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
       <header className="rounded-2xl border border-border/70 bg-card/80 px-5 py-6 shadow-sm">
         <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
           <Table2 className="h-4 w-4" aria-hidden="true" />
