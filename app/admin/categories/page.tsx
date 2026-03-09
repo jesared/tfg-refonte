@@ -3,6 +3,10 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 
 import { CategoryActions } from "@/app/admin/categories/_components/CategoryActions";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
@@ -34,58 +38,71 @@ export default async function AdminCategoriesPage() {
   );
 
   return (
-    <main className="mx-auto w-full max-w-5xl space-y-6 p-8">
+    <main className="mx-auto w-full max-w-6xl space-y-6 p-8">
       <header className="flex items-start justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-2xl font-bold">Catégories</h1>
-          <p className="text-sm text-gray-500">Gérez les catégories disponibles.</p>
+          <p className="text-sm text-muted-foreground">Gérez les catégories disponibles.</p>
         </div>
-        <Link href="/admin/categories/new" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-          + Ajouter une catégorie
-        </Link>
+        <Button asChild>
+          <Link href="/admin/categories/new">+ Ajouter une catégorie</Link>
+        </Button>
       </header>
 
       {groupedCategories.length === 0 ? (
-        <section className="rounded border p-6 text-sm text-gray-500">Aucune catégorie créée pour le moment.</section>
+        <Card>
+          <CardContent className="p-6 text-sm text-muted-foreground">Aucune catégorie créée pour le moment.</CardContent>
+        </Card>
       ) : (
-        <section className="overflow-hidden rounded border">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
-              <tr>
-                <th className="px-4 py-3">Nom</th>
-                <th className="px-4 py-3">Horaires</th>
-                <th className="px-4 py-3">Points</th>
-                <th className="px-4 py-3">Inscriptions</th>
-                <th className="px-4 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle>Liste des catégories</CardTitle>
+            <CardDescription>Les catégories sont regroupées par nom et mutualisées entre les tours.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nom</TableHead>
+                  <TableHead>Horaires</TableHead>
+                  <TableHead>Points</TableHead>
+                  <TableHead>Inscriptions</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
               {groupedCategories.map((group) => {
                 const sample = group[0];
                 const totalRegistrations = group.reduce((sum, item) => sum + item._count.registrations, 0);
 
                 return (
-                  <tr key={sample.nom} className="border-t align-top">
-                    <td className="px-4 py-3 font-medium">{sample.nom}</td>
-                    <td className="px-4 py-3 text-muted-foreground">
+                  <TableRow key={sample.nom} className="align-top">
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        {sample.nom}
+                        {group.length > 1 && <Badge variant="secondary">{group.length} tours</Badge>}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
                       {new Date(sample.heureDebut).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                       {sample.heureFin
                         ? ` - ${new Date(sample.heureFin).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
                         : ""}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
                       {sample.minPoints ?? "-∞"} → {sample.maxPoints ?? "+∞"}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">{totalRegistrations}</td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{totalRegistrations}</TableCell>
+                    <TableCell>
                       <CategoryActions categoryId={sample.id} categoryName={sample.nom} />
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
-        </section>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
     </main>
   );
