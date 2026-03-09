@@ -77,10 +77,17 @@ export default async function TournamentDetailPage({ params }: { params: Promise
           <ul className="space-y-2">
             {tournament.categories.map((category) => (
               <li key={category.id} className="rounded border p-2 text-sm">
-                <p className="font-medium">{category.nom}</p>
-                <p className="text-xs text-gray-600">
-                  Points: {category.minPoints ?? "-∞"} → {category.maxPoints ?? "+∞"} · Max joueurs: {category.maxJoueurs ?? "Non limité"}
-                </p>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-medium">{category.nom}</p>
+                    <p className="text-xs text-gray-600">
+                      Points: {category.minPoints ?? "-∞"} → {category.maxPoints ?? "+∞"} · Max joueurs: {category.maxJoueurs ?? "Non limité"}
+                    </p>
+                  </div>
+                  <Link href={`/admin/categories/${category.id}/edit`} className="text-xs text-blue-600">
+                    Modifier (tous les tours)
+                  </Link>
+                </div>
               </li>
             ))}
           </ul>

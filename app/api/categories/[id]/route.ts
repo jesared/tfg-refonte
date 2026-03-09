@@ -8,28 +8,36 @@ function forbiddenResponse() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 }
 
-export async function POST(req: Request) {
+const parseOptionalInt = (value: unknown) => {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+
+  const parsed = Number.parseInt(String(value), 10);
+  return Number.isNaN(parsed) ? Number.NaN : parsed;
+};
+
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user || session.user.role !== "ADMIN") {
     return forbiddenResponse();
   }
 
+  const { id } = await params;
   const body = await req.json();
 
   const nom = String(body?.nom ?? "").trim();
+
   if (!nom) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  const parseOptionalInt = (value: unknown) => {
-    if (value === undefined || value === null || value === "") {
-      return null;
-    }
+  const category = await prisma.category.findUnique({ where: { id }, select: { nom: true } });
 
-    const parsed = Number.parseInt(String(value), 10);
-    return Number.isNaN(parsed) ? Number.NaN : parsed;
-  };
+  if (!category) {
+    return NextResponse.json({ error: "Category not found" }, { status: 404 });
+  }
 
   const minPoints = parseOptionalInt(body?.minPoints);
   const maxPoints = parseOptionalInt(body?.maxPoints);
@@ -43,23 +51,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "minPoints must be <= maxPoints" }, { status: 400 });
   }
 
-  const tournaments = await prisma.tournament.findMany({
-    select: { id: true },
-  });
-
-  if (tournaments.length === 0) {
-    return NextResponse.json({ error: "No tournament available" }, { status: 400 });
-  }
-
-  await prisma.category.createMany({
-    data: tournaments.map((tournament) => ({
+  const updated = await prisma.category.updateMany({
+    where: { nom: category.nom },
+    data: {
       nom,
       minPoints,
       maxPoints,
       maxJoueurs,
-      tournamentId: tournament.id,
-    })),
+    },
   });
 
-  return NextResponse.json({ created: tournaments.length }, { status: 201 });
+  return NextResponse.json({ updated: updated.count });
 }
