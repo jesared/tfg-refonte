@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Récompenses",
   description:
-    "Présentation des récompenses, des mises de fond par club et de la cérémonie de remise du trophée.",
+    "Informations connues sur le financement des dotations et le barème de points du classement général.",
 };
 
 export default function RecompensesPage() {
@@ -15,38 +15,34 @@ export default function RecompensesPage() {
             Récompenses
           </p>
           <h1 className="text-4xl font-semibold leading-tight">
-            Valoriser l&apos;engagement des clubs et célébrer la performance
+            Dotations et points du classement général
           </h1>
           <p className="text-lg text-muted-foreground">
-            Une page dédiée à l&apos;effort collectif, aux lots remis aux équipes gagnantes et à la
-            cérémonie finale du trophée.
+            Cette page reprend uniquement les éléments confirmés sur les récompenses du challenge.
           </p>
         </header>
 
         <section className="grid gap-6 rounded-3xl border border-border bg-muted/40 p-8 shadow-sm">
           <div className="space-y-3">
-            <h2 className="text-2xl font-semibold">Mise de fond par club</h2>
+            <h2 className="text-2xl font-semibold">Financement des dotations</h2>
             <p className="text-base leading-7 text-foreground/90">
-              Chaque club participant contribue à hauteur de 100&nbsp;€, une mise de fond unique
-              destinée à constituer une enveloppe commune pour les récompenses. Cette contribution
-              garantit un engagement équitable, renforce l&apos;esprit d&apos;entraide entre les
-              équipes et assure une redistribution transparente lors de la cérémonie finale.
+              Les dotations du classement général sont financées par l&apos;ensemble des clubs
+              participants. À ce jour, le montant exact des dotations n&apos;est pas connu à
+              l&apos;avance.
             </p>
             <div className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-2">
               <div className="rounded-2xl border border-border bg-card/80 p-4">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Répartition</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Montants</p>
                 <p className="mt-2">
-                  60% pour le 1er, 25% pour le 2e et 15% pour le 3e, afin de valoriser chaque
-                  podium.
+                  Les montants de récompense ne sont pas définis à l&apos;avance.
                 </p>
               </div>
               <div className="rounded-2xl border border-border bg-card/80 p-4">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                  Transparence
+                  Participation
                 </p>
                 <p className="mt-2">
-                  Les clubs reçoivent un récapitulatif des contributions et des dotations lors de la
-                  remise officielle.
+                  Chaque club contribue au financement des dotations du classement général.
                 </p>
               </div>
             </div>
@@ -54,156 +50,82 @@ export default function RecompensesPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-border bg-card p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Contribution</p>
-              <p className="mt-2 text-2xl font-semibold text-foreground">100&nbsp;€</p>
-              <p className="mt-2 text-sm text-muted-foreground">Par club engagé dans la saison.</p>
+              <p className="mt-2 text-base font-semibold text-foreground">Club participant</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                La participation existe, mais le niveau de contribution n&apos;est pas précisé.
+              </p>
             </div>
             <div className="rounded-2xl border border-border bg-card p-4">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Objectif</p>
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Répartition</p>
               <p className="mt-2 text-base font-semibold text-foreground">
-                Récompenser l&apos;effort collectif
+                Information non communiquée
               </p>
               <p className="mt-2 text-sm text-muted-foreground">
-                L&apos;enveloppe permet de doter les trois premières équipes.
+                Le mode de répartition des dotations n&apos;est pas encore détaillé.
               </p>
             </div>
           </div>
         </section>
 
         <section className="space-y-6">
-          <h2 className="text-2xl font-semibold">Détail des lots</h2>
-          <div className="grid gap-6 md:grid-cols-3">
-            <article className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">1er</p>
-              <h3 className="mt-3 text-xl font-semibold">Trophée principal</h3>
-              <p className="mt-3 text-sm text-muted-foreground">
-                Remise du trophée François Grieder, dotation financière majeure (60% de
-                l&apos;enveloppe) et mise en avant officielle du club vainqueur sur les supports de
-                la ligue.
-              </p>
-              <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                <li>• Trophée gravé + médaille</li>
-                <li>• Mise à l&apos;honneur lors de la soirée finale</li>
-              </ul>
-            </article>
-            <article className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">2e</p>
-              <h3 className="mt-3 text-xl font-semibold">Dotation d&apos;équipe</h3>
-              <p className="mt-3 text-sm text-muted-foreground">
-                Lot financier (25% de l&apos;enveloppe) et équipement sportif pour valoriser la
-                progression jusqu&apos;à la finale.
-              </p>
-              <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                <li>• Pack textile pour l&apos;effectif</li>
-                <li>• Bon d&apos;achat chez un partenaire local</li>
-              </ul>
-            </article>
-            <article className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">3e</p>
-              <h3 className="mt-3 text-xl font-semibold">Prix de podium</h3>
-              <p className="mt-3 text-sm text-muted-foreground">
-                Récompense symbolique (15% de l&apos;enveloppe), dotée par les partenaires locaux,
-                pour saluer une saison régulière et solide.
-              </p>
-              <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                <li>• Trophée podium + kit supporters</li>
-                <li>• Mise en avant dans la newsletter</li>
-              </ul>
-            </article>
+          <h2 className="text-2xl font-semibold">Barème de points</h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            {[
+              { round: "Vainqueur", points: "9 points" },
+              { round: "Finaliste", points: "6 points" },
+              { round: "Demi-finaliste", points: "4 points" },
+              { round: "Quart de finaliste", points: "2 points" },
+              { round: "Autres", points: "0 point" },
+            ].map((item) => (
+              <article key={item.round} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <p className="text-sm uppercase tracking-wide text-muted-foreground">{item.round}</p>
+                <p className="mt-2 text-2xl font-semibold">{item.points}</p>
+              </article>
+            ))}
           </div>
         </section>
         <section className="space-y-6">
           <div className="flex flex-wrap items-end justify-between gap-4">
-            <h2 className="text-2xl font-semibold">Carrousel des moments forts</h2>
+            <h2 className="text-2xl font-semibold">Informations en attente</h2>
             <p className="max-w-xl text-sm text-muted-foreground">
-              Une boucle animée met en avant les trophées, les dotations et la célébration finale.
-              Faites défiler pour découvrir chaque étape.
+              Certains éléments complémentaires ne sont pas encore documentés.
             </p>
           </div>
-          <div className="relative overflow-hidden rounded-3xl border border-border bg-muted/40">
-            <div className="flex w-[200%] animate-[trophy-scroll_24s_linear_infinite] gap-6 p-6">
-              {[
-                {
-                  title: "Trophée principal",
-                  desc: "Moment phare avec remise officielle du trophée.",
-                },
-                {
-                  title: "Dotation 2e place",
-                  desc: "Équipement sportif pour renforcer l&apos;effectif.",
-                },
-                {
-                  title: "Prix podium",
-                  desc: "Récompense symbolique et visibilité locale.",
-                },
-                {
-                  title: "Célébration finale",
-                  desc: "Discours, photos et mise à l&apos;honneur des clubs.",
-                },
-              ].map((item) => (
-                <article
-                  key={item.title}
-                  className="min-w-[240px] flex-1 rounded-2xl border border-border bg-card p-5 shadow-sm"
-                >
-                  <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                    Highlight
-                  </p>
-                  <h3 className="mt-3 text-lg font-semibold">{item.title}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">{item.desc}</p>
-                </article>
-              ))}
-              {[
-                {
-                  title: "Trophée principal",
-                  desc: "Moment phare avec remise officielle du trophée.",
-                },
-                {
-                  title: "Dotation 2e place",
-                  desc: "Équipement sportif pour renforcer l&apos;effectif.",
-                },
-                {
-                  title: "Prix podium",
-                  desc: "Récompense symbolique et visibilité locale.",
-                },
-                {
-                  title: "Célébration finale",
-                  desc: "Discours, photos et mise à l&apos;honneur des clubs.",
-                },
-              ].map((item) => (
-                <article
-                  key={`${item.title}-duplicate`}
-                  className="min-w-[240px] flex-1 rounded-2xl border border-border bg-card p-5 shadow-sm"
-                >
-                  <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                    Highlight
-                  </p>
-                  <h3 className="mt-3 text-lg font-semibold">{item.title}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">{item.desc}</p>
-                </article>
-              ))}
-            </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {[
+              "Répartition détaillée des dotations",
+              "Transparence de gestion",
+              "Détail précis des lots",
+              "Fonctionnement du carrousel",
+            ].map((item) => (
+              <article key={item} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Statut</p>
+                <p className="mt-2 text-sm font-semibold text-foreground">Non communiqué</p>
+                <p className="mt-2 text-sm text-muted-foreground">{item}</p>
+              </article>
+            ))}
           </div>
         </section>
 
         <section className="rounded-3xl border border-border bg-muted/40 p-8">
           <div className="space-y-4">
-            <h2 className="text-2xl font-semibold">Cérémonie de remise des récompenses</h2>
+            <h2 className="text-2xl font-semibold">Cérémonie de remise</h2>
             <p className="text-base leading-7 text-foreground/90">
-              La remise officielle se déroule lors de la soirée de clôture. Les capitaines et
-              représentants des clubs sont invités à recevoir les lots, à partager un temps
-              d&apos;échanges avec les bénévoles et à célébrer les performances de la saison.
+              Il n&apos;est pas prévu de cérémonie de remise des prix.
             </p>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="rounded-2xl border border-border bg-card p-4">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Moment clé</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Format</p>
                 <p className="mt-2 text-sm font-semibold text-foreground">
-                  Soirée finale &amp; hommage aux clubs
+                  Aucune cérémonie annoncée
                 </p>
               </div>
               <div className="rounded-2xl border border-border bg-card p-4">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                  Participants
+                  Remise des prix
                 </p>
                 <p className="mt-2 text-sm font-semibold text-foreground">
-                  Clubs, partenaires, bénévoles et supporters
+                  Sans événement dédié
                 </p>
               </div>
             </div>
