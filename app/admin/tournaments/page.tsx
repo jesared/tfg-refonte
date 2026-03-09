@@ -34,6 +34,9 @@ export default async function TournamentsPage() {
             </div>
 
             <div className="flex gap-3">
+              <Link href={`/admin/tournaments/${t.id}/edit`} className="text-blue-600">
+                Modifier
+              </Link>
               <Link href={`/admin/tournaments/${t.id}`} className="text-blue-600">
                 Gérer
               </Link>
