@@ -1,58 +1,14 @@
 import type { Metadata } from "next";
 import { MapPin } from "lucide-react";
 
-import { getAgendaTours } from "@/lib/agenda";
+import { prisma } from "@/lib/prisma";
 
-const FRENCH_MONTHS: Record<string, string> = {
-  janvier: "01",
-  février: "02",
-  fevrier: "02",
-  mars: "03",
-  avril: "04",
-  mai: "05",
-  juin: "06",
-  juillet: "07",
-  août: "08",
-  aout: "08",
-  septembre: "09",
-  octobre: "10",
-  novembre: "11",
-  décembre: "12",
-  decembre: "12",
-};
-
-const formatAgendaDate = (value: string) => {
-  const raw = value.trim();
-
-  if (/^\d{2}-\d{2}-\d{4}$/.test(raw)) return raw;
-
-  const isoMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (isoMatch) {
-    const [, year, month, day] = isoMatch;
-    return `${day}-${month}-${year}`;
-  }
-
-  const frenchMatch = raw
-    .toLowerCase()
-    .match(/^(\d{1,2})\s+([a-zàâäéèêëîïôöùûüç]+)\s+(\d{4})$/i);
-  if (frenchMatch) {
-    const [, day, monthWord, year] = frenchMatch;
-    const month = FRENCH_MONTHS[monthWord];
-    if (month) {
-      return `${day.padStart(2, "0")}-${month}-${year}`;
-    }
-  }
-
-  const parsed = new Date(raw);
-  if (!Number.isNaN(parsed.getTime())) {
-    const day = String(parsed.getDate()).padStart(2, "0");
-    const month = String(parsed.getMonth() + 1).padStart(2, "0");
-    const year = parsed.getFullYear();
-    return `${day}-${month}-${year}`;
-  }
-
-  return raw;
-};
+const formatAgendaDate = (date: Date) =>
+  date.toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 
 export const metadata: Metadata = {
   title: "Agenda & salles",
@@ -74,9 +30,36 @@ const getCurrentSeasonLabel = (now = new Date()) => {
   return `${year}-${year + 1}`;
 };
 
+const getCurrentSeasonRange = (now = new Date()) => {
+  const month = now.getMonth() + 1;
+  const year = now.getFullYear();
+  const startYear = month >= 8 ? year : year - 1;
+
+  return {
+    start: new Date(startYear, 7, 1, 0, 0, 0, 0),
+    end: new Date(startYear + 1, 6, 31, 23, 59, 59, 999),
+  };
+};
+
 export default async function AgendaPage() {
-  const tours = await getAgendaTours();
   const seasonLabel = getCurrentSeasonLabel();
+  const seasonRange = getCurrentSeasonRange();
+
+  let tours: Awaited<ReturnType<typeof prisma.tournament.findMany>> = [];
+
+  try {
+    tours = await prisma.tournament.findMany({
+      where: {
+        date: {
+          gte: seasonRange.start,
+          lte: seasonRange.end,
+        },
+      },
+      orderBy: [{ date: "asc" }, { tour: "asc" }],
+    });
+  } catch (error) {
+    console.error("[agenda] Unable to load tournaments", error);
+  }
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-8">
@@ -107,9 +90,9 @@ export default async function AgendaPage() {
             <tbody>
               {tours.map((tour) => (
                 <tr key={tour.id} className="border-b border-border/60 last:border-0">
-                  <td className="px-3 py-3 font-semibold text-foreground">{tour.label}</td>
+                  <td className="px-3 py-3 font-semibold text-foreground">Tour {tour.tour}</td>
                   <td className="px-3 py-3 text-foreground/90">{formatAgendaDate(tour.date)}</td>
-                  <td className="px-3 py-3 text-foreground/90">{tour.club}</td>
+                  <td className="px-3 py-3 text-foreground/90">{tour.clubOrganisateur}</td>
                 </tr>
               ))}
             </tbody>
@@ -123,10 +106,10 @@ export default async function AgendaPage() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                  {tour.label}
+                  Tour {tour.tour}
                 </p>
-                <h2 className="mt-1 text-xl font-semibold text-foreground">{tour.city}</h2>
-                <p className="mt-1 text-sm text-muted-foreground">{tour.club}</p>
+                <h2 className="mt-1 text-xl font-semibold text-foreground">{tour.salleVille}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{tour.clubOrganisateur}</p>
               </div>
               <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                 {formatAgendaDate(tour.date)}
@@ -134,13 +117,13 @@ export default async function AgendaPage() {
             </div>
 
             <div className="mt-4 space-y-3 text-sm">
-              <p className="font-medium text-foreground">{tour.venue}</p>
+              <p className="font-medium text-foreground">{tour.salleNom}</p>
               <div className="flex items-start gap-2 text-muted-foreground">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>{tour.address}</span>
+                <span>{tour.salleAdresse}</span>
               </div>
               <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tour.address)}`}
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tour.salleAdresse)}`}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 font-medium text-primary hover:underline"
