@@ -1,7 +1,23 @@
-import { getTableaux } from "@/lib/tableaux";
+import { prisma } from "@/lib/prisma";
 
 export default async function TableauxPage() {
-  const tableaux = await getTableaux();
+  const categories = await prisma.category.findMany({
+    orderBy: [{ nom: "asc" }, { heureDebut: "asc" }],
+    include: {
+      tournament: {
+        select: { tour: true },
+      },
+    },
+  });
+
+  const groupedCategories = Object.values(
+    categories.reduce<Record<string, typeof categories>>((acc, category) => {
+      acc[category.nom] = acc[category.nom] ?? [];
+      acc[category.nom].push(category);
+      return acc;
+    }, {}),
+  );
+
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-8">
       <section className="flex flex-col gap-4 rounded-3xl border border-border bg-card px-5 py-6 shadow-sm sm:px-6 sm:py-8">
@@ -10,11 +26,9 @@ export default async function TableauxPage() {
           <span>Tableaux &amp; règlement</span>
         </div>
         <div className="space-y-3">
-          <h1 className="text-3xl font-semibold text-foreground sm:text-4xl">
-            Tableaux de compétition
-          </h1>
+          <h1 className="text-3xl font-semibold text-foreground sm:text-4xl">Catégories de compétition</h1>
           <p className="text-base text-muted-foreground sm:text-lg">
-            Retrouvez les 8 tableaux, leurs plages de points et les horaires de début.
+            Retrouvez les catégories, leurs plages de points et les horaires de début.
             L&apos;affichage est pensé pour être lisible sur mobile avant tout.
           </p>
         </div>
@@ -22,39 +36,49 @@ export default async function TableauxPage() {
 
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-foreground">Liste des tableaux</h2>
+          <h2 className="text-xl font-semibold text-foreground">Liste des catégories</h2>
           <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
-            {tableaux.length} tableaux
+            {groupedCategories.length} catégories
           </span>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          {tableaux.map((tableau) => (
-            <article
-              key={tableau.id}
-              className="rounded-2xl border border-border bg-card px-4 py-4 shadow-sm"
-            >
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-foreground">{tableau.title}</h3>
-                <span className="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
-                  {tableau.start}
-                </span>
-              </div>
-              <dl className="mt-4 space-y-3 text-sm">
-                <div>
-                  <dt className="text-xs uppercase tracking-wide text-muted-foreground">
-                    Plage de points
-                  </dt>
-                  <dd className="mt-1 font-medium text-foreground">{tableau.points}</dd>
+          {groupedCategories.map((group) => {
+            const sample = group[0];
+            const points = `${sample.minPoints ?? "-∞"} → ${sample.maxPoints ?? "+∞"}`;
+            const start = new Date(sample.heureDebut).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+            const tours = group
+              .map((item) => item.tournament.tour)
+              .sort((a, b) => a - b)
+              .join(", ");
+
+            return (
+              <article key={sample.nom} className="rounded-2xl border border-border bg-card px-4 py-4 shadow-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-lg font-semibold text-foreground">{sample.nom}</h3>
+                  <span className="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
+                    {start}
+                  </span>
                 </div>
-                <div>
-                  <dt className="text-xs uppercase tracking-wide text-muted-foreground">
-                    Heure de début
-                  </dt>
-                  <dd className="mt-1 font-medium text-foreground">{tableau.start}</dd>
-                </div>
-              </dl>
-            </article>
-          ))}
+                <dl className="mt-4 space-y-3 text-sm">
+                  <div>
+                    <dt className="text-xs uppercase tracking-wide text-muted-foreground">Plage de points</dt>
+                    <dd className="mt-1 font-medium text-foreground">{points}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs uppercase tracking-wide text-muted-foreground">Heure de début</dt>
+                    <dd className="mt-1 font-medium text-foreground">{start}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs uppercase tracking-wide text-muted-foreground">Tours disponibles</dt>
+                    <dd className="mt-1 font-medium text-foreground">{tours || "-"}</dd>
+                  </div>
+                </dl>
+              </article>
+            );
+          })}
         </div>
       </section>
 
