@@ -117,6 +117,11 @@ export default async function AdminAgendaPage({
         </p>
       )}
 
+      <p className="rounded-xl border border-border/70 bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
+        Astuce: configure <code className="font-mono">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> pour activer
+        l&apos;auto-complétion Google Maps sur le champ &quot;Salle&quot;.
+      </p>
+
       <form action={updateAgenda} className="space-y-4">
         <AgendaEditor initialTours={tours} />
 
