@@ -4,6 +4,7 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 
 export default async function TournamentsPage() {
   const session = await getServerSession(authOptions);
@@ -17,6 +18,31 @@ export default async function TournamentsPage() {
   });
 
   const openRegistrationsCount = tournaments.filter((tournament) => tournament.inscriptionOuverte).length;
+
+
+  async function deleteTournament(formData: FormData) {
+    "use server";
+
+    const actionSession = await getServerSession(authOptions);
+
+    if (!actionSession?.user || actionSession.user.role !== "ADMIN") {
+      redirect("/");
+    }
+
+    const tournamentId = String(formData.get("tournamentId") ?? "");
+
+    if (!tournamentId) {
+      return;
+    }
+
+    await prisma.$transaction([
+      prisma.registration.deleteMany({ where: { tournamentId } }),
+      prisma.category.deleteMany({ where: { tournamentId } }),
+      prisma.tournament.delete({ where: { id: tournamentId } }),
+    ]);
+
+    revalidatePath("/admin/tournaments");
+  }
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-8">
@@ -119,6 +145,15 @@ export default async function TournamentsPage() {
                   >
                     Modifier
                   </Link>
+                  <form action={deleteTournament}>
+                    <input type="hidden" name="tournamentId" value={tournament.id} />
+                    <button
+                      type="submit"
+                      className="cursor-pointer rounded-md border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-sm font-medium text-destructive transition hover:bg-destructive/20"
+                    >
+                      Supprimer
+                    </button>
+                  </form>
                   <Link
                     href={`/admin/tournaments/${tournament.id}`}
                     className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition hover:opacity-90"
