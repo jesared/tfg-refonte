@@ -10,6 +10,7 @@ type FormState = {
   minPoints: string;
   maxPoints: string;
   maxJoueurs: string;
+  tournamentId: string;
 };
 
 const initialState: FormState = {
@@ -18,6 +19,7 @@ const initialState: FormState = {
   minPoints: "",
   maxPoints: "",
   maxJoueurs: "",
+  tournamentId: "",
 };
 
 export function NewCategoryForm({
@@ -31,7 +33,7 @@ export function NewCategoryForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [form, setForm] = useState<FormState>(initialState);
+  const [form, setForm] = useState<FormState>({ ...initialState, tournamentId: tournamentId ?? "" });
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
