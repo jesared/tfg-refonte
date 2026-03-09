@@ -151,20 +151,9 @@ export default async function AdminCategoriesPage() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-                      {group.length} tour{group.length > 1 ? "s" : ""}
-                    </span>
                     <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
                       {totalByGroup} inscription{totalByGroup > 1 ? "s" : ""}
                     </span>
-                    {group.map((category) => (
-                      <span
-                        key={category.id}
-                        className="inline-flex items-center rounded-full border border-border bg-background px-2.5 py-1 text-xs text-foreground"
-                      >
-                        {category.tournament.nom}
-                      </span>
-                    ))}
                   </div>
                 </article>
               );
