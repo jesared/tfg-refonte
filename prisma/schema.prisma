@@ -7,11 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  USER
-  ADMIN
-}
-
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -19,9 +14,8 @@ model User {
   emailVerified DateTime?
   image         String?
   role          Role      @default(USER)
-
-  accounts Account[]
-  sessions Session[]
+  accounts      Account[]
+  sessions      Session[]
 }
 
 model Account {
@@ -37,8 +31,7 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -48,8 +41,7 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model FacebookPost {
@@ -57,10 +49,11 @@ model FacebookPost {
   message   String?
   image     String?
   permalink String
-  type      String? 
   createdAt DateTime
   syncedAt  DateTime @default(now())
+  type      String?
 }
+
 model Tableau {
   id        Int      @id
   title     String
@@ -76,3 +69,42 @@ model AgendaSetting {
   updatedAt DateTime @updatedAt
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+model Registration {
+  id              String   @id @default(cuid())
+
+  // Infos joueur
+  nom             String
+  prenom          String
+  numeroLicence   String
+  genre           Gender?
+  club            String
+  points          Int?     // Points officiels FFTT
+
+  // Inscription
+  tableau         String
+  saison          String?
+
+  statut          RegistrationStatus @default(EN_ATTENTE)
+  licenceVerified Boolean  @default(false)
+  present         Boolean  @default(false)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([numeroLicence, tableau])
+}
+enum RegistrationStatus {
+  EN_ATTENTE
+  VALIDE
+  REFUSE
+  ANNULE
+}
+
+enum Gender {
+  M
+  F
+}
