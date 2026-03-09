@@ -40,12 +40,47 @@ export function CategoryActions({
     setLoading(false);
   }
 
+  async function handleDuplicate() {
+    const duplicatedName = window.prompt("Nom de la nouvelle catégorie", `${categoryName} (copie)`);
+
+    if (duplicatedName === null) {
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    const response = await fetch(`/api/categories/${categoryId}/duplicate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nom: duplicatedName }),
+    });
+
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { error?: string } | null;
+      setError(body?.error ?? "Impossible de dupliquer la catégorie.");
+      setLoading(false);
+      return;
+    }
+
+    router.refresh();
+    setLoading(false);
+  }
+
   return (
     <div className="flex flex-col items-end gap-2">
       <div className="flex items-center gap-3">
         <Link href={`/admin/categories/${categoryId}/edit`} className="text-xs text-blue-600">
           Modifier
         </Link>
+        <button
+          type="button"
+          disabled={loading}
+          onClick={handleDuplicate}
+          className="text-xs text-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {loading ? "Duplication..." : "Dupliquer"}
+        </button>
         <button
           type="button"
           disabled={loading}
