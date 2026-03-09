@@ -9,7 +9,7 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 export default async function NewCategoryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tournamentId?: string }>;
+  searchParams: Promise<{ tournamentId?: string | string[] }>;
 }) {
   const session = await getServerSession(authOptions);
 
@@ -18,8 +18,13 @@ export default async function NewCategoryPage({
   }
 
   const { tournamentId } = await searchParams;
-  const tournament = tournamentId
-    ? await prisma.tournament.findUnique({ where: { id: tournamentId }, select: { id: true, nom: true } })
+  const normalizedTournamentId = Array.isArray(tournamentId) ? tournamentId[0] : tournamentId;
+
+  const tournament = normalizedTournamentId
+    ? await prisma.tournament.findUnique({
+        where: { id: normalizedTournamentId },
+        select: { id: true, nom: true },
+      })
     : null;
 
   const backHref = tournament ? `/admin/tournaments/${tournament.id}` : "/admin/tournaments";

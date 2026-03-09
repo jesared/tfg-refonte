@@ -43,7 +43,7 @@ export function NewCategoryForm({
     const response = await fetch("/api/categories", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, tournamentId: tournamentId ?? "" }),
     });
 
     if (!response.ok) {
