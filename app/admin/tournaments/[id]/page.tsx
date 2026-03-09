@@ -81,7 +81,7 @@ export default async function TournamentDetailPage({ params }: { params: Promise
                   <div>
                     <p className="font-medium">{category.nom}</p>
                     <p className="text-xs text-gray-600">
-                      Points: {category.minPoints ?? "-∞"} → {category.maxPoints ?? "+∞"} · Max joueurs: {category.maxJoueurs ?? "Non limité"}
+                      Horaire: {category.horaire || "-"} · Points: {category.minPoints ?? "-∞"} → {category.maxPoints ?? "+∞"} · Max joueurs: {category.maxJoueurs ?? "Non limité"}
                     </p>
                   </div>
                   <Link href={`/admin/categories/${category.id}/edit`} className="text-xs text-blue-600">

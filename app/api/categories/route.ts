@@ -18,6 +18,7 @@ export async function POST(req: Request) {
   const body = await req.json();
 
   const nom = String(body?.nom ?? "").trim();
+  const horaire = String(body?.horaire ?? "").trim();
   if (!nom) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
@@ -54,6 +55,7 @@ export async function POST(req: Request) {
   await prisma.category.createMany({
     data: tournaments.map((tournament) => ({
       nom,
+      horaire: horaire || null,
       minPoints,
       maxPoints,
       maxJoueurs,

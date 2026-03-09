@@ -17,7 +17,7 @@ export default async function EditCategoryPage({ params }: { params: Promise<{ i
 
   const category = await prisma.category.findUnique({
     where: { id },
-    select: { id: true, nom: true, minPoints: true, maxPoints: true, maxJoueurs: true, tournamentId: true },
+    select: { id: true, nom: true, horaire: true, minPoints: true, maxPoints: true, maxJoueurs: true, tournamentId: true },
   });
 
   if (!category) {

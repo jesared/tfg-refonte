@@ -6,6 +6,7 @@ import { useState } from "react";
 
 type FormState = {
   nom: string;
+  horaire: string;
   minPoints: string;
   maxPoints: string;
   maxJoueurs: string;
@@ -15,7 +16,7 @@ export function EditCategoryForm({
   category,
   backHref,
 }: {
-  category: { id: string; nom: string; minPoints: number | null; maxPoints: number | null; maxJoueurs: number | null };
+  category: { id: string; nom: string; horaire: string | null; minPoints: number | null; maxPoints: number | null; maxJoueurs: number | null };
   backHref: string;
 }) {
   const router = useRouter();
@@ -23,6 +24,7 @@ export function EditCategoryForm({
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>({
     nom: category.nom,
+    horaire: category.horaire ?? "",
     minPoints: category.minPoints?.toString() ?? "",
     maxPoints: category.maxPoints?.toString() ?? "",
     maxJoueurs: category.maxJoueurs?.toString() ?? "",
@@ -58,6 +60,16 @@ export function EditCategoryForm({
           required
           value={form.nom}
           onChange={(e) => setForm((prev) => ({ ...prev, nom: e.target.value }))}
+          className="w-full rounded border p-2"
+        />
+      </div>
+
+      <div>
+        <label className="mb-1 block text-sm font-medium">Horaire</label>
+        <input
+          type="time"
+          value={form.horaire}
+          onChange={(e) => setForm((prev) => ({ ...prev, horaire: e.target.value }))}
           className="w-full rounded border p-2"
         />
       </div>
