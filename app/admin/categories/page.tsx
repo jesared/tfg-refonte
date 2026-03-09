@@ -93,7 +93,7 @@ export default async function AdminCategoriesPage() {
           <div className="mb-4 inline-flex rounded-lg bg-primary/10 p-2 text-primary">
             <CalendarDays className="h-5 w-5" aria-hidden="true" />
           </div>
-          <p className="text-sm text-muted-foreground">Catégories déployées (tous tours)</p>
+          <p className="text-sm text-muted-foreground">Catégories déployées</p>
           <p className="mt-1 text-3xl font-semibold text-foreground">{categories.length}</p>
         </article>
 
