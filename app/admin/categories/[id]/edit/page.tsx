@@ -17,7 +17,7 @@ export default async function EditCategoryPage({ params }: { params: Promise<{ i
 
   const category = await prisma.category.findUnique({
     where: { id },
-    select: { id: true, nom: true, horaire: true, minPoints: true, maxPoints: true, maxJoueurs: true, tournamentId: true },
+    select: { id: true, nom: true, heureDebut: true, heureFin: true, minPoints: true, maxPoints: true, maxJoueurs: true, tournamentId: true },
   });
 
   if (!category) {
@@ -35,7 +35,11 @@ export default async function EditCategoryPage({ params }: { params: Promise<{ i
       </header>
 
       <EditCategoryForm
-        category={category}
+        category={{
+          ...category,
+          heureDebut: category.heureDebut.toISOString().slice(11, 16),
+          heureFin: category.heureFin ? category.heureFin.toISOString().slice(11, 16) : null,
+        }}
         backHref={`/admin/tournaments/${category.tournamentId}`}
       />
     </main>

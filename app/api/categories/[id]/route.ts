@@ -17,6 +17,33 @@ const parseOptionalInt = (value: unknown) => {
   return Number.isNaN(parsed) ? Number.NaN : parsed;
 };
 
+function parseTime(value: unknown) {
+  const normalized = String(value ?? "").trim();
+  if (!normalized) {
+    return null;
+  }
+
+  const match = normalized.match(/^(\d{2}):(\d{2})$/);
+  if (!match) {
+    return null;
+  }
+
+  const hours = Number.parseInt(match[1], 10);
+  const minutes = Number.parseInt(match[2], 10);
+
+  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+    return null;
+  }
+
+  return { hours, minutes };
+}
+
+function withTournamentDate(date: Date, hours: number, minutes: number) {
+  const result = new Date(date);
+  result.setHours(hours, minutes, 0, 0);
+  return result;
+}
+
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions);
 
@@ -28,10 +55,24 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const body = await req.json();
 
   const nom = String(body?.nom ?? "").trim();
-  const horaire = String(body?.horaire ?? "").trim();
 
   if (!nom) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+  }
+
+  const heureDebut = parseTime(body?.heureDebut);
+  const heureFin = parseTime(body?.heureFin);
+
+  if (!heureDebut) {
+    return NextResponse.json({ error: "Heure de début invalide" }, { status: 400 });
+  }
+
+  if (
+    heureFin &&
+    (heureFin.hours < heureDebut.hours ||
+      (heureFin.hours === heureDebut.hours && heureFin.minutes <= heureDebut.minutes))
+  ) {
+    return NextResponse.json({ error: "L'heure de fin doit être après l'heure de début" }, { status: 400 });
   }
 
   const category = await prisma.category.findUnique({ where: { id }, select: { nom: true } });
@@ -52,16 +93,28 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     return NextResponse.json({ error: "minPoints must be <= maxPoints" }, { status: 400 });
   }
 
-  const updated = await prisma.category.updateMany({
+  const categoriesToUpdate = await prisma.category.findMany({
     where: { nom: category.nom },
-    data: {
-      nom,
-      horaire: horaire || null,
-      minPoints,
-      maxPoints,
-      maxJoueurs,
-    },
+    select: { id: true, tournament: { select: { date: true } } },
   });
 
-  return NextResponse.json({ updated: updated.count });
+  const updates = await prisma.$transaction(
+    categoriesToUpdate.map((item) =>
+      prisma.category.update({
+        where: { id: item.id },
+        data: {
+          nom,
+          heureDebut: withTournamentDate(item.tournament.date, heureDebut.hours, heureDebut.minutes),
+          heureFin: heureFin
+            ? withTournamentDate(item.tournament.date, heureFin.hours, heureFin.minutes)
+            : null,
+          minPoints,
+          maxPoints,
+          maxJoueurs,
+        },
+      }),
+    ),
+  );
+
+  return NextResponse.json({ updated: updates.length });
 }

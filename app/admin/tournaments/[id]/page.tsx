@@ -81,7 +81,7 @@ export default async function TournamentDetailPage({ params }: { params: Promise
                   <div>
                     <p className="font-medium">{category.nom}</p>
                     <p className="text-xs text-gray-600">
-                      Horaire: {category.horaire || "-"} · Points: {category.minPoints ?? "-∞"} → {category.maxPoints ?? "+∞"} · Max joueurs: {category.maxJoueurs ?? "Non limité"}
+                      Horaire: {new Date(category.heureDebut).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}{category.heureFin ? ` - ${new Date(category.heureFin).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : ""} · Points: {category.minPoints ?? "-∞"} → {category.maxPoints ?? "+∞"} · Max joueurs: {category.maxJoueurs ?? "Non limité"}
                     </p>
                   </div>
                   <Link href={`/admin/categories/${category.id}/edit`} className="text-xs text-blue-600">

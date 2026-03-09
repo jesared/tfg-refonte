@@ -140,9 +140,10 @@ model Tournament {
 }
 
 model Category {
-  id         String  @id @default(cuid())
+  id         String   @id @default(cuid())
   nom        String
-  horaire    String?
+  heureDebut DateTime
+  heureFin   DateTime?
   minPoints  Int?
   maxPoints  Int?
   maxJoueurs Int?
@@ -151,4 +152,7 @@ model Category {
   tournamentId String
 
   registrations Registration[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
