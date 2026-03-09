@@ -56,12 +56,27 @@ const formatAgendaDate = (value: string) => {
 
 export const metadata: Metadata = {
   title: "Agenda & salles",
-  description:
-    "Agenda officiel de la saison 2025-2026 avec les clubs organisateurs, salles et adresses.",
+  description: "Agenda officiel de la saison en cours avec les clubs organisateurs, salles et adresses.",
+};
+
+const getCurrentSeasonLabel = (now = new Date()) => {
+  const month = now.getMonth() + 1;
+  const year = now.getFullYear();
+
+  if (month >= 8) {
+    return `${year}-${year + 1}`;
+  }
+
+  if (month <= 6) {
+    return `${year - 1}-${year}`;
+  }
+
+  return `${year}-${year + 1}`;
 };
 
 export default async function AgendaPage() {
-  const tours2025_2026 = await getAgendaTours();
+  const tours = await getAgendaTours();
+  const seasonLabel = getCurrentSeasonLabel();
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-8">
@@ -71,7 +86,7 @@ export default async function AgendaPage() {
           <span>Agenda & salles</span>
         </div>
         <div className="space-y-3">
-          <h1 className="text-3xl font-semibold text-foreground sm:text-4xl">Saison 2025-2026</h1>
+          <h1 className="text-3xl font-semibold text-foreground sm:text-4xl">Saison {seasonLabel}</h1>
           <p className="text-base text-muted-foreground sm:text-lg">
             Retrouvez les dates, clubs organisateurs, salles et adresses des différents tours du
             Trophée François Grieder.
@@ -90,7 +105,7 @@ export default async function AgendaPage() {
               </tr>
             </thead>
             <tbody>
-              {tours2025_2026.map((tour) => (
+              {tours.map((tour) => (
                 <tr key={tour.id} className="border-b border-border/60 last:border-0">
                   <td className="px-3 py-3 font-semibold text-foreground">{tour.label}</td>
                   <td className="px-3 py-3 text-foreground/90">{formatAgendaDate(tour.date)}</td>
@@ -103,7 +118,7 @@ export default async function AgendaPage() {
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2">
-        {tours2025_2026.map((tour) => (
+        {tours.map((tour) => (
           <article key={tour.id} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div>
