@@ -288,7 +288,7 @@ export default function EditTournamentPage() {
           </button>
           <button
             type="button"
-            onClick={() => router.push(tournamentId ? `/admin/tournaments/${tournamentId}` : "/admin/tournaments")}
+            onClick={() => router.push("/admin/tournaments")}
             className="rounded-md border border-border px-4 py-2"
           >
             Annuler
