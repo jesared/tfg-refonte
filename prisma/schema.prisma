@@ -73,19 +73,20 @@ enum Role {
   USER
   ADMIN
 }
-model Registration {
-  id              String   @id @default(cuid())
 
-  nom             String
-  prenom          String
-  numeroLicence   String
-  genre           Gender?
-  club            String
-  points          Int?
+model Registration {
+  id String @id @default(cuid())
+
+  nom           String
+  prenom        String
+  numeroLicence String
+  genre         Gender?
+  club          String
+  points        Int?
 
   statut          RegistrationStatus @default(EN_ATTENTE)
-  licenceVerified Boolean  @default(false)
-  present         Boolean  @default(false)
+  licenceVerified Boolean            @default(false)
+  present         Boolean            @default(false)
 
   tournament   Tournament @relation(fields: [tournamentId], references: [id])
   tournamentId String
@@ -98,6 +99,7 @@ model Registration {
 
   @@unique([numeroLicence, categoryId])
 }
+
 enum RegistrationStatus {
   EN_ATTENTE
   VALIDE
@@ -109,39 +111,41 @@ enum Gender {
   M
   F
 }
-model Tournament {
-  id                 String   @id @default(cuid())
 
-  nom                String
-  tour               Int      // ex: 1, 2, 3
-  date               DateTime
+model Tournament {
+  id String @id @default(cuid())
+
+  nom  String
+  tour Int // ex: 1, 2, 3
+  date DateTime
 
   // Club organisateur
-  clubOrganisateur   String
+  clubOrganisateur String
 
   // Salle (Google Maps ready)
-  salleNom           String
-  salleAdresse       String
-  salleVille         String
-  salleLatitude      Float?
-  salleLongitude     Float?
-  sallePlaceId       String?
+  salleNom       String
+  salleAdresse   String
+  salleVille     String
+  salleLatitude  Float?
+  salleLongitude Float?
+  sallePlaceId   String?
 
-  inscriptionOuverte Boolean  @default(false)
+  inscriptionOuverte Boolean @default(false)
 
-  categories         Category[]
-  registrations      Registration[]
+  categories    Category[]
+  registrations Registration[]
 
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Category {
-  id           String @id @default(cuid())
-  nom          String
-  minPoints    Int?
-  maxPoints    Int?
-  maxJoueurs   Int?
+  id         String  @id @default(cuid())
+  nom        String
+  horaire    String?
+  minPoints  Int?
+  maxPoints  Int?
+  maxJoueurs Int?
 
   tournament   Tournament @relation(fields: [tournamentId], references: [id])
   tournamentId String

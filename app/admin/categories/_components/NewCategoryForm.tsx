@@ -6,6 +6,7 @@ import { useState } from "react";
 
 type FormState = {
   nom: string;
+  horaire: string;
   minPoints: string;
   maxPoints: string;
   maxJoueurs: string;
@@ -13,6 +14,7 @@ type FormState = {
 
 const initialState: FormState = {
   nom: "",
+  horaire: "",
   minPoints: "",
   maxPoints: "",
   maxJoueurs: "",
@@ -56,6 +58,16 @@ export function NewCategoryForm() {
           onChange={(e) => setForm((prev) => ({ ...prev, nom: e.target.value }))}
           className="w-full rounded border p-2"
           placeholder="Ex: Dames -1500"
+        />
+      </div>
+
+      <div>
+        <label className="mb-1 block text-sm font-medium">Horaire</label>
+        <input
+          type="time"
+          value={form.horaire}
+          onChange={(e) => setForm((prev) => ({ ...prev, horaire: e.target.value }))}
+          className="w-full rounded border p-2"
         />
       </div>
 

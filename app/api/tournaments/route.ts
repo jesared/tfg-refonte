@@ -39,8 +39,8 @@ export async function POST(req: Request) {
 
   const body = await req.json();
 
-  const nom = String(body?.nom ?? "").trim();
   const tour = Number.parseInt(String(body?.tour ?? ""), 10);
+  const nom = `Tour ${tour}`;
   const date = new Date(String(body?.date ?? ""));
   const clubOrganisateur = String(body?.clubOrganisateur ?? "").trim();
   const salleNom = String(body?.salleNom ?? "").trim();

@@ -28,6 +28,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const body = await req.json();
 
   const nom = String(body?.nom ?? "").trim();
+  const horaire = String(body?.horaire ?? "").trim();
 
   if (!nom) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -55,6 +56,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     where: { nom: category.nom },
     data: {
       nom,
+      horaire: horaire || null,
       minPoints,
       maxPoints,
       maxJoueurs,
