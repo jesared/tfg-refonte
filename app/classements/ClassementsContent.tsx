@@ -143,10 +143,21 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-xl font-semibold text-foreground sm:text-2xl">Saisons disponibles</h2>
+        <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
+          {saisons.length} saison{saisons.length > 1 ? "s" : ""}
+        </span>
+      </div>
       {[...saisons].sort(sortSaisonsDesc).map((saison) => (
-        <Card key={saison.id} className="border-border/70 shadow-sm">
+        <Card key={saison.id} className="rounded-3xl border-border/70 bg-card shadow-sm">
           <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle className="text-xl">{saison.name}</CardTitle>
+            <div className="flex items-center justify-between gap-3">
+              <CardTitle className="text-xl text-foreground">{saison.name}</CardTitle>
+              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                {saison.tours.length} tour{saison.tours.length > 1 ? "s" : ""}
+              </span>
+            </div>
           </CardHeader>
 
           <CardContent>
@@ -160,12 +171,12 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
                   <AccordionItem
                     key={tour.id}
                     value={`${saison.id}-${tour.id}`}
-                    className="overflow-hidden rounded-xl border border-border/70 bg-card"
+                    className="overflow-hidden rounded-2xl border border-border/70 bg-background/70"
                   >
                     <AccordionTrigger className="px-4 font-semibold hover:no-underline">
                       <div className="flex w-full items-center justify-between gap-4 pr-3">
                         <span>{tour.name}</span>
-                        <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                        <span className="rounded-full border border-border/60 bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                           {countAllFiles(tour)} fichier{countAllFiles(tour) > 1 ? "s" : ""}
                         </span>
                       </div>
@@ -201,7 +212,7 @@ export default function ClassementsContent({ saisons }: ClassementsContentProps)
                               {tour.tableaux.map((tableau) => (
                                 <div
                                   key={tableau.id}
-                                  className="rounded-lg border border-border/70 bg-muted/15 p-3"
+                                  className="rounded-xl border border-border/70 bg-muted/25 p-3"
                                 >
                                   <h6 className="mb-2 flex items-center gap-2 text-sm font-semibold">
                                     <Folder className="h-4 w-4 text-muted-foreground" />

@@ -114,15 +114,27 @@ export default async function ClassementsPage() {
   );
 
   return (
-    <div className="max-w-5xl mx-auto space-y-10">
-      <header>
-        <h1 className="text-4xl font-bold text-primary">Classements & Résultats</h1>
-        <p className="text-muted-foreground mt-2">
-          Classements officiels du Trophée François Grieder
-        </p>
-      </header>
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 sm:gap-10">
+      <section className="rounded-3xl border border-border bg-card px-5 py-7 shadow-sm sm:px-8 sm:py-10">
+        <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
+          <span aria-hidden="true" className="text-lg">
+            🏆
+          </span>
+          <span>Classements officiels</span>
+        </div>
+
+        <div className="mt-4 space-y-4">
+          <h1 className="text-2xl font-semibold text-primary sm:text-4xl">
+            Classements & Résultats
+          </h1>
+          <p className="max-w-3xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+            Consultez les documents publiés pour chaque saison et chaque tour du Trophée François
+            Grieder, dans une présentation harmonisée avec le reste du site.
+          </p>
+        </div>
+      </section>
 
       <ClassementsContent saisons={saisons} />
-    </div>
+    </main>
   );
 }
