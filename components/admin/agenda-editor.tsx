@@ -54,7 +54,9 @@ export function AgendaEditor({ initialTours }: AgendaEditorProps) {
   const venueInputRefs = useRef(new Map<string, HTMLInputElement>());
   const cityInputRefs = useRef(new Map<string, HTMLInputElement>());
   const addressInputRefs = useRef(new Map<string, HTMLInputElement>());
+  const rowRefs = useRef(new Map<string, HTMLElement>());
   const autocompleteReadyFor = useRef(new Set<string>());
+  const highlightedRowId = useRef<string | null>(null);
 
   const mapsApiKey = useMemo(() => process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY, []);
 
@@ -69,43 +71,86 @@ export function AgendaEditor({ initialTours }: AgendaEditorProps) {
       if (autocompleteReadyFor.current.has(row.localId)) return;
 
       const venueInput = venueInputRefs.current.get(row.localId);
-      if (!venueInput) return;
+      const cityInput = cityInputRefs.current.get(row.localId);
+      if (!venueInput && !cityInput) return;
 
-      const autocomplete = new AutocompleteCtor(venueInput, {
-        fields: ["name", "formatted_address", "address_components"],
-        types: ["establishment"],
-      });
+      if (venueInput) {
+        const autocomplete = new AutocompleteCtor(venueInput, {
+          fields: ["name", "formatted_address", "address_components"],
+          types: ["establishment"],
+        });
 
-      autocomplete.addListener("place_changed", () => {
-        const place = autocomplete.getPlace();
-        const resolvedCity =
-          place.address_components?.find((component) => component.types?.includes("locality"))
-            ?.long_name ??
-          place.address_components?.find((component) =>
-            component.types?.includes("administrative_area_level_2"),
-          )?.long_name ??
-          "";
+        autocomplete.addListener("place_changed", () => {
+          const place = autocomplete.getPlace();
+          const resolvedCity =
+            place.address_components?.find((component) => component.types?.includes("locality"))
+              ?.long_name ??
+            place.address_components?.find((component) =>
+              component.types?.includes("administrative_area_level_2"),
+            )?.long_name ??
+            "";
 
-        if (place.name) {
-          venueInput.value = place.name;
-        }
+          if (place.name) {
+            venueInput.value = place.name;
+          }
 
-        const cityInput = cityInputRefs.current.get(row.localId);
-        if (cityInput && resolvedCity) {
-          cityInput.value = resolvedCity;
-        }
+          const cityInputField = cityInputRefs.current.get(row.localId);
+          if (cityInputField && resolvedCity) {
+            cityInputField.value = resolvedCity;
+          }
 
-        const addressInput = addressInputRefs.current.get(row.localId);
-        if (addressInput && place.formatted_address) {
-          addressInput.value = place.formatted_address;
-        }
-      });
+          const addressInput = addressInputRefs.current.get(row.localId);
+          if (addressInput && place.formatted_address) {
+            addressInput.value = place.formatted_address;
+          }
+        });
+      }
+
+      if (cityInput) {
+        const cityAutocomplete = new AutocompleteCtor(cityInput, {
+          fields: ["address_components", "formatted_address", "name"],
+          types: ["(cities)"],
+        });
+
+        cityAutocomplete.addListener("place_changed", () => {
+          const place = cityAutocomplete.getPlace();
+          const resolvedCity =
+            place.address_components?.find((component) => component.types?.includes("locality"))
+              ?.long_name ??
+            place.name ??
+            "";
+
+          if (resolvedCity) {
+            cityInput.value = resolvedCity;
+          }
+        });
+      }
 
       autocompleteReadyFor.current.add(row.localId);
     });
   }, [mapsReady, rows]);
 
+  useEffect(() => {
+    if (!highlightedRowId.current) return;
+
+    const row = rowRefs.current.get(highlightedRowId.current);
+    if (!row) return;
+
+    row.scrollIntoView({ behavior: "smooth", block: "center" });
+    row.classList.add("ring-2", "ring-primary/50");
+
+    const timer = window.setTimeout(() => {
+      row.classList.remove("ring-2", "ring-primary/50");
+      highlightedRowId.current = null;
+    }, 1800);
+
+    return () => window.clearTimeout(timer);
+  }, [rows]);
+
   const addRow = () => {
+    const newLocalId = `new-${Date.now()}-${Math.random()}`;
+    highlightedRowId.current = newLocalId;
+
     setRows((previous) => [
       ...previous,
       {
@@ -116,7 +161,7 @@ export function AgendaEditor({ initialTours }: AgendaEditorProps) {
         city: "",
         venue: "",
         address: "",
-        localId: `new-${Date.now()}-${Math.random()}`,
+        localId: newLocalId,
       },
     ]);
   };
@@ -126,6 +171,7 @@ export function AgendaEditor({ initialTours }: AgendaEditorProps) {
     venueInputRefs.current.delete(localId);
     cityInputRefs.current.delete(localId);
     addressInputRefs.current.delete(localId);
+    rowRefs.current.delete(localId);
     autocompleteReadyFor.current.delete(localId);
   };
 
@@ -153,7 +199,14 @@ export function AgendaEditor({ initialTours }: AgendaEditorProps) {
 
       <div className="space-y-4">
         {rows.map((row, index) => (
-          <article key={row.localId} className="rounded-xl border border-border/80 bg-muted/30 p-4">
+          <article
+            key={row.localId}
+            ref={(node) => {
+              if (node) rowRefs.current.set(row.localId, node);
+              else rowRefs.current.delete(row.localId);
+            }}
+            className="rounded-xl border border-border/80 bg-muted/30 p-4 transition-shadow"
+          >
             <div className="mb-3 flex items-center justify-between gap-3">
               <p className="text-sm font-semibold text-foreground">Tour #{index + 1}</p>
               <button
