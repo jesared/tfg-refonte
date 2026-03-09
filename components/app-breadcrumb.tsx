@@ -1,0 +1,78 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+
+const SEGMENT_LABELS: Record<string, string> = {
+  actualites: "Actualités",
+  admin: "Administration",
+  agenda: "Agenda",
+  classements: "Classements",
+  contact: "Contact",
+  profile: "Profil",
+  recompenses: "Récompenses",
+  salles: "Salles",
+  tableaux: "Tableaux",
+  trophee: "Trophée",
+  tournois: "Tournois",
+  users: "Joueurs",
+  utilisateurs: "Utilisateurs",
+};
+
+function getSegmentLabel(segment: string): string {
+  return (
+    SEGMENT_LABELS[segment] ??
+    decodeURIComponent(segment)
+      .replace(/[-_]+/g, " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase())
+  );
+}
+
+export function AppBreadcrumb() {
+  const pathname = usePathname();
+  const segments = pathname.split("/").filter(Boolean);
+
+  if (segments.length === 0) {
+    return null;
+  }
+
+  return (
+    <Breadcrumb>
+      <BreadcrumbList>
+        <BreadcrumbItem>
+          <BreadcrumbLink asChild>
+            <Link href="/">Accueil</Link>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+
+        {segments.map((segment, index) => {
+          const href = `/${segments.slice(0, index + 1).join("/")}`;
+          const isLast = index === segments.length - 1;
+
+          return (
+            <div key={href} className="contents">
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                {isLast ? (
+                  <BreadcrumbPage>{getSegmentLabel(segment)}</BreadcrumbPage>
+                ) : (
+                  <BreadcrumbLink asChild>
+                    <Link href={href}>{getSegmentLabel(segment)}</Link>
+                  </BreadcrumbLink>
+                )}
+              </BreadcrumbItem>
+            </div>
+          );
+        })}
+      </BreadcrumbList>
+    </Breadcrumb>
+  );
+}

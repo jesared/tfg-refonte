@@ -1,33 +1,9 @@
-import Link from "next/link";
-
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { getTableaux } from "@/lib/tableaux";
 
 export default async function TableauxPage() {
   const tableaux = await getTableaux();
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-8">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href="/">Accueil</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Tableaux</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
       <section className="flex flex-col gap-4 rounded-3xl border border-border bg-card px-5 py-6 shadow-sm sm:px-6 sm:py-8">
         <div className="flex items-center gap-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           <span className="text-lg">📋</span>
