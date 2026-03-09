@@ -64,6 +64,30 @@ export default async function TournamentDetailPage({ params }: { params: Promise
       </section>
 
       <section className="rounded border p-4">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h2 className="font-semibold">Catégories</h2>
+          <Link href={`/admin/categories/new?tournamentId=${tournament.id}`} className="text-sm text-blue-600">
+            + Nouvelle catégorie
+          </Link>
+        </div>
+
+        {tournament.categories.length === 0 ? (
+          <p className="text-sm text-gray-500">Aucune catégorie pour le moment.</p>
+        ) : (
+          <ul className="space-y-2">
+            {tournament.categories.map((category) => (
+              <li key={category.id} className="rounded border p-2 text-sm">
+                <p className="font-medium">{category.nom}</p>
+                <p className="text-xs text-gray-600">
+                  Points: {category.minPoints ?? "-∞"} → {category.maxPoints ?? "+∞"} · Max joueurs: {category.maxJoueurs ?? "Non limité"}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="rounded border p-4">
         <h2 className="font-semibold mb-2">Dernières inscriptions</h2>
         {tournament.registrations.length === 0 ? (
           <p className="text-sm text-gray-500">Aucune inscription pour le moment.</p>
