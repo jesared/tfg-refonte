@@ -18,6 +18,9 @@ export default async function TournamentsPage() {
   });
 
   const openRegistrationsCount = tournaments.filter((tournament) => tournament.inscriptionOuverte).length;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const pastTournamentsCount = tournaments.filter((tournament) => new Date(tournament.date) < today).length;
 
 
   async function deleteTournament(formData: FormData) {
@@ -80,9 +83,9 @@ export default async function TournamentsPage() {
           <div className="mb-4 inline-flex rounded-lg bg-primary/10 p-2 text-primary">
             <CalendarDays className="h-5 w-5" aria-hidden="true" />
           </div>
-          <p className="text-sm text-muted-foreground">Prochain rendez-vous</p>
+          <p className="text-sm text-muted-foreground">Tournois passés</p>
           <p className="mt-1 text-lg font-semibold text-foreground">
-            {tournaments[0] ? new Date(tournaments[0].date).toLocaleDateString("fr-FR") : "Aucune date"}
+            {pastTournamentsCount}
           </p>
         </article>
 
@@ -116,53 +119,63 @@ export default async function TournamentsPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {tournaments.map((tournament) => (
-              <article
-                key={tournament.id}
-                className="flex flex-col gap-3 rounded-xl border border-border/80 bg-muted/20 p-4 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div>
-                  <p className="font-semibold text-foreground">{tournament.nom}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Tour {tournament.tour} · {new Date(tournament.date).toLocaleDateString("fr-FR")}
-                  </p>
-                </div>
+            {tournaments.map((tournament) => {
+              const isPastTournament = new Date(tournament.date) < today;
 
-                <div className="flex flex-wrap items-center gap-2">
-                  <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
-                      tournament.inscriptionOuverte
-                        ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {tournament.inscriptionOuverte ? "Inscriptions ouvertes" : "Inscriptions fermées"}
-                  </span>
+              return (
+                <article
+                  key={tournament.id}
+                  className="flex flex-col gap-3 rounded-xl border border-border/80 bg-muted/20 p-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div>
+                    <p className="font-semibold text-foreground">{tournament.nom}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Tour {tournament.tour} · {new Date(tournament.date).toLocaleDateString("fr-FR")}
+                    </p>
+                  </div>
 
-                  <Link
-                    href={`/admin/tournaments/${tournament.id}/edit`}
-                    className="rounded-md border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground transition hover:bg-muted"
-                  >
-                    Modifier
-                  </Link>
-                  <form action={deleteTournament}>
-                    <input type="hidden" name="tournamentId" value={tournament.id} />
-                    <button
-                      type="submit"
-                      className="cursor-pointer rounded-md border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-sm font-medium text-destructive transition hover:bg-destructive/20"
+                  <div className="flex flex-wrap items-center gap-2">
+                    {isPastTournament ? (
+                      <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-700 dark:text-amber-300">
+                        Tournoi passé
+                      </span>
+                    ) : null}
+
+                    <span
+                      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
+                        tournament.inscriptionOuverte
+                          ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                          : "bg-muted text-muted-foreground"
+                      }`}
                     >
-                      Supprimer
-                    </button>
-                  </form>
-                  <Link
-                    href={`/admin/tournaments/${tournament.id}`}
-                    className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition hover:opacity-90"
-                  >
-                    Gérer
-                  </Link>
-                </div>
-              </article>
-            ))}
+                      {tournament.inscriptionOuverte ? "Inscriptions ouvertes" : "Inscriptions fermées"}
+                    </span>
+
+                    <Link
+                      href={`/admin/tournaments/${tournament.id}/edit`}
+                      className="rounded-md border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground transition hover:bg-muted"
+                    >
+                      Modifier
+                    </Link>
+                    <form action={deleteTournament}>
+                      <input type="hidden" name="tournamentId" value={tournament.id} />
+                      <button
+                        type="submit"
+                        className="cursor-pointer rounded-md border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-sm font-medium text-destructive transition hover:bg-destructive/20"
+                      >
+                        Supprimer
+                      </button>
+                    </form>
+                    <Link
+                      href={`/admin/tournaments/${tournament.id}`}
+                      className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition hover:opacity-90"
+                    >
+                      Gérer
+                    </Link>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         )}
       </section>
