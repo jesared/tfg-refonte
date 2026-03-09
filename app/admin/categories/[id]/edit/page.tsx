@@ -6,7 +6,13 @@ import { EditCategoryForm } from "@/app/admin/categories/_components/EditCategor
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
-export default async function EditCategoryPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditCategoryPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ scope?: string }>;
+}) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user || session.user.role !== "ADMIN") {
@@ -14,24 +20,42 @@ export default async function EditCategoryPage({ params }: { params: Promise<{ i
   }
 
   const { id } = await params;
+  const { scope } = await searchParams;
+  const roundScope = scope === "round";
 
   const category = await prisma.category.findUnique({
     where: { id },
-    select: { id: true, nom: true, heureDebut: true, heureFin: true, minPoints: true, maxPoints: true, maxJoueurs: true, tournamentId: true },
+    select: {
+      id: true,
+      nom: true,
+      heureDebut: true,
+      heureFin: true,
+      minPoints: true,
+      maxPoints: true,
+      maxJoueurs: true,
+      tournamentId: true,
+      tournament: { select: { tour: true } },
+    },
   });
 
   if (!category) {
     notFound();
   }
 
+  const backHref = roundScope ? `/admin/tournaments/${category.tournamentId}` : "/admin/categories";
+
   return (
     <main className="mx-auto w-full max-w-3xl space-y-4 p-8">
       <header className="space-y-1">
-        <Link href={`/admin/tournaments/${category.tournamentId}`} className="text-sm text-blue-600">
-          ← Retour au tournoi
+        <Link href={backHref} className="text-sm text-blue-600">
+          ← Retour
         </Link>
         <h1 className="text-2xl font-bold">Modifier la catégorie</h1>
-        <p className="text-sm text-gray-500">La modification est appliquée à tous les tours.</p>
+        <p className="text-sm text-gray-500">
+          {roundScope
+            ? `Les réglages sont communs à tous les tours, sauf “Max joueurs” qui s'applique uniquement au tour ${category.tournament.tour}.`
+            : "Les réglages sont communs à tous les tours (la limite de joueurs reste propre à chaque tour)."}
+        </p>
       </header>
 
       <EditCategoryForm
@@ -40,7 +64,8 @@ export default async function EditCategoryPage({ params }: { params: Promise<{ i
           heureDebut: category.heureDebut.toISOString().slice(11, 16),
           heureFin: category.heureFin ? category.heureFin.toISOString().slice(11, 16) : null,
         }}
-        backHref={`/admin/tournaments/${category.tournamentId}`}
+        backHref={backHref}
+        allowEditMaxJoueurs={roundScope}
       />
     </main>
   );

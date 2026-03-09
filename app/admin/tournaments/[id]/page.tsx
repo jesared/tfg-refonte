@@ -84,8 +84,8 @@ export default async function TournamentDetailPage({ params }: { params: Promise
                       Horaire: {new Date(category.heureDebut).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}{category.heureFin ? ` - ${new Date(category.heureFin).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : ""} · Points: {category.minPoints ?? "-∞"} → {category.maxPoints ?? "+∞"} · Max joueurs: {category.maxJoueurs ?? "Non limité"}
                     </p>
                   </div>
-                  <Link href={`/admin/categories/${category.id}/edit`} className="text-xs text-blue-600">
-                    Modifier (tous les tours)
+                  <Link href={`/admin/categories/${category.id}/edit?scope=round`} className="text-xs text-blue-600">
+                    Modifier (dont limite du tour)
                   </Link>
                 </div>
               </li>
