@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma";
+import type { Gender } from "@prisma/client";
 import { NextResponse } from "next/server";
 
-const VALID_GENRES = new Set(["M", "F"]);
+const VALID_GENRES = new Set<Gender>(["M", "F"]);
 const VALID_TABLEAUX = new Set(["0-899", "900-1299", "1300-1599", "1600+"]);
 
 type RegistrationPayload = {
@@ -42,7 +43,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Le nombre de points est invalide." }, { status: 400 });
     }
 
-    const genre = genreRaw ? (VALID_GENRES.has(genreRaw) ? genreRaw : null) : null;
+    const genre = genreRaw ? (VALID_GENRES.has(genreRaw as Gender) ? (genreRaw as Gender) : null) : null;
     if (genreRaw && !genre) {
       return NextResponse.json({ error: "Genre invalide." }, { status: 400 });
     }
