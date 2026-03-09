@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { getServerSession } from "next-auth";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
 
 export default async function TournamentsPage() {
   const session = await getServerSession(authOptions);
@@ -28,9 +28,6 @@ export default async function TournamentsPage() {
           <div key={t.id} className="border p-4 rounded flex justify-between items-center">
             <div>
               <p className="font-semibold">{t.nom}</p>
-              <p className="text-sm text-gray-500">
-                Tour {t.tour} · {new Date(t.date).toLocaleDateString()}
-              </p>
             </div>
 
             <div className="flex gap-3">
