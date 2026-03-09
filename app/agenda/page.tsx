@@ -3,6 +3,57 @@ import { MapPin } from "lucide-react";
 
 import { getAgendaTours } from "@/lib/agenda";
 
+const FRENCH_MONTHS: Record<string, string> = {
+  janvier: "01",
+  février: "02",
+  fevrier: "02",
+  mars: "03",
+  avril: "04",
+  mai: "05",
+  juin: "06",
+  juillet: "07",
+  août: "08",
+  aout: "08",
+  septembre: "09",
+  octobre: "10",
+  novembre: "11",
+  décembre: "12",
+  decembre: "12",
+};
+
+const formatAgendaDate = (value: string) => {
+  const raw = value.trim();
+
+  if (/^\d{2}-\d{2}-\d{4}$/.test(raw)) return raw;
+
+  const isoMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    const [, year, month, day] = isoMatch;
+    return `${day}-${month}-${year}`;
+  }
+
+  const frenchMatch = raw
+    .toLowerCase()
+    .match(/^(\d{1,2})\s+([a-zàâäéèêëîïôöùûüç]+)\s+(\d{4})$/i);
+  if (frenchMatch) {
+    const [, day, monthWord, year] = frenchMatch;
+    const month = FRENCH_MONTHS[monthWord];
+    if (month) {
+      return `${day.padStart(2, "0")}-${month}-${year}`;
+    }
+  }
+
+  const parsed = new Date(raw);
+  if (!Number.isNaN(parsed.getTime())) {
+    const day = String(parsed.getDate()).padStart(2, "0");
+    const month = String(parsed.getMonth() + 1).padStart(2, "0");
+    const year = parsed.getFullYear();
+    return `${day}-${month}-${year}`;
+  }
+
+  return raw;
+};
+
 export const metadata: Metadata = {
   title: "Agenda & salles",
   description:
@@ -42,7 +93,7 @@ export default async function AgendaPage() {
               {tours2025_2026.map((tour) => (
                 <tr key={tour.id} className="border-b border-border/60 last:border-0">
                   <td className="px-3 py-3 font-semibold text-foreground">{tour.label}</td>
-                  <td className="px-3 py-3 text-foreground/90">{tour.date}</td>
+                  <td className="px-3 py-3 text-foreground/90">{formatAgendaDate(tour.date)}</td>
                   <td className="px-3 py-3 text-foreground/90">{tour.club}</td>
                 </tr>
               ))}
@@ -63,7 +114,7 @@ export default async function AgendaPage() {
                 <p className="mt-1 text-sm text-muted-foreground">{tour.club}</p>
               </div>
               <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                {tour.date}
+                {formatAgendaDate(tour.date)}
               </span>
             </div>
 
