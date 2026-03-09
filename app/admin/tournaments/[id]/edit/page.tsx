@@ -89,6 +89,7 @@ export default function EditTournamentPage() {
   const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(initialState);
+  const hasCoordinates = form.salleLatitude !== null && form.salleLongitude !== null;
 
   useEffect(() => {
     async function loadTournament() {
@@ -206,7 +207,30 @@ export default function EditTournamentPage() {
         />
       ) : null}
 
-      <h1 className="mb-4 text-2xl font-bold">Modifier le tournoi</h1>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <button
+            type="button"
+            onClick={() => router.push(`/admin/tournaments/${tournamentId}`)}
+            className="mb-2 text-sm text-muted-foreground underline-offset-2 hover:underline"
+          >
+            ← Retour au tournoi
+          </button>
+          <h1 className="text-2xl font-bold">Modifier le tournoi</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Mettez à jour les informations générales et le lieu de la compétition.
+          </p>
+        </div>
+        <span
+          className={`rounded-full px-3 py-1 text-xs font-medium ${
+            form.inscriptionOuverte
+              ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+              : "bg-amber-500/15 text-amber-700 dark:text-amber-300"
+          }`}
+        >
+          {form.inscriptionOuverte ? "Inscriptions ouvertes" : "Inscriptions fermées"}
+        </span>
+      </div>
 
       {!mapsApiKey || mapsFailed ? (
         <p className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">
@@ -214,58 +238,91 @@ export default function EditTournamentPage() {
         </p>
       ) : null}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="number"
-          name="tour"
-          placeholder="Tour (ex: 1)"
-          min={1}
-          required
-          value={form.tour}
-          onChange={(e) => setForm((prev) => ({ ...prev, tour: e.target.value }))}
-          className="w-full rounded-md border border-border bg-background p-2"
-        />
-        <input
-          type="date"
-          name="date"
-          required
-          value={form.date}
-          onChange={(e) => setForm((prev) => ({ ...prev, date: e.target.value }))}
-          className="w-full rounded-md border border-border bg-background p-2"
-        />
-        <input
-          name="clubOrganisateur"
-          placeholder="Club organisateur"
-          required
-          value={form.clubOrganisateur}
-          onChange={(e) => setForm((prev) => ({ ...prev, clubOrganisateur: e.target.value }))}
-          className="w-full rounded-md border border-border bg-background p-2"
-        />
-        <input
-          ref={salleNomRef}
-          name="salleNom"
-          placeholder={mapsApiKey ? "Commencez à saisir pour rechercher un lieu" : "Nom de la salle"}
-          required
-          value={form.salleNom}
-          onChange={(e) => setForm((prev) => ({ ...prev, salleNom: e.target.value }))}
-          className="w-full rounded-md border border-border bg-background p-2"
-        />
-        <input
-          name="salleAdresse"
-          placeholder="Adresse de la salle"
-          required
-          value={form.salleAdresse}
-          onChange={(e) => setForm((prev) => ({ ...prev, salleAdresse: e.target.value }))}
-          className="w-full rounded-md border border-border bg-background p-2"
-        />
-        <input
-          name="salleVille"
-          placeholder="Ville"
-          required
-          value={form.salleVille}
-          onChange={(e) => setForm((prev) => ({ ...prev, salleVille: e.target.value }))}
-          className="w-full rounded-md border border-border bg-background p-2"
-        />
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <section className="space-y-4 rounded-lg border border-border bg-card p-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Informations du tournoi</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="space-y-1 text-sm">
+              <span className="font-medium">Tour</span>
+              <input
+                type="number"
+                name="tour"
+                placeholder="Ex : 1"
+                min={1}
+                required
+                value={form.tour}
+                onChange={(e) => setForm((prev) => ({ ...prev, tour: e.target.value }))}
+                className="w-full rounded-md border border-border bg-background p-2"
+              />
+            </label>
+            <label className="space-y-1 text-sm">
+              <span className="font-medium">Date</span>
+              <input
+                type="date"
+                name="date"
+                required
+                value={form.date}
+                onChange={(e) => setForm((prev) => ({ ...prev, date: e.target.value }))}
+                className="w-full rounded-md border border-border bg-background p-2"
+              />
+            </label>
+          </div>
+          <label className="space-y-1 text-sm">
+            <span className="font-medium">Club organisateur</span>
+            <input
+              name="clubOrganisateur"
+              placeholder="Nom du club"
+              required
+              value={form.clubOrganisateur}
+              onChange={(e) => setForm((prev) => ({ ...prev, clubOrganisateur: e.target.value }))}
+              className="w-full rounded-md border border-border bg-background p-2"
+            />
+          </label>
+        </section>
+
+        <section className="space-y-4 rounded-lg border border-border bg-card p-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Lieu</h2>
+          <label className="space-y-1 text-sm">
+            <span className="font-medium">Nom de la salle</span>
+            <input
+              ref={salleNomRef}
+              name="salleNom"
+              placeholder={mapsApiKey ? "Commencez à saisir pour rechercher un lieu" : "Nom de la salle"}
+              required
+              value={form.salleNom}
+              onChange={(e) => setForm((prev) => ({ ...prev, salleNom: e.target.value }))}
+              className="w-full rounded-md border border-border bg-background p-2"
+            />
+          </label>
+          <label className="space-y-1 text-sm">
+            <span className="font-medium">Adresse</span>
+            <input
+              name="salleAdresse"
+              placeholder="Adresse de la salle"
+              required
+              value={form.salleAdresse}
+              onChange={(e) => setForm((prev) => ({ ...prev, salleAdresse: e.target.value }))}
+              className="w-full rounded-md border border-border bg-background p-2"
+            />
+          </label>
+          <label className="space-y-1 text-sm">
+            <span className="font-medium">Ville</span>
+            <input
+              name="salleVille"
+              placeholder="Ville"
+              required
+              value={form.salleVille}
+              onChange={(e) => setForm((prev) => ({ ...prev, salleVille: e.target.value }))}
+              className="w-full rounded-md border border-border bg-background p-2"
+            />
+          </label>
+
+          <p className="text-xs text-muted-foreground">
+            {hasCoordinates
+              ? `Coordonnées détectées : ${form.salleLatitude?.toFixed(5)}, ${form.salleLongitude?.toFixed(5)}`
+              : "Aucune coordonnée GPS enregistrée pour ce lieu."}
+          </p>
+        </section>
 
         <label className="flex items-center gap-2 text-sm">
           <input
@@ -278,7 +335,7 @@ export default function EditTournamentPage() {
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <button
             type="submit"
             disabled={loading}
