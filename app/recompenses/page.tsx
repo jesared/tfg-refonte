@@ -84,53 +84,6 @@ export default function RecompensesPage() {
             ))}
           </div>
         </section>
-        <section className="space-y-6">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <h2 className="text-2xl font-semibold">Informations en attente</h2>
-            <p className="max-w-xl text-sm text-muted-foreground">
-              Certains éléments complémentaires ne sont pas encore documentés.
-            </p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            {[
-              "Répartition détaillée des dotations",
-              "Transparence de gestion",
-              "Détail précis des lots",
-              "Fonctionnement du carrousel",
-            ].map((item) => (
-              <article key={item} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Statut</p>
-                <p className="mt-2 text-sm font-semibold text-foreground">Non communiqué</p>
-                <p className="mt-2 text-sm text-muted-foreground">{item}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="rounded-3xl border border-border bg-muted/40 p-8">
-          <div className="space-y-4">
-            <h2 className="text-2xl font-semibold">Cérémonie de remise</h2>
-            <p className="text-base leading-7 text-foreground/90">
-              Il n&apos;est pas prévu de cérémonie de remise des prix.
-            </p>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-2xl border border-border bg-card p-4">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Format</p>
-                <p className="mt-2 text-sm font-semibold text-foreground">
-                  Aucune cérémonie annoncée
-                </p>
-              </div>
-              <div className="rounded-2xl border border-border bg-card p-4">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                  Remise des prix
-                </p>
-                <p className="mt-2 text-sm font-semibold text-foreground">
-                  Sans événement dédié
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
       </div>
     </main>
   );
