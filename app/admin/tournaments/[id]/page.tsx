@@ -40,6 +40,11 @@ export default async function TournamentDetailPage({ params }: { params: Promise
         <Link href="/admin/tournaments" className="text-sm text-blue-600">
           ← Retour aux tournois
         </Link>
+        <div>
+          <Link href={`/admin/tournaments/${tournament.id}/edit`} className="text-sm text-blue-600">
+            Modifier le tournoi
+          </Link>
+        </div>
         <h1 className="text-2xl font-bold">{tournament.nom}</h1>
         <p className="text-sm text-gray-500">
           Tour {tournament.tour} · {new Date(tournament.date).toLocaleDateString()} · {tournament.clubOrganisateur}
