@@ -37,12 +37,12 @@ export async function POST(req: Request) {
   }
 
   const category = await prisma.category.findFirst({
-    where: { id: categoryId, tournamentId },
+    where: { id: categoryId },
     select: { id: true },
   });
 
   if (!category) {
-    return NextResponse.json({ error: "Le tableau sélectionné est invalide pour ce tournoi." }, { status: 400 });
+    return NextResponse.json({ error: "Le tableau sélectionné est invalide." }, { status: 400 });
   }
 
   try {

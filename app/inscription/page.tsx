@@ -14,7 +14,8 @@ export default async function InscriptionPage() {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
 
-  let tournament: Awaited<ReturnType<typeof prisma.tournament.findFirst>> = null;
+  let tournament: { id: string; nom: string; tour: number; date: Date } | null = null;
+  let categories: { id: string; nom: string }[] = [];
 
   try {
     tournament = await prisma.tournament.findFirst({
@@ -27,16 +28,26 @@ export default async function InscriptionPage() {
       orderBy: {
         date: "asc",
       },
-      include: {
-        categories: {
-          orderBy: {
-            heureDebut: "asc",
-          },
-        },
+      select: {
+        id: true,
+        nom: true,
+        tour: true,
+        date: true,
+      },
+    });
+
+    categories = await prisma.category.findMany({
+      orderBy: {
+        nom: "asc",
+      },
+      select: {
+        id: true,
+        nom: true,
       },
     });
   } catch {
     tournament = null;
+    categories = [];
   }
 
   return (
@@ -56,17 +67,11 @@ export default async function InscriptionPage() {
               obligatoires.
             </p>
 
-            {tournament.categories.length > 0 ? (
-              <InscriptionForm
-                tournamentId={tournament.id}
-                categories={tournament.categories.map((category) => ({
-                  id: category.id,
-                  nom: category.nom,
-                }))}
-              />
+            {categories.length > 0 ? (
+              <InscriptionForm tournamentId={tournament.id} categories={categories} />
             ) : (
               <p className="mt-6 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
-                Aucune catégorie (tableau) n&apos;est encore configurée pour ce tournoi.
+                Aucune catégorie (tableau) n&apos;est encore configurée.
               </p>
             )}
           </>
