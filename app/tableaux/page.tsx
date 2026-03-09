@@ -60,21 +60,27 @@ export default async function TableauxPage() {
 
       <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="rounded-3xl border border-border bg-muted/40 px-5 py-6 sm:px-6 sm:py-7">
-          <h2 className="text-lg font-semibold text-foreground">Exceptions de programmation</h2>
+          <h2 className="text-lg font-semibold text-foreground">Format selon les tableaux</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Certaines plages sont adaptées pour fluidifier la journée.
+            Le format des poules et la qualification varient selon les catégories.
           </p>
           <ul className="mt-4 space-y-3 text-sm text-foreground/90">
             <li className="rounded-2xl border border-border bg-card px-4 py-3">
               <span className="font-semibold text-foreground">Tableaux 5–6</span>
               <p className="mt-1 text-sm text-muted-foreground">
-                Démarrage décalé après la pause méridienne pour libérer les tables du matin.
+                Poules de 3 joueurs, avec qualification pour tous les participants.
               </p>
             </li>
             <li className="rounded-2xl border border-border bg-card px-4 py-3">
               <span className="font-semibold text-foreground">Tableaux 15–22</span>
               <p className="mt-1 text-sm text-muted-foreground">
-                Programmés en toute fin de journée avec confirmation des horaires sur place.
+                Poules de 4 joueurs, les 3 premiers de chaque poule sont qualifiés.
+              </p>
+            </li>
+            <li className="rounded-2xl border border-border bg-card px-4 py-3">
+              <span className="font-semibold text-foreground">Autres tableaux</span>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Poules de 3 joueurs, les 2 premiers de chaque poule sont qualifiés.
               </p>
             </li>
           </ul>
@@ -86,7 +92,8 @@ export default async function TableauxPage() {
             <div className="rounded-2xl border border-border bg-muted/40 px-4 py-3">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Composition</p>
               <p className="mt-2 font-medium text-foreground">
-                Poules de 3 ou 4 joueurs selon les inscriptions.
+                Le nombre de joueurs peut être ajusté selon les inscrits (poules de 2 au lieu de
+                3, ou de 3 au lieu de 4).
               </p>
             </div>
             <div className="rounded-2xl border border-border bg-muted/40 px-4 py-3">
@@ -98,7 +105,8 @@ export default async function TableauxPage() {
             <div className="rounded-2xl border border-border bg-muted/40 px-4 py-3">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Qualification</p>
               <p className="mt-2 font-medium text-foreground">
-                Les deux premiers de chaque poule accèdent au tableau final.
+                Qualification selon le tableau : tous qualifiés en 5–6, 3 qualifiés sur 4 en
+                15–22, sinon 2 qualifiés sur 3.
               </p>
             </div>
           </div>
