@@ -39,8 +39,8 @@ export default async function TournamentDetailPage({ params }: { params: Promise
       <header className="rounded-xl border border-border bg-card p-5 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-2">
-            <Link href="/admin/tournaments" className="inline-flex text-sm font-medium text-primary hover:underline">
-              ← Retour à tous les tournois
+            <Link href="/admin/tournaments" className="inline-flex items-center rounded-md border border-border bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-muted">
+              Retour à tous les tournois
             </Link>
             <h1 className="text-2xl font-bold tracking-tight">{tournament.nom}</h1>
             <p className="text-sm text-muted-foreground">
