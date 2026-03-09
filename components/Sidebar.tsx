@@ -105,7 +105,7 @@ export function Sidebar() {
       {/* ===== MOBILE SIDEBAR ===== */}
       <div
         id="mobile-sidebar"
-        className={`fixed inset-y-0 left-0 z-50 w-72 border-r border-border bg-card px-6 py-6 shadow-lg transition-transform md:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col overflow-y-auto border-r border-border bg-card px-6 py-6 shadow-lg transition-transform md:hidden ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         role="dialog"
@@ -123,7 +123,7 @@ export function Sidebar() {
           </button>
         </div>
 
-        <nav className="space-y-2">
+        <nav className="space-y-2 pb-4">
           <Accordion
             type="single"
             collapsible
@@ -180,14 +180,14 @@ export function Sidebar() {
           )}
         </nav>
 
-        <div className="mt-6 space-y-3 border-t border-border pt-4">
+        <div className="mt-auto space-y-3 border-t border-border pt-4">
           <ThemeToggle />
           <LoginButton />
         </div>
       </div>
 
       {/* ===== DESKTOP SIDEBAR ===== */}
-      <aside className="hidden border-r border-border bg-card md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col md:px-6 md:py-8">
+      <aside className="hidden overflow-y-auto border-r border-border bg-card md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col md:px-6 md:py-8">
         <div className="mb-6 text-sm font-semibold text-foreground">Trophée François Grieder</div>
 
         <nav className="space-y-2">
