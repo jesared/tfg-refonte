@@ -1,7 +1,7 @@
 "use client";
 
 import Script from "next/script";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 type FormState = {
@@ -71,8 +71,13 @@ const initialState: FormState = {
   inscriptionOuverte: false,
 };
 
-export default function EditTournamentPage({ params }: { params: { id: string } }) {
+export default function EditTournamentPage() {
   const router = useRouter();
+  const params = useParams<{ id?: string | string[] }>();
+  const tournamentId = useMemo(() => {
+    if (!params?.id) return undefined;
+    return Array.isArray(params.id) ? params.id[0] : params.id;
+  }, [params]);
   const mapsApiKey = useMemo(() => process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY, []);
   const salleNomRef = useRef<HTMLInputElement | null>(null);
   const autocompleteInitializedRef = useRef(false);
@@ -87,7 +92,13 @@ export default function EditTournamentPage({ params }: { params: { id: string } 
 
   useEffect(() => {
     async function loadTournament() {
-      const response = await fetch(`/api/tournaments/${params.id}`);
+      if (!tournamentId) {
+        setError("Impossible de charger le tournoi.");
+        setLoadingData(false);
+        return;
+      }
+
+      const response = await fetch(`/api/tournaments/${tournamentId}`);
       if (!response.ok) {
         setError("Impossible de charger le tournoi.");
         setLoadingData(false);
@@ -113,7 +124,7 @@ export default function EditTournamentPage({ params }: { params: { id: string } 
     }
 
     loadTournament();
-  }, [params.id]);
+  }, [tournamentId]);
 
   useEffect(() => {
     if (!mapsApiKey || !mapsReady || !salleNomRef.current || autocompleteInitializedRef.current) {
@@ -153,10 +164,15 @@ export default function EditTournamentPage({ params }: { params: { id: string } 
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!tournamentId) {
+      setError("Impossible de modifier le tournoi.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
-    const response = await fetch(`/api/tournaments/${params.id}`, {
+    const response = await fetch(`/api/tournaments/${tournamentId}`, {
       method: "PUT",
       body: JSON.stringify({
         ...form,
@@ -172,7 +188,7 @@ export default function EditTournamentPage({ params }: { params: { id: string } 
       return;
     }
 
-    router.push(`/admin/tournaments/${params.id}`);
+    router.push(`/admin/tournaments/${tournamentId}`);
   }
 
   if (loadingData) {
@@ -272,7 +288,7 @@ export default function EditTournamentPage({ params }: { params: { id: string } 
           </button>
           <button
             type="button"
-            onClick={() => router.push(`/admin/tournaments/${params.id}`)}
+            onClick={() => router.push(tournamentId ? `/admin/tournaments/${tournamentId}` : "/admin/tournaments")}
             className="rounded-md border border-border px-4 py-2"
           >
             Annuler
