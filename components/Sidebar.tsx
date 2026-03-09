@@ -34,6 +34,7 @@ const navigationItems = [
   { href: "/tableaux", label: "Tableaux & Règlement", icon: Table2 },
   { href: "/classements", label: "Classements", icon: Scale },
   { href: "/recompenses", label: "Récompenses", icon: Gift },
+  { href: "/inscription", label: "Inscription", icon: User },
   { href: "/contact", label: "Contact", icon: Mail },
 ];
 
