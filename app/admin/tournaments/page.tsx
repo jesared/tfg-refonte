@@ -1,3 +1,4 @@
+import { CalendarDays, Check, ShieldCheck, Trophy } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth";
@@ -15,32 +16,121 @@ export default async function TournamentsPage() {
     orderBy: [{ date: "desc" }],
   });
 
+  const openRegistrationsCount = tournaments.filter((tournament) => tournament.inscriptionOuverte).length;
+
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">Tournois</h1>
-
-      <Link href="/admin/tournaments/new" className="bg-blue-600 text-white px-4 py-2 rounded">
-        + Nouveau tournoi
-      </Link>
-
-      <div className="mt-6 space-y-4">
-        {tournaments.map((t) => (
-          <div key={t.id} className="border p-4 rounded flex justify-between items-center">
-            <div>
-              <p className="font-semibold">{t.nom}</p>
-            </div>
-
-            <div className="flex gap-3">
-              <Link href={`/admin/tournaments/${t.id}/edit`} className="text-blue-600">
-                Modifier
-              </Link>
-              <Link href={`/admin/tournaments/${t.id}`} className="text-blue-600">
-                Gérer
-              </Link>
-            </div>
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-8">
+      <header className="rounded-2xl border border-border bg-card px-6 py-7 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Admin</p>
+            <h1 className="mt-3 text-3xl font-semibold text-foreground">Tournois</h1>
+            <p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">
+              Centralisez les étapes du TFG, suivez les inscriptions ouvertes et accédez rapidement
+              à la gestion détaillée de chaque tournoi.
+            </p>
           </div>
-        ))}
-      </div>
-    </div>
+
+          <Link
+            href="/admin/tournaments/new"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90"
+          >
+            <Check className="h-4 w-4" aria-hidden="true" />
+            Nouveau tournoi
+          </Link>
+        </div>
+      </header>
+
+      <section className="grid gap-4 md:grid-cols-3">
+        <article className="rounded-xl border border-border bg-card p-5 shadow-sm">
+          <div className="mb-4 inline-flex rounded-lg bg-primary/10 p-2 text-primary">
+            <Trophy className="h-5 w-5" aria-hidden="true" />
+          </div>
+          <p className="text-sm text-muted-foreground">Tournois enregistrés</p>
+          <p className="mt-1 text-3xl font-semibold text-foreground">{tournaments.length}</p>
+        </article>
+
+        <article className="rounded-xl border border-border bg-card p-5 shadow-sm">
+          <div className="mb-4 inline-flex rounded-lg bg-primary/10 p-2 text-primary">
+            <CalendarDays className="h-5 w-5" aria-hidden="true" />
+          </div>
+          <p className="text-sm text-muted-foreground">Prochain rendez-vous</p>
+          <p className="mt-1 text-lg font-semibold text-foreground">
+            {tournaments[0] ? new Date(tournaments[0].date).toLocaleDateString("fr-FR") : "Aucune date"}
+          </p>
+        </article>
+
+        <article className="rounded-xl border border-border bg-card p-5 shadow-sm">
+          <div className="mb-4 inline-flex rounded-lg bg-primary/10 p-2 text-primary">
+            <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+          </div>
+          <p className="text-sm text-muted-foreground">Inscriptions ouvertes</p>
+          <p className="mt-1 text-3xl font-semibold text-foreground">{openRegistrationsCount}</p>
+        </article>
+      </section>
+
+      <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Liste des tournois
+          </h2>
+          <p className="text-xs text-muted-foreground">Triés du plus récent au plus ancien</p>
+        </div>
+
+        {tournaments.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border bg-muted/20 p-8 text-center">
+            <p className="text-sm text-muted-foreground">Aucun tournoi n&apos;a encore été créé.</p>
+            <Link
+              href="/admin/tournaments/new"
+              className="mt-4 inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
+            >
+              <Check className="h-4 w-4" aria-hidden="true" />
+              Créer le premier tournoi
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {tournaments.map((tournament) => (
+              <article
+                key={tournament.id}
+                className="flex flex-col gap-3 rounded-xl border border-border/80 bg-muted/20 p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div>
+                  <p className="font-semibold text-foreground">{tournament.nom}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Tour {tournament.tour} · {new Date(tournament.date).toLocaleDateString("fr-FR")}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
+                      tournament.inscriptionOuverte
+                        ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {tournament.inscriptionOuverte ? "Inscriptions ouvertes" : "Inscriptions fermées"}
+                  </span>
+
+                  <Link
+                    href={`/admin/tournaments/${tournament.id}/edit`}
+                    className="rounded-md border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground transition hover:bg-muted"
+                  >
+                    Modifier
+                  </Link>
+                  <Link
+                    href={`/admin/tournaments/${tournament.id}`}
+                    className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition hover:opacity-90"
+                  >
+                    Gérer
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+    </main>
   );
 }
