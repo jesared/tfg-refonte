@@ -6,7 +6,8 @@ import { useState } from "react";
 
 type FormState = {
   nom: string;
-  horaire: string;
+  heureDebut: string;
+  heureFin: string;
   minPoints: string;
   maxPoints: string;
   maxJoueurs: string;
@@ -16,7 +17,15 @@ export function EditCategoryForm({
   category,
   backHref,
 }: {
-  category: { id: string; nom: string; horaire: string | null; minPoints: number | null; maxPoints: number | null; maxJoueurs: number | null };
+  category: {
+    id: string;
+    nom: string;
+    heureDebut: string;
+    heureFin: string | null;
+    minPoints: number | null;
+    maxPoints: number | null;
+    maxJoueurs: number | null;
+  };
   backHref: string;
 }) {
   const router = useRouter();
@@ -24,7 +33,8 @@ export function EditCategoryForm({
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>({
     nom: category.nom,
-    horaire: category.horaire ?? "",
+    heureDebut: category.heureDebut,
+    heureFin: category.heureFin ?? "",
     minPoints: category.minPoints?.toString() ?? "",
     maxPoints: category.maxPoints?.toString() ?? "",
     maxJoueurs: category.maxJoueurs?.toString() ?? "",
@@ -53,53 +63,65 @@ export function EditCategoryForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 rounded border p-4">
+    <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-border bg-card p-5 shadow-sm">
       <div>
-        <label className="mb-1 block text-sm font-medium">Nom de la catégorie</label>
+        <label className="mb-1 block text-sm font-medium text-foreground">Nom de la catégorie</label>
         <input
           required
           value={form.nom}
           onChange={(e) => setForm((prev) => ({ ...prev, nom: e.target.value }))}
-          className="w-full rounded border p-2"
+          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
         />
       </div>
 
-      <div>
-        <label className="mb-1 block text-sm font-medium">Horaire</label>
-        <input
-          type="time"
-          value={form.horaire}
-          onChange={(e) => setForm((prev) => ({ ...prev, horaire: e.target.value }))}
-          className="w-full rounded border p-2"
-        />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className="mb-1 block text-sm font-medium text-foreground">Heure de début</label>
+          <input
+            type="time"
+            required
+            value={form.heureDebut}
+            onChange={(e) => setForm((prev) => ({ ...prev, heureDebut: e.target.value }))}
+            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-foreground">Heure de fin (optionnel)</label>
+          <input
+            type="time"
+            value={form.heureFin}
+            onChange={(e) => setForm((prev) => ({ ...prev, heureFin: e.target.value }))}
+            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+          />
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div>
-          <label className="mb-1 block text-sm font-medium">Min points</label>
+          <label className="mb-1 block text-sm font-medium text-foreground">Min points</label>
           <input
             type="number"
             value={form.minPoints}
             onChange={(e) => setForm((prev) => ({ ...prev, minPoints: e.target.value }))}
-            className="w-full rounded border p-2"
+            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium">Max points</label>
+          <label className="mb-1 block text-sm font-medium text-foreground">Max points</label>
           <input
             type="number"
             value={form.maxPoints}
             onChange={(e) => setForm((prev) => ({ ...prev, maxPoints: e.target.value }))}
-            className="w-full rounded border p-2"
+            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium">Max joueurs</label>
+          <label className="mb-1 block text-sm font-medium text-foreground">Max joueurs</label>
           <input
             type="number"
             value={form.maxJoueurs}
             onChange={(e) => setForm((prev) => ({ ...prev, maxJoueurs: e.target.value }))}
-            className="w-full rounded border p-2"
+            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
           />
         </div>
       </div>
@@ -107,10 +129,10 @@ export function EditCategoryForm({
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       <div className="flex gap-3">
-        <button type="submit" disabled={loading} className="rounded bg-blue-600 px-4 py-2 text-white">
+        <button type="submit" disabled={loading} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
           {loading ? "Mise à jour..." : "Modifier pour tous les tours"}
         </button>
-        <Link href={backHref} className="rounded border px-4 py-2 text-sm">
+        <Link href={backHref} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground">
           Annuler
         </Link>
       </div>

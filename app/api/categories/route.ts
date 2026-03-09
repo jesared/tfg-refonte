@@ -8,6 +8,42 @@ function forbiddenResponse() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 }
 
+function parseOptionalInt(value: unknown) {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+
+  const parsed = Number.parseInt(String(value), 10);
+  return Number.isNaN(parsed) ? Number.NaN : parsed;
+}
+
+function parseTime(value: unknown) {
+  const normalized = String(value ?? "").trim();
+  if (!normalized) {
+    return null;
+  }
+
+  const match = normalized.match(/^(\d{2}):(\d{2})$/);
+  if (!match) {
+    return null;
+  }
+
+  const hours = Number.parseInt(match[1], 10);
+  const minutes = Number.parseInt(match[2], 10);
+
+  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+    return null;
+  }
+
+  return { hours, minutes };
+}
+
+function withTournamentDate(date: Date, hours: number, minutes: number) {
+  const result = new Date(date);
+  result.setHours(hours, minutes, 0, 0);
+  return result;
+}
+
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
 
@@ -18,20 +54,26 @@ export async function POST(req: Request) {
   const body = await req.json();
 
   const nom = String(body?.nom ?? "").trim();
-  const horaire = String(body?.horaire ?? "").trim();
   const tournamentId = String(body?.tournamentId ?? "").trim();
+
   if (!nom) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  const parseOptionalInt = (value: unknown) => {
-    if (value === undefined || value === null || value === "") {
-      return null;
-    }
+  const heureDebut = parseTime(body?.heureDebut);
+  const heureFin = parseTime(body?.heureFin);
 
-    const parsed = Number.parseInt(String(value), 10);
-    return Number.isNaN(parsed) ? Number.NaN : parsed;
-  };
+  if (!heureDebut) {
+    return NextResponse.json({ error: "Heure de début invalide" }, { status: 400 });
+  }
+
+  if (
+    heureFin &&
+    (heureFin.hours < heureDebut.hours ||
+      (heureFin.hours === heureDebut.hours && heureFin.minutes <= heureDebut.minutes))
+  ) {
+    return NextResponse.json({ error: "L'heure de fin doit être après l'heure de début" }, { status: 400 });
+  }
 
   const minPoints = parseOptionalInt(body?.minPoints);
   const maxPoints = parseOptionalInt(body?.maxPoints);
@@ -46,8 +88,8 @@ export async function POST(req: Request) {
   }
 
   const tournaments = tournamentId
-    ? await prisma.tournament.findMany({ where: { id: tournamentId }, select: { id: true } })
-    : await prisma.tournament.findMany({ select: { id: true } });
+    ? await prisma.tournament.findMany({ where: { id: tournamentId }, select: { id: true, date: true } })
+    : await prisma.tournament.findMany({ select: { id: true, date: true } });
 
   if (tournaments.length === 0) {
     return NextResponse.json({ error: tournamentId ? "Tournament not found" : "No tournament available" }, { status: 400 });
@@ -56,7 +98,10 @@ export async function POST(req: Request) {
   await prisma.category.createMany({
     data: tournaments.map((tournament) => ({
       nom,
-      horaire: horaire || null,
+      heureDebut: withTournamentDate(tournament.date, heureDebut.hours, heureDebut.minutes),
+      heureFin: heureFin
+        ? withTournamentDate(tournament.date, heureFin.hours, heureFin.minutes)
+        : null,
       minPoints,
       maxPoints,
       maxJoueurs,
