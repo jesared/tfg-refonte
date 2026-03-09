@@ -4,14 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-type FormState = {
-  nom: string;
-  heureDebut: string;
-  heureFin: string;
-  minPoints: string;
-  maxPoints: string;
-  maxJoueurs?: string;
-};
+import { CategoryFormFields, CategoryFormValues } from "@/app/admin/categories/_components/CategoryFormFields";
+
+type FormState = CategoryFormValues;
 
 export function EditCategoryForm({
   category,
@@ -68,69 +63,11 @@ export function EditCategoryForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-border bg-card p-5 shadow-sm">
-      <div>
-        <label className="mb-1 block text-sm font-medium text-foreground">Nom de la catégorie</label>
-        <input
-          required
-          value={form.nom}
-          onChange={(e) => setForm((prev) => ({ ...prev, nom: e.target.value }))}
-          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
-        />
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label className="mb-1 block text-sm font-medium text-foreground">Heure de début</label>
-          <input
-            type="time"
-            required
-            value={form.heureDebut}
-            onChange={(e) => setForm((prev) => ({ ...prev, heureDebut: e.target.value }))}
-            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium text-foreground">Heure de fin (optionnel)</label>
-          <input
-            type="time"
-            value={form.heureFin}
-            onChange={(e) => setForm((prev) => ({ ...prev, heureFin: e.target.value }))}
-            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
-          />
-        </div>
-      </div>
-
-      <div className={`grid gap-4 ${allowEditMaxJoueurs ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
-        <div>
-          <label className="mb-1 block text-sm font-medium text-foreground">Min points</label>
-          <input
-            type="number"
-            value={form.minPoints}
-            onChange={(e) => setForm((prev) => ({ ...prev, minPoints: e.target.value }))}
-            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium text-foreground">Max points</label>
-          <input
-            type="number"
-            value={form.maxPoints}
-            onChange={(e) => setForm((prev) => ({ ...prev, maxPoints: e.target.value }))}
-            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
-          />
-        </div>
-        {allowEditMaxJoueurs && (
-          <div>
-            <label className="mb-1 block text-sm font-medium text-foreground">Max joueurs (tour courant)</label>
-            <input
-              type="number"
-              value={form.maxJoueurs ?? ""}
-              onChange={(e) => setForm((prev) => ({ ...prev, maxJoueurs: e.target.value }))}
-              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
-            />
-          </div>
-        )}
-      </div>
+      <CategoryFormFields
+        form={form}
+        allowEditMaxJoueurs={allowEditMaxJoueurs}
+        onChange={(field, value) => setForm((prev) => ({ ...prev, [field]: value }))}
+      />
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
