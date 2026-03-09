@@ -11,39 +11,43 @@ type FormState = {
   maxJoueurs: string;
 };
 
-const initialState: FormState = {
-  nom: "",
-  minPoints: "",
-  maxPoints: "",
-  maxJoueurs: "",
-};
-
-export function NewCategoryForm() {
+export function EditCategoryForm({
+  category,
+  backHref,
+}: {
+  category: { id: string; nom: string; minPoints: number | null; maxPoints: number | null; maxJoueurs: number | null };
+  backHref: string;
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const [form, setForm] = useState<FormState>(initialState);
+  const [form, setForm] = useState<FormState>({
+    nom: category.nom,
+    minPoints: category.minPoints?.toString() ?? "",
+    maxPoints: category.maxPoints?.toString() ?? "",
+    maxJoueurs: category.maxJoueurs?.toString() ?? "",
+  });
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    const response = await fetch("/api/categories", {
-      method: "POST",
+    const response = await fetch(`/api/categories/${category.id}`, {
+      method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
 
     if (!response.ok) {
       const body = (await response.json().catch(() => null)) as { error?: string } | null;
-      setError(body?.error ?? "Impossible de créer la catégorie.");
+      setError(body?.error ?? "Impossible de modifier la catégorie.");
       setLoading(false);
       return;
     }
 
-    router.push(`/admin/tournaments`);
+    router.push(backHref);
+    router.refresh();
   }
 
   return (
@@ -55,7 +59,6 @@ export function NewCategoryForm() {
           value={form.nom}
           onChange={(e) => setForm((prev) => ({ ...prev, nom: e.target.value }))}
           className="w-full rounded border p-2"
-          placeholder="Ex: Dames -1500"
         />
       </div>
 
@@ -92,10 +95,10 @@ export function NewCategoryForm() {
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       <div className="flex gap-3">
-        <button type="submit" disabled={loading} className="rounded bg-green-600 px-4 py-2 text-white">
-          {loading ? "Création..." : "Créer la catégorie"}
+        <button type="submit" disabled={loading} className="rounded bg-blue-600 px-4 py-2 text-white">
+          {loading ? "Mise à jour..." : "Modifier pour tous les tours"}
         </button>
-        <Link href="/admin/tournaments" className="rounded border px-4 py-2 text-sm">
+        <Link href={backHref} className="rounded border px-4 py-2 text-sm">
           Annuler
         </Link>
       </div>
