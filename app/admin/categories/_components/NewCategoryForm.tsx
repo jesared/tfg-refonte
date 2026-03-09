@@ -20,7 +20,13 @@ const initialState: FormState = {
   maxJoueurs: "",
 };
 
-export function NewCategoryForm() {
+export function NewCategoryForm({
+  tournamentId,
+  backHref,
+}: {
+  tournamentId: string | null;
+  backHref: string;
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +41,7 @@ export function NewCategoryForm() {
     const response = await fetch("/api/categories", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, tournamentId: tournamentId ?? "" }),
     });
 
     if (!response.ok) {
@@ -45,7 +51,8 @@ export function NewCategoryForm() {
       return;
     }
 
-    router.push(`/admin/tournaments`);
+    router.push(backHref);
+    router.refresh();
   }
 
   return (
@@ -107,7 +114,7 @@ export function NewCategoryForm() {
         <button type="submit" disabled={loading} className="rounded bg-green-600 px-4 py-2 text-white">
           {loading ? "Création..." : "Créer la catégorie"}
         </button>
-        <Link href="/admin/tournaments" className="rounded border px-4 py-2 text-sm">
+        <Link href={backHref} className="rounded border px-4 py-2 text-sm">
           Annuler
         </Link>
       </div>
