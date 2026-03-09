@@ -42,6 +42,7 @@ const adminItems = [
   { href: "/admin", label: "Tableau de bord", icon: ShieldCheck },
   { href: "/admin/agenda", label: "Modifier agenda & salles", icon: CalendarDays },
   { href: "/admin/tableaux", label: "Modifier tableaux", icon: Swords },
+  { href: "/admin/tournaments", label: "Tournois", icon: Trophy },
   { href: "/admin/utilisateurs", label: "Utilisateurs", icon: User },
 ];
 
