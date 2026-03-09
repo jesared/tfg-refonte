@@ -212,9 +212,9 @@ export default function EditTournamentPage() {
           <button
             type="button"
             onClick={() => router.push(`/admin/tournaments/${tournamentId}`)}
-            className="mb-2 text-sm text-muted-foreground underline-offset-2 hover:underline"
+            className="mb-2 inline-flex items-center rounded-md border border-border bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
           >
-            ← Retour au tournoi
+            Retour au tournoi
           </button>
           <h1 className="text-2xl font-bold">Modifier le tournoi</h1>
           <p className="mt-1 text-sm text-muted-foreground">

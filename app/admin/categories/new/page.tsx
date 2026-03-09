@@ -32,9 +32,12 @@ export default async function NewCategoryPage({
 
   return (
     <main className="mx-auto w-full max-w-3xl space-y-4 p-8">
-      <header className="space-y-1">
-        <Link href={backHref} className="text-sm text-blue-600">
-          ← Retour aux tournois
+      <header className="space-y-3">
+        <Link
+          href={backHref}
+          className="inline-flex rounded-md border border-border px-3 py-2 text-sm hover:bg-muted"
+        >
+          Retour aux tournois
         </Link>
         <h1 className="text-2xl font-bold">Nouvelle catégorie</h1>
         <p className="text-sm text-gray-500">
