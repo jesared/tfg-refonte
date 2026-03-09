@@ -93,3 +93,27 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
   return NextResponse.json(tournament);
 }
+
+export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user || session.user.role !== "ADMIN") {
+    return forbiddenResponse();
+  }
+
+  const { id } = await params;
+
+  const existing = await prisma.tournament.findUnique({ where: { id }, select: { id: true } });
+
+  if (!existing) {
+    return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
+  }
+
+  await prisma.$transaction([
+    prisma.registration.deleteMany({ where: { tournamentId: id } }),
+    prisma.category.deleteMany({ where: { tournamentId: id } }),
+    prisma.tournament.delete({ where: { id } }),
+  ]);
+
+  return NextResponse.json({ success: true });
+}
