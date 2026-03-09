@@ -38,6 +38,11 @@ function getSegmentLabel(segment: string): string {
 
 export function AppBreadcrumb() {
   const pathname = usePathname();
+
+  if (!pathname) {
+    return null;
+  }
+
   const segments = pathname.split("/").filter(Boolean);
 
   if (segments.length === 0) {
