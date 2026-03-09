@@ -19,6 +19,7 @@ export async function POST(req: Request) {
 
   const nom = String(body?.nom ?? "").trim();
   const horaire = String(body?.horaire ?? "").trim();
+  const tournamentId = String(body?.tournamentId ?? "").trim();
   if (!nom) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
@@ -44,12 +45,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "minPoints must be <= maxPoints" }, { status: 400 });
   }
 
-  const tournaments = await prisma.tournament.findMany({
-    select: { id: true },
-  });
+  const tournaments = tournamentId
+    ? await prisma.tournament.findMany({ where: { id: tournamentId }, select: { id: true } })
+    : await prisma.tournament.findMany({ select: { id: true } });
 
   if (tournaments.length === 0) {
-    return NextResponse.json({ error: "No tournament available" }, { status: 400 });
+    return NextResponse.json({ error: tournamentId ? "Tournament not found" : "No tournament available" }, { status: 400 });
   }
 
   await prisma.category.createMany({

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
-export default function AdminTournoisPage() {
+export default function AdminTournoiPage() {
   redirect("/admin/tournaments");
 }
