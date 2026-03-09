@@ -62,11 +62,14 @@ export default function NewTournamentPage() {
   const mapsApiKey = useMemo(() => process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY, []);
   const salleNomRef = useRef<HTMLInputElement | null>(null);
   const autocompleteInitializedRef = useRef(false);
-  const [mapsReady, setMapsReady] = useState(false);
+  const [mapsReady, setMapsReady] = useState(
+    () => typeof window !== "undefined" && Boolean((window as GoogleWindow).google?.maps?.places?.Autocomplete),
+  );
   const [mapsFailed, setMapsFailed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(initialState);
+
 
   useEffect(() => {
     if (!mapsApiKey || !mapsReady || !salleNomRef.current || autocompleteInitializedRef.current) {
@@ -132,7 +135,7 @@ export default function NewTournamentPage() {
     <div className="mx-auto max-w-2xl p-8 text-foreground">
       {mapsApiKey ? (
         <Script
-          src={`https://maps.googleapis.com/maps/api/js?key=${mapsApiKey}&libraries=places&loading=async`}
+          src={`https://maps.googleapis.com/maps/api/js?key=${mapsApiKey}&libraries=places`}
           strategy="afterInteractive"
           onLoad={() => setMapsReady(true)}
           onError={() => setMapsFailed(true)}
