@@ -14,10 +14,10 @@ export default async function AdminCategoriesPage() {
   }
 
   const categories = await prisma.category.findMany({
-    orderBy: [{ nom: "asc" }, { tournament: { tour: "asc" } }],
+    orderBy: [{ nom: "asc" }, { tournament: { nom: "asc" } }],
     include: {
       tournament: {
-        select: { id: true, tour: true, nom: true },
+        select: { id: true, nom: true },
       },
       _count: {
         select: { registrations: true },
@@ -38,7 +38,7 @@ export default async function AdminCategoriesPage() {
       <header className="flex items-start justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-2xl font-bold">Catégories</h1>
-          <p className="text-sm text-gray-500">Gérez les catégories communes à tous les tours.</p>
+          <p className="text-sm text-gray-500">Gérez les catégories disponibles.</p>
         </div>
         <Link href="/admin/categories/new" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
           + Ajouter une catégorie
@@ -55,8 +55,6 @@ export default async function AdminCategoriesPage() {
                 <th className="px-4 py-3">Nom</th>
                 <th className="px-4 py-3">Horaires</th>
                 <th className="px-4 py-3">Points</th>
-                <th className="px-4 py-3">Max joueurs</th>
-                <th className="px-4 py-3">Tours</th>
                 <th className="px-4 py-3">Inscriptions</th>
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
@@ -64,7 +62,6 @@ export default async function AdminCategoriesPage() {
             <tbody>
               {groupedCategories.map((group) => {
                 const sample = group[0];
-                const tours = group.map((item) => item.tournament.tour).join(", ");
                 const totalRegistrations = group.reduce((sum, item) => sum + item._count.registrations, 0);
 
                 return (
@@ -79,8 +76,6 @@ export default async function AdminCategoriesPage() {
                     <td className="px-4 py-3 text-muted-foreground">
                       {sample.minPoints ?? "-∞"} → {sample.maxPoints ?? "+∞"}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">{group.map((item) => `T${item.tournament.tour}: ${item.maxJoueurs ?? "∞"}`).join(" · ")}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{tours}</td>
                     <td className="px-4 py-3 text-muted-foreground">{totalRegistrations}</td>
                     <td className="px-4 py-3">
                       <CategoryActions categoryId={sample.id} categoryName={sample.nom} />
