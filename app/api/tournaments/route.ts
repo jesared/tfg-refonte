@@ -8,6 +8,16 @@ function forbiddenResponse() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 }
 
+function withTournamentDate(date: Date, sourceDate: Date | null) {
+  if (!sourceDate) {
+    return null;
+  }
+
+  const result = new Date(date);
+  result.setHours(sourceDate.getHours(), sourceDate.getMinutes(), 0, 0);
+  return result;
+}
+
 export async function GET() {
   const session = await getServerSession(authOptions);
 
@@ -59,6 +69,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing or invalid fields" }, { status: 400 });
   }
 
+  const sourceTournament = await prisma.tournament.findFirst({
+    where: {
+      categories: {
+        some: {},
+      },
+    },
+    orderBy: { date: "desc" },
+    include: {
+      categories: {
+        orderBy: { nom: "asc" },
+      },
+    },
+  });
+
   const tournament = await prisma.tournament.create({
     data: {
       nom,
@@ -78,6 +102,23 @@ export async function POST(req: Request) {
           : null,
       sallePlaceId: body?.sallePlaceId ? String(body.sallePlaceId) : null,
       inscriptionOuverte: Boolean(body?.inscriptionOuverte),
+      categories: sourceTournament
+        ? {
+            create: sourceTournament.categories.map((category) => ({
+              nom: category.nom,
+              heureDebut: withTournamentDate(date, category.heureDebut) ?? date,
+              heureFin: withTournamentDate(date, category.heureFin),
+              minPoints: category.minPoints,
+              maxPoints: category.maxPoints,
+              maxJoueurs: category.maxJoueurs,
+            })),
+          }
+        : undefined,
+    },
+    include: {
+      categories: {
+        orderBy: { nom: "asc" },
+      },
     },
   });
 

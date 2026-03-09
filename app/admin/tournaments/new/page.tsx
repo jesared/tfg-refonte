@@ -61,13 +61,17 @@ export default function NewTournamentPage() {
   const router = useRouter();
   const mapsApiKey = useMemo(() => process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY, []);
   const salleNomRef = useRef<HTMLInputElement | null>(null);
+  const autocompleteInitializedRef = useRef(false);
   const [mapsReady, setMapsReady] = useState(false);
+  const [mapsFailed, setMapsFailed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(initialState);
 
   useEffect(() => {
-    if (!mapsReady || !salleNomRef.current) return;
+    if (!mapsApiKey || !mapsReady || !salleNomRef.current || autocompleteInitializedRef.current) {
+      return;
+    }
 
     const win = window as GoogleWindow;
     const AutocompleteCtor = win.google?.maps?.places?.Autocomplete;
@@ -75,8 +79,8 @@ export default function NewTournamentPage() {
 
     const autocomplete = new AutocompleteCtor(salleNomRef.current, {
       fields: ["name", "formatted_address", "address_components", "geometry", "place_id"],
-      types: ["establishment"],
     });
+    autocompleteInitializedRef.current = true;
 
     autocomplete.addListener("place_changed", () => {
       const place = autocomplete.getPlace();
@@ -98,7 +102,7 @@ export default function NewTournamentPage() {
         salleLongitude: place.geometry?.location?.lng() ?? null,
       }));
     });
-  }, [mapsReady]);
+  }, [mapsReady, mapsApiKey]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -125,16 +129,23 @@ export default function NewTournamentPage() {
   }
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="mx-auto max-w-2xl p-8 text-foreground">
       {mapsApiKey ? (
         <Script
-          src={`https://maps.googleapis.com/maps/api/js?key=${mapsApiKey}&libraries=places`}
+          src={`https://maps.googleapis.com/maps/api/js?key=${mapsApiKey}&libraries=places&loading=async`}
           strategy="afterInteractive"
           onLoad={() => setMapsReady(true)}
+          onError={() => setMapsFailed(true)}
         />
       ) : null}
 
-      <h1 className="text-xl font-bold mb-4">Créer un tournoi</h1>
+      <h1 className="mb-4 text-2xl font-bold">Créer un tournoi</h1>
+
+      {!mapsApiKey || mapsFailed ? (
+        <p className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">
+          La recherche Google Places est indisponible. Vous pouvez saisir le lieu manuellement.
+        </p>
+      ) : null}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
@@ -145,7 +156,7 @@ export default function NewTournamentPage() {
           required
           value={form.tour}
           onChange={(e) => setForm((prev) => ({ ...prev, tour: e.target.value }))}
-          className="w-full border p-2 rounded"
+          className="w-full rounded-md border border-border bg-background p-2"
         />
         <input
           type="date"
@@ -153,7 +164,7 @@ export default function NewTournamentPage() {
           required
           value={form.date}
           onChange={(e) => setForm((prev) => ({ ...prev, date: e.target.value }))}
-          className="w-full border p-2 rounded"
+          className="w-full rounded-md border border-border bg-background p-2"
         />
         <input
           name="clubOrganisateur"
@@ -161,16 +172,16 @@ export default function NewTournamentPage() {
           required
           value={form.clubOrganisateur}
           onChange={(e) => setForm((prev) => ({ ...prev, clubOrganisateur: e.target.value }))}
-          className="w-full border p-2 rounded"
+          className="w-full rounded-md border border-border bg-background p-2"
         />
         <input
           ref={salleNomRef}
           name="salleNom"
-          placeholder={mapsApiKey ? "Commence à saisir pour rechercher un lieu" : "Nom de la salle"}
+          placeholder={mapsApiKey ? "Commencez à saisir pour rechercher un lieu" : "Nom de la salle"}
           required
           value={form.salleNom}
           onChange={(e) => setForm((prev) => ({ ...prev, salleNom: e.target.value }))}
-          className="w-full border p-2 rounded"
+          className="w-full rounded-md border border-border bg-background p-2"
         />
         <input
           name="salleAdresse"
@@ -178,7 +189,7 @@ export default function NewTournamentPage() {
           required
           value={form.salleAdresse}
           onChange={(e) => setForm((prev) => ({ ...prev, salleAdresse: e.target.value }))}
-          className="w-full border p-2 rounded"
+          className="w-full rounded-md border border-border bg-background p-2"
         />
         <input
           name="salleVille"
@@ -186,7 +197,7 @@ export default function NewTournamentPage() {
           required
           value={form.salleVille}
           onChange={(e) => setForm((prev) => ({ ...prev, salleVille: e.target.value }))}
-          className="w-full border p-2 rounded"
+          className="w-full rounded-md border border-border bg-background p-2"
         />
 
         <label className="flex items-center gap-2 text-sm">
@@ -203,7 +214,7 @@ export default function NewTournamentPage() {
         <button
           type="submit"
           disabled={loading}
-          className="bg-green-600 text-white px-4 py-2 rounded"
+          className="rounded-md bg-primary px-4 py-2 font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? "Création..." : "Créer"}
         </button>
