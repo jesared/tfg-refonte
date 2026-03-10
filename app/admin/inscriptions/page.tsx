@@ -1,4 +1,4 @@
-import { Check, ShieldCheck, Trophy } from "lucide-react";
+import { Check, ShieldCheck, Trophy, X } from "lucide-react";
 import type { Metadata } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -84,6 +84,38 @@ async function resetRegistration(formData: FormData) {
   redirect("/admin/inscriptions?updated=reset");
 }
 
+async function deletePlayerRegistrations(formData: FormData) {
+  "use server";
+
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user || session.user.role !== "ADMIN") {
+    redirect("/");
+  }
+
+  const registrationId = String(formData.get("registrationId") ?? "").trim();
+
+  if (!registrationId) {
+    redirect("/admin/inscriptions?updated=0");
+  }
+
+  const existing = await prisma.registration.findUnique({
+    where: { id: registrationId },
+    select: { numeroLicence: true },
+  });
+
+  if (!existing) {
+    redirect("/admin/inscriptions?updated=0");
+  }
+
+  await prisma.registration.deleteMany({
+    where: { numeroLicence: existing.numeroLicence },
+  });
+
+  revalidatePath("/admin/inscriptions");
+  redirect("/admin/inscriptions?updated=deleted");
+}
+
 export default async function AdminInscriptionsPage({
   searchParams,
 }: {
@@ -140,6 +172,7 @@ export default async function AdminInscriptionsPage({
   const updateStatus = params?.updated;
   const isValidated = updateStatus === "validated";
   const isReset = updateStatus === "reset";
+  const isDeleted = updateStatus === "deleted";
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-8">
@@ -164,6 +197,12 @@ export default async function AdminInscriptionsPage({
       {isReset && (
         <p className="rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-200">
           ↩️ Inscription remise en attente.
+        </p>
+      )}
+
+      {isDeleted && (
+        <p className="rounded-xl border border-rose-300/60 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700 dark:border-rose-400/40 dark:bg-rose-500/10 dark:text-rose-200">
+          🗑️ Joueur supprimé avec tous ses engagements.
         </p>
       )}
 
@@ -365,6 +404,17 @@ export default async function AdminInscriptionsPage({
                                   </button>
                                 </form>
                               )}
+
+                              <form action={deletePlayerRegistrations}>
+                                <input type="hidden" name="registrationId" value={registration.id} />
+                                <button
+                                  type="submit"
+                                  className="inline-flex items-center gap-1 rounded-lg border border-rose-300/70 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/20"
+                                >
+                                  <X className="h-3.5 w-3.5" aria-hidden="true" />
+                                  Supprimer joueur
+                                </button>
+                              </form>
                             </div>
                           </td>
                         </tr>
