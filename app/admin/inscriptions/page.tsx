@@ -1,4 +1,4 @@
-import { Check, EllipsisVertical, ShieldCheck, Trophy, X } from "lucide-react";
+import { Check, Dot, ShieldCheck, Trophy, X } from "lucide-react";
 import type { Metadata } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -716,7 +716,7 @@ export default async function AdminInscriptionsPage({
                               <div className="relative inline-block">
                                 <details className="group">
                                   <summary className="inline-flex cursor-pointer list-none items-center rounded-md bg-[#1e2238] p-2 text-[#c5cbf7] transition hover:bg-[#2a2f4b]">
-                                    <EllipsisVertical className="h-4 w-4" aria-hidden="true" />
+                                    <Dot className="h-4 w-4" aria-hidden="true" />
                                   </summary>
                                   <div className="absolute right-0 top-full z-10 mt-2 flex w-44 flex-col overflow-hidden rounded-md border border-[#3a3f5e] bg-[#4b4f6a] py-1 text-sm text-[#e4e7ff] shadow-xl">
                                     {canValidate ? (
