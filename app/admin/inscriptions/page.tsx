@@ -708,18 +708,12 @@ export default async function AdminInscriptionsPage({
                                               >
                                                 Enregistrer
                                               </button>
-                                              <button
-                                                type="button"
-                                                onClick={(event) => {
-                                                  const details = event.currentTarget.closest("details");
-                                                  if (details) {
-                                                    details.removeAttribute("open");
-                                                  }
-                                                }}
+                                              <a
+                                                href={`/admin/inscriptions?scope=${scope}&status=${status}`}
                                                 className="inline-flex items-center rounded-md border border-[#7f85aa] px-2 py-1 text-xs text-[#d2d6f8] transition hover:bg-[#5c617d]"
                                               >
                                                 Fermer
-                                              </button>
+                                              </a>
                                             </div>
                                           </div>
                                         </div>
