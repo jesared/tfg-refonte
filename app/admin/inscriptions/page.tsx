@@ -711,53 +711,60 @@ export default async function AdminInscriptionsPage({
                               </span>
                             </td>
                             <td className="px-3 py-3">
-                              <div className="flex flex-wrap items-center gap-2">
-                                {canValidate ? (
-                                  <InlineActionForm
-                                    action={validateRegistration}
-                                    registrationId={registration.id}
-                                  >
-                                    <button
-                                      type="submit"
-                                      className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
-                                    >
-                                      <Check className="h-3.5 w-3.5" aria-hidden="true" />
-                                      Valider
-                                    </button>
-                                  </InlineActionForm>
-                                ) : (
-                                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-300">
-                                    Déjà validée
-                                  </span>
-                                )}
+                              <div className="relative inline-block">
+                                <details className="group">
+                                  <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted">
+                                    Actions
+                                  </summary>
+                                  <div className="absolute right-0 top-full z-10 mt-2 flex w-48 flex-col gap-1 rounded-lg border border-border bg-popover p-2 shadow-lg">
+                                    {canValidate ? (
+                                      <InlineActionForm
+                                        action={validateRegistration}
+                                        registrationId={registration.id}
+                                      >
+                                        <button
+                                          type="submit"
+                                          className="inline-flex w-full items-center gap-1 rounded-md bg-primary px-2.5 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
+                                        >
+                                          <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                                          Valider
+                                        </button>
+                                      </InlineActionForm>
+                                    ) : (
+                                      <span className="px-2.5 py-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-300">
+                                        Déjà validée
+                                      </span>
+                                    )}
 
-                                {canReset && (
-                                  <InlineActionForm
-                                    action={resetRegistration}
-                                    registrationId={registration.id}
-                                  >
-                                    <button
-                                      type="submit"
-                                      className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
-                                    >
-                                      Remettre en attente
-                                    </button>
-                                  </InlineActionForm>
-                                )}
+                                    {canReset && (
+                                      <InlineActionForm
+                                        action={resetRegistration}
+                                        registrationId={registration.id}
+                                      >
+                                        <button
+                                          type="submit"
+                                          className="inline-flex w-full items-center rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
+                                        >
+                                          Remettre en attente
+                                        </button>
+                                      </InlineActionForm>
+                                    )}
 
-                                <InlineActionForm
-                                  action={deletePlayerRegistrations}
-                                  registrationId={registration.id}
-                                  confirmMessage="Confirmer la suppression de ce joueur et de toutes ses inscriptions ?"
-                                >
-                                  <button
-                                    type="submit"
-                                    className="inline-flex items-center gap-1 rounded-lg border border-rose-300/70 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/20"
-                                  >
-                                    <X className="h-3.5 w-3.5" aria-hidden="true" />
-                                    Supprimer joueur
-                                  </button>
-                                </InlineActionForm>
+                                    <InlineActionForm
+                                      action={deletePlayerRegistrations}
+                                      registrationId={registration.id}
+                                      confirmMessage="Confirmer la suppression de ce joueur et de toutes ses inscriptions ?"
+                                    >
+                                      <button
+                                        type="submit"
+                                        className="inline-flex w-full items-center gap-1 rounded-md border border-rose-300/70 bg-rose-50 px-2.5 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/20"
+                                      >
+                                        <X className="h-3.5 w-3.5" aria-hidden="true" />
+                                        Supprimer joueur
+                                      </button>
+                                    </InlineActionForm>
+                                  </div>
+                                </details>
                               </div>
                             </td>
                           </tr>
