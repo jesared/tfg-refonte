@@ -1,4 +1,4 @@
-import { Check, ShieldCheck, Trophy, X } from "lucide-react";
+import { Check, MoreVertical, ShieldCheck, Trophy, X } from "lucide-react";
 import type { Metadata } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -633,53 +633,6 @@ export default async function AdminInscriptionsPage({
                                 <span className="text-xs font-semibold text-foreground">
                                   Engagement actuel : {registration.category.nom}
                                 </span>
-                                <InlineActionForm
-                                  action={updateRegistrationEngagements}
-                                  registrationId={registration.id}
-                                >
-                                  <div className="relative">
-                                    <details className="group">
-                                      <summary className="cursor-pointer list-none rounded-md border border-border bg-background px-2 py-1 text-xs font-medium text-foreground transition hover:bg-muted">
-                                        Modifier engagements
-                                      </summary>
-                                      <div className="absolute left-0 top-full z-10 mt-2 w-72 rounded-lg border border-border bg-popover p-3 shadow-lg">
-                                        <p className="mb-2 text-xs font-semibold text-foreground">
-                                          Choisir un ou plusieurs tableaux
-                                        </p>
-                                        <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
-                                          {eligibleCategories.map((category) => (
-                                            <label
-                                              key={category.id}
-                                              className="flex items-start gap-2 text-xs text-foreground/90"
-                                            >
-                                              <input
-                                                type="checkbox"
-                                                name="categoryIds"
-                                                value={category.id}
-                                                defaultChecked={selectedCategoryIds.includes(
-                                                  category.id,
-                                                )}
-                                              />
-                                              <span>
-                                                {category.nom}
-                                                {category.minPoints !== null ||
-                                                category.maxPoints !== null
-                                                  ? ` (${category.minPoints ?? 0}-${category.maxPoints ?? "∞"} pts)`
-                                                  : ""}
-                                              </span>
-                                            </label>
-                                          ))}
-                                        </div>
-                                        <button
-                                          type="submit"
-                                          className="mt-3 inline-flex items-center rounded-md border border-border bg-background px-2 py-1 text-xs font-medium text-foreground transition hover:bg-muted"
-                                        >
-                                          Enregistrer
-                                        </button>
-                                      </div>
-                                    </details>
-                                  </div>
-                                </InlineActionForm>
                                 <span className="text-xs text-muted-foreground">
                                   Points: {registration.points ?? "non renseignés"}
                                 </span>
@@ -711,54 +664,103 @@ export default async function AdminInscriptionsPage({
                               </span>
                             </td>
                             <td className="px-3 py-3">
-                              <div className="flex flex-wrap items-center gap-2">
-                                {canValidate ? (
-                                  <InlineActionForm
-                                    action={validateRegistration}
-                                    registrationId={registration.id}
-                                  >
-                                    <button
-                                      type="submit"
-                                      className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
-                                    >
-                                      <Check className="h-3.5 w-3.5" aria-hidden="true" />
-                                      Valider
-                                    </button>
-                                  </InlineActionForm>
-                                ) : (
-                                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-300">
-                                    Déjà validée
-                                  </span>
-                                )}
+                              <details className="group relative inline-block">
+                                <summary className="flex cursor-pointer list-none items-center justify-center rounded-md border border-border bg-background p-2 text-foreground transition hover:bg-muted">
+                                  <MoreVertical className="h-4 w-4" aria-hidden="true" />
+                                  <span className="sr-only">Ouvrir les actions</span>
+                                </summary>
+                                <div className="absolute right-0 top-full z-10 mt-2 w-72 rounded-lg border border-border bg-popover p-3 shadow-lg">
+                                  <div className="space-y-2">
+                                    {canValidate ? (
+                                      <InlineActionForm
+                                        action={validateRegistration}
+                                        registrationId={registration.id}
+                                      >
+                                        <button
+                                          type="submit"
+                                          className="inline-flex w-full items-center gap-2 rounded-md bg-primary px-2.5 py-1.5 text-left text-xs font-semibold text-primary-foreground transition hover:opacity-90"
+                                        >
+                                          <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                                          Valider
+                                        </button>
+                                      </InlineActionForm>
+                                    ) : (
+                                      <p className="rounded-md bg-emerald-50 px-2.5 py-1.5 text-xs font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200">
+                                        Déjà validée
+                                      </p>
+                                    )}
 
-                                {canReset && (
-                                  <InlineActionForm
-                                    action={resetRegistration}
-                                    registrationId={registration.id}
-                                  >
-                                    <button
-                                      type="submit"
-                                      className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
-                                    >
-                                      Remettre en attente
-                                    </button>
-                                  </InlineActionForm>
-                                )}
+                                    {canReset && (
+                                      <InlineActionForm
+                                        action={resetRegistration}
+                                        registrationId={registration.id}
+                                      >
+                                        <button
+                                          type="submit"
+                                          className="inline-flex w-full items-center rounded-md border border-border bg-background px-2.5 py-1.5 text-left text-xs font-semibold text-foreground transition hover:bg-muted"
+                                        >
+                                          Remettre en attente
+                                        </button>
+                                      </InlineActionForm>
+                                    )}
 
-                                <InlineActionForm
-                                  action={deletePlayerRegistrations}
-                                  registrationId={registration.id}
-                                  confirmMessage="Confirmer la suppression de ce joueur et de toutes ses inscriptions ?"
-                                >
-                                  <button
-                                    type="submit"
-                                    className="inline-flex items-center gap-1 rounded-lg border border-rose-300/70 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/20"
-                                  >
-                                    <X className="h-3.5 w-3.5" aria-hidden="true" />
-                                    Supprimer joueur
-                                  </button>
-                                </InlineActionForm>
-                              </div>
+                                    <details>
+                                      <summary className="cursor-pointer list-none rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted">
+                                        Modifier engagements
+                                      </summary>
+                                      <InlineActionForm
+                                        action={updateRegistrationEngagements}
+                                        registrationId={registration.id}
+                                      >
+                                        <div className="mt-2 max-h-48 space-y-2 overflow-y-auto pr-1">
+                                          {eligibleCategories.map((category) => (
+                                            <label
+                                              key={category.id}
+                                              className="flex items-start gap-2 text-xs text-foreground/90"
+                                            >
+                                              <input
+                                                type="checkbox"
+                                                name="categoryIds"
+                                                value={category.id}
+                                                defaultChecked={selectedCategoryIds.includes(
+                                                  category.id,
+                                                )}
+                                              />
+                                              <span>
+                                                {category.nom}
+                                                {category.minPoints !== null ||
+                                                category.maxPoints !== null
+                                                  ? ` (${category.minPoints ?? 0}-${category.maxPoints ?? "∞"} pts)`
+                                                  : ""}
+                                              </span>
+                                            </label>
+                                          ))}
+                                        </div>
+                                        <button
+                                          type="submit"
+                                          className="mt-3 inline-flex w-full items-center justify-center rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground transition hover:bg-muted"
+                                        >
+                                          Enregistrer les engagements
+                                        </button>
+                                      </InlineActionForm>
+                                    </details>
+
+                                    <InlineActionForm
+                                      action={deletePlayerRegistrations}
+                                      registrationId={registration.id}
+                                      confirmMessage="Confirmer la suppression de ce joueur et de toutes ses inscriptions ?"
+                                    >
+                                      <button
+                                        type="submit"
+                                        className="inline-flex w-full items-center gap-2 rounded-md border border-rose-300/70 bg-rose-50 px-2.5 py-1.5 text-left text-xs font-semibold text-rose-700 transition hover:bg-rose-100 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/20"
+                                      >
+                                        <X className="h-3.5 w-3.5" aria-hidden="true" />
+                                        Supprimer joueur
+                                      </button>
+                                    </InlineActionForm>
+                                  </div>
+                                </div>
+                              </details>
                             </td>
                           </tr>
                         );
