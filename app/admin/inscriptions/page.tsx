@@ -211,6 +211,7 @@ async function updateRegistrationEngagements(formData: FormData) {
   const existingEngagements = await prisma.registration.findMany({
     where: {
       numeroLicence: registration.numeroLicence,
+      userId: registration.userId,
       tournamentId: registration.tournamentId,
     },
     select: {
