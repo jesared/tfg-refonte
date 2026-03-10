@@ -1,11 +1,22 @@
 import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 
 import { prisma } from "@/lib/prisma";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
 const LICENCE_REGEX = /^[A-Za-z0-9]{3,9}$/;
 
 export async function POST(req: Request) {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return NextResponse.json(
+      { error: "Vous devez être connecté pour inscrire un joueur." },
+      { status: 401 },
+    );
+  }
+
   const body = await req.json();
 
   const nom = String(body?.nom ?? "").trim();
@@ -89,6 +100,7 @@ export async function POST(req: Request) {
         points,
         tournamentId,
         categoryId,
+        userId: session.user.id,
       })),
     });
   } catch (error) {

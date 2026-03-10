@@ -16,6 +16,7 @@ model User {
   role          Role      @default(USER)
   accounts      Account[]
   sessions      Session[]
+  registrations Registration[]
 }
 
 model Account {
@@ -93,6 +94,9 @@ model Registration {
 
   category   Category @relation(fields: [categoryId], references: [id])
   categoryId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

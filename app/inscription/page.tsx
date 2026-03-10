@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { CalendarDays, Trophy } from "lucide-react";
+import { getServerSession } from "next-auth";
 
 import { InscriptionForm } from "./InscriptionForm";
 
@@ -14,6 +16,8 @@ function formatTournamentDate(date: Date) {
 }
 
 export default async function InscriptionPage() {
+  const session = await getServerSession(authOptions);
+
   const now = new Date();
   now.setHours(0, 0, 0, 0);
 
@@ -71,7 +75,11 @@ export default async function InscriptionPage() {
           {tournament ? <span className="text-primary">· Tour {tournament.tour}</span> : null}
         </h1>
 
-        {tournament ? (
+        {!session?.user ? (
+          <p className="mt-6 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+            Vous devez être connecté avec Google pour accéder au formulaire d&apos;inscription.
+          </p>
+        ) : tournament ? (
           <>
             <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
               <CalendarDays className="h-4 w-4 text-primary" aria-hidden="true" />
