@@ -1,8 +1,8 @@
 import { Check, EllipsisVertical, Pencil, ShieldCheck, Trophy, X } from "lucide-react";
 import type { Metadata } from "next";
+import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
 
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -261,33 +261,29 @@ async function updateRegistrationEngagements(formData: FormData) {
   });
 
   await prisma.$transaction(async (tx) => {
-    if (idsToDelete.length > 0) {
-      await tx.registration.deleteMany({
-        where: {
-          id: { in: idsToDelete },
-        },
-      });
-    }
+    await tx.registration.deleteMany({
+      where: {
+        numeroLicence: registration.numeroLicence,
+        tournamentId: registration.tournamentId,
+      },
+    });
 
-    if (categoriesToCreate.length > 0) {
-      await tx.registration.createMany({
-        data: categoriesToCreate.map((categoryId) => ({
-          nom: registration.nom,
-          prenom: registration.prenom,
-          numeroLicence: registration.numeroLicence,
-          genre: registration.genre,
-          club: registration.club,
-          points: registration.points,
-          statut: registration.statut,
-          licenceVerified: registration.licenceVerified,
-          present: registration.present,
-          tournamentId: registration.tournamentId,
-          categoryId,
-          userId: registration.userId,
-        })),
-        skipDuplicates: true,
-      });
-    }
+    await tx.registration.createMany({
+      data: uniqueCategoryIds.map((categoryId) => ({
+        nom: registration.nom,
+        prenom: registration.prenom,
+        numeroLicence: registration.numeroLicence,
+        genre: registration.genre,
+        club: registration.club,
+        points: registration.points,
+        statut: registration.statut,
+        licenceVerified: registration.licenceVerified,
+        present: registration.present,
+        tournamentId: registration.tournamentId,
+        categoryId,
+        userId: registration.userId,
+      })),
+    });
   });
 
   revalidatePath("/admin/inscriptions");
@@ -695,7 +691,10 @@ export default async function AdminInscriptionsPage({
                                     >
                                       <details className="group/modal">
                                         <summary className="cursor-pointer list-none px-3 py-2 text-left text-sm transition hover:bg-[#5c617d]">
-                                          <Pencil className="mr-2 inline h-3.5 w-3.5" aria-hidden="true" />
+                                          <Pencil
+                                            className="mr-2 inline h-3.5 w-3.5"
+                                            aria-hidden="true"
+                                          />
                                           Modifier
                                         </summary>
                                         <div className="fixed inset-0 z-20 hidden items-center justify-center bg-black/55 p-4 group-open/modal:flex">

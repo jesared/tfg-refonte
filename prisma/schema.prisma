@@ -101,7 +101,7 @@ model Registration {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([numeroLicence, categoryId])
+   @@unique([numeroLicence, tournamentId, categoryId])
 }
 
 enum RegistrationStatus {
