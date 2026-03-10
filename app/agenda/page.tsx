@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { unstable_noStore as noStore } from "next/cache";
 import { MapPin } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
@@ -42,6 +43,8 @@ const getCurrentSeasonRange = (now = new Date()) => {
 };
 
 export default async function AgendaPage() {
+  noStore();
+
   const seasonLabel = getCurrentSeasonLabel();
   const seasonRange = getCurrentSeasonRange();
 
