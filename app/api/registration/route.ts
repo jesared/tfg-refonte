@@ -12,14 +12,16 @@ export async function POST(req: Request) {
   const club = String(body?.club ?? "").trim();
   const genre = body?.genre === "M" || body?.genre === "F" ? body.genre : null;
   const tournamentId = String(body?.tournamentId ?? "").trim();
-  const categoryId = String(body?.categoryId ?? "").trim();
+  const categoryIds = Array.isArray(body?.categoryIds)
+    ? body.categoryIds.map((id: unknown) => String(id).trim()).filter(Boolean)
+    : [];
 
   const points =
     body?.points === null || body?.points === undefined || body?.points === ""
       ? null
       : Number.parseInt(String(body.points), 10);
 
-  if (!nom || !prenom || !numeroLicence || !club || !tournamentId || !categoryId) {
+  if (!nom || !prenom || !numeroLicence || !club || !tournamentId || categoryIds.length === 0) {
     return NextResponse.json({ error: "Champs obligatoires manquants." }, { status: 400 });
   }
 
@@ -39,18 +41,17 @@ export async function POST(req: Request) {
     );
   }
 
-  const category = await prisma.category.findFirst({
-    where: { id: categoryId, tournamentId },
-    select: { id: true },
+  const categoriesCount = await prisma.category.count({
+    where: { id: { in: categoryIds }, tournamentId },
   });
 
-  if (!category) {
-    return NextResponse.json({ error: "Le tableau sélectionné est invalide." }, { status: 400 });
+  if (categoriesCount !== categoryIds.length) {
+    return NextResponse.json({ error: "Au moins un tableau sélectionné est invalide." }, { status: 400 });
   }
 
   try {
-    await prisma.registration.create({
-      data: {
+    await prisma.registration.createMany({
+      data: categoryIds.map((categoryId: string) => ({
         nom,
         prenom,
         numeroLicence,
@@ -59,12 +60,12 @@ export async function POST(req: Request) {
         points,
         tournamentId,
         categoryId,
-      },
+      })),
     });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       return NextResponse.json(
-        { error: "Cette licence est déjà inscrite sur ce tableau." },
+        { error: "Cette licence est déjà inscrite sur au moins un des tableaux sélectionnés." },
         { status: 409 },
       );
     }
