@@ -19,7 +19,7 @@ export function CategoryActions({
 
   async function handleDelete() {
     const confirmed = window.confirm(
-      `Supprimer la catégorie “${categoryName}” pour tous les tours ? Cette action est irréversible.`,
+      `Supprimer la catégorie “${categoryName}” sur ce tour ? Cette action est irréversible.`,
     );
 
     if (!confirmed) {

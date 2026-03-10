@@ -7,13 +7,6 @@ import { CategoryActions } from "@/app/admin/categories/_components/CategoryActi
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
-type CategoryWithRelations = Awaited<
-  ReturnType<typeof prisma.category.findMany>
->[number] & {
-  tournament: { id: string; nom: string };
-  _count: { registrations: number };
-};
-
 function formatTime(date: Date | null) {
   if (!date) {
     return null;
@@ -25,6 +18,14 @@ function formatTime(date: Date | null) {
   }).format(date);
 }
 
+function formatDate(date: Date) {
+  return new Intl.DateTimeFormat("fr-FR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }).format(date);
+}
+
 export default async function AdminCategoriesPage() {
   const session = await getServerSession(authOptions);
 
@@ -32,28 +33,44 @@ export default async function AdminCategoriesPage() {
     redirect("/");
   }
 
-  const categories = await prisma.category.findMany({
-    orderBy: [{ nom: "asc" }, { tournament: { nom: "asc" } }],
-    include: {
-      tournament: {
-        select: { id: true, nom: true },
+  const tournaments = await prisma.tournament.findMany({
+    orderBy: [{ date: "asc" }, { tour: "asc" }],
+    select: {
+      id: true,
+      nom: true,
+      tour: true,
+      date: true,
+      salleVille: true,
+      categories: {
+        orderBy: [{ nom: "asc" }],
+        select: {
+          id: true,
+          nom: true,
+          heureDebut: true,
+          heureFin: true,
+          minPoints: true,
+          maxPoints: true,
+          _count: {
+            select: {
+              registrations: true,
+            },
+          },
+        },
       },
       _count: {
-        select: { registrations: true },
+        select: {
+          registrations: true,
+        },
       },
     },
   });
 
-  const groupedCategories = Object.values(
-    categories.reduce<Record<string, CategoryWithRelations[]>>((acc, category) => {
-      acc[category.nom] = acc[category.nom] ?? [];
-      acc[category.nom].push(category);
-      return acc;
-    }, {}),
+  const totalCategories = tournaments.reduce(
+    (sum, tournament) => sum + tournament.categories.length,
+    0,
   );
-
-  const totalRegistrations = categories.reduce(
-    (sum, category) => sum + category._count.registrations,
+  const totalRegistrations = tournaments.reduce(
+    (sum, tournament) => sum + tournament._count.registrations,
     0,
   );
 
@@ -62,11 +79,13 @@ export default async function AdminCategoriesPage() {
       <header className="rounded-2xl border border-border bg-card px-6 py-7 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Admin</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Admin
+            </p>
             <h1 className="mt-3 text-3xl font-semibold text-foreground">Catégories</h1>
             <p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">
-              Pilotez les catégories utilisées sur les tournois, vérifiez leurs créneaux et suivez les
-              inscriptions associées en un coup d&apos;œil.
+              Les catégories sont séparées par tour pour garder une gestion claire, tout en
+              conservant les mêmes paramètres quand vous les dupliquez.
             </p>
           </div>
 
@@ -85,16 +104,16 @@ export default async function AdminCategoriesPage() {
           <div className="mb-4 inline-flex rounded-lg bg-primary/10 p-2 text-primary">
             <Trophy className="h-5 w-5" aria-hidden="true" />
           </div>
-          <p className="text-sm text-muted-foreground">Catégories distinctes</p>
-          <p className="mt-1 text-3xl font-semibold text-foreground">{groupedCategories.length}</p>
+          <p className="text-sm text-muted-foreground">Tours disponibles</p>
+          <p className="mt-1 text-3xl font-semibold text-foreground">{tournaments.length}</p>
         </article>
 
         <article className="rounded-xl border border-border bg-card p-5 shadow-sm">
           <div className="mb-4 inline-flex rounded-lg bg-primary/10 p-2 text-primary">
             <CalendarDays className="h-5 w-5" aria-hidden="true" />
           </div>
-          <p className="text-sm text-muted-foreground">Catégories déployées</p>
-          <p className="mt-1 text-3xl font-semibold text-foreground">{categories.length}</p>
+          <p className="text-sm text-muted-foreground">Catégories au total</p>
+          <p className="mt-1 text-3xl font-semibold text-foreground">{totalCategories}</p>
         </article>
 
         <article className="rounded-xl border border-border bg-card p-5 shadow-sm">
@@ -109,55 +128,86 @@ export default async function AdminCategoriesPage() {
       <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Liste des catégories
+            Catégories par tour
           </h2>
-          <p className="text-xs text-muted-foreground">Regroupées par nom, mutualisées entre les tours</p>
+          <p className="text-xs text-muted-foreground">
+            Affichage compact, ouvrable uniquement si besoin
+          </p>
         </div>
 
-        {groupedCategories.length === 0 ? (
+        {tournaments.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-muted/20 p-8 text-center">
-            <p className="text-sm text-muted-foreground">Aucune catégorie n&apos;a encore été créée.</p>
-            <Link
-              href="/admin/categories/new"
-              className="mt-4 inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
-            >
-              <Check className="h-4 w-4" aria-hidden="true" />
-              Créer la première catégorie
-            </Link>
+            <p className="text-sm text-muted-foreground">Aucun tournoi n&apos;a encore été créé.</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {groupedCategories.map((group) => {
-              const sample = group[0];
-              const totalByGroup = group.reduce((sum, item) => sum + item._count.registrations, 0);
-              const start = formatTime(sample.heureDebut);
-              const end = formatTime(sample.heureFin);
-
-              return (
-                <article
-                  key={sample.nom}
-                  className="flex flex-col gap-4 rounded-xl border border-border/80 bg-muted/20 p-4"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-foreground">{sample.nom}</p>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {start ?? "Horaire non défini"}
-                        {end ? ` - ${end}` : ""} · {sample.minPoints ?? "-∞"} → {sample.maxPoints ?? "+∞"} points
-                      </p>
-                    </div>
-
-                    <CategoryActions categoryId={sample.id} categoryName={sample.nom} />
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
-                      {totalByGroup} inscription{totalByGroup > 1 ? "s" : ""}
+            {tournaments.map((tournament) => (
+              <details
+                key={tournament.id}
+                className="rounded-xl border border-border/80 bg-muted/20 p-4"
+              >
+                <summary className="cursor-pointer list-none">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="font-semibold text-foreground">
+                      Tour {tournament.tour} · {tournament.nom}
+                    </p>
+                    <span className="text-xs text-muted-foreground">
+                      {tournament.categories.length} catégorie
+                      {tournament.categories.length > 1 ? "s" : ""} ·{" "}
+                      {tournament._count.registrations} inscrit
+                      {tournament._count.registrations > 1 ? "s" : ""}
                     </span>
                   </div>
-                </article>
-              );
-            })}
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {formatDate(tournament.date)} · {tournament.salleVille}
+                  </p>
+                </summary>
+
+                <div className="mt-4 space-y-2 border-t border-border/70 pt-4">
+                  {tournament.categories.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Aucune catégorie sur ce tour.</p>
+                  ) : (
+                    tournament.categories.map((category) => {
+                      const start = formatTime(category.heureDebut);
+                      const end = formatTime(category.heureFin);
+
+                      return (
+                        <article
+                          key={category.id}
+                          className="rounded-lg border border-border bg-background p-3"
+                        >
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                              <p className="font-medium text-foreground">{category.nom}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {start ?? "Horaire non défini"}
+                                {end ? ` - ${end}` : ""} · {category.minPoints ?? "-∞"} →{" "}
+                                {category.maxPoints ?? "+∞"} points
+                              </p>
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {category._count.registrations} inscrit
+                                {category._count.registrations > 1 ? "s" : ""}
+                              </p>
+                            </div>
+
+                            <CategoryActions categoryId={category.id} categoryName={category.nom} />
+                          </div>
+                        </article>
+                      );
+                    })
+                  )}
+
+                  <div className="pt-1">
+                    <Link
+                      href={`/admin/tournaments/${tournament.id}`}
+                      className="text-xs font-medium text-primary underline-offset-4 hover:underline"
+                    >
+                      Voir les inscrits de ce tour
+                    </Link>
+                  </div>
+                </div>
+              </details>
+            ))}
           </div>
         )}
       </section>

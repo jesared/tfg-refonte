@@ -72,7 +72,10 @@ export async function POST(req: Request) {
     (heureFin.hours < heureDebut.hours ||
       (heureFin.hours === heureDebut.hours && heureFin.minutes <= heureDebut.minutes))
   ) {
-    return NextResponse.json({ error: "L'heure de fin doit être après l'heure de début" }, { status: 400 });
+    return NextResponse.json(
+      { error: "L'heure de fin doit être après l'heure de début" },
+      { status: 400 },
+    );
   }
 
   const minPoints = parseOptionalInt(body?.minPoints);
@@ -88,11 +91,34 @@ export async function POST(req: Request) {
   }
 
   const tournaments = tournamentId
-    ? await prisma.tournament.findMany({ where: { id: tournamentId }, select: { id: true, date: true } })
+    ? await prisma.tournament.findMany({
+        where: { id: tournamentId },
+        select: { id: true, date: true },
+      })
     : await prisma.tournament.findMany({ select: { id: true, date: true } });
 
   if (tournaments.length === 0) {
-    return NextResponse.json({ error: tournamentId ? "Tournament not found" : "No tournament available" }, { status: 400 });
+    return NextResponse.json(
+      { error: tournamentId ? "Tournament not found" : "No tournament available" },
+      { status: 400 },
+    );
+  }
+
+  const existingCategories = await prisma.category.findMany({
+    where: {
+      nom,
+      tournamentId: {
+        in: tournaments.map((tournament) => tournament.id),
+      },
+    },
+    select: { tournamentId: true },
+  });
+
+  if (existingCategories.length > 0) {
+    return NextResponse.json(
+      { error: "Cette catégorie existe déjà pour au moins un des tours sélectionnés." },
+      { status: 400 },
+    );
   }
 
   await prisma.category.createMany({

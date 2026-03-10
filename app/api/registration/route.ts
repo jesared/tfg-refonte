@@ -33,11 +33,14 @@ export async function POST(req: Request) {
   });
 
   if (!tournament) {
-    return NextResponse.json({ error: "Le tournoi sélectionné n'accepte pas les inscriptions." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Le tournoi sélectionné n'accepte pas les inscriptions." },
+      { status: 400 },
+    );
   }
 
   const category = await prisma.category.findFirst({
-    where: { id: categoryId },
+    where: { id: categoryId, tournamentId },
     select: { id: true },
   });
 
@@ -59,10 +62,7 @@ export async function POST(req: Request) {
       },
     });
   } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002"
-    ) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       return NextResponse.json(
         { error: "Cette licence est déjà inscrite sur ce tableau." },
         { status: 409 },

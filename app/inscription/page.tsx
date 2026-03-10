@@ -17,6 +17,7 @@ export default async function InscriptionPage() {
   let tournament: {
     id: string;
     date: Date;
+    tour: number;
     salleVille: string;
     categories: { id: string; nom: string; minPoints: number | null; maxPoints: number | null }[];
   } | null = null;
@@ -35,6 +36,7 @@ export default async function InscriptionPage() {
       select: {
         id: true,
         date: true,
+        tour: true,
         salleVille: true,
         categories: {
           orderBy: {
@@ -57,17 +59,19 @@ export default async function InscriptionPage() {
     <section className="mx-auto max-w-3xl px-4 py-8 sm:px-6 md:py-12">
       <div className="rounded-xl border border-border bg-card p-6 shadow-sm md:p-8">
         <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-          Inscription au tournoi {tournament ? <span className="text-blue-600">· {tournament.salleVille}</span> : null}
+          Inscription au tournoi{" "}
+          {tournament ? <span className="text-blue-600">· Tour {tournament.tour}</span> : null}
         </h1>
 
         {tournament ? (
           <>
             <p className="mt-2 text-sm text-muted-foreground">
-              Tournoi à venir : <strong>{tournament.salleVille}</strong> le {formatTournamentDate(tournament.date)}.
+              Tournoi à venir : <strong>{tournament.salleVille}</strong> le{" "}
+              {formatTournamentDate(tournament.date)}.
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Remplissez le formulaire ci-dessous pour vous inscrire. Tous les champs marqués d’un * sont
-              obligatoires.
+              Remplissez le formulaire ci-dessous pour vous inscrire. Tous les champs marqués d’un *
+              sont obligatoires.
             </p>
 
             {tournament.categories.length > 0 ? (
