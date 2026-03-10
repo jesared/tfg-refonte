@@ -50,7 +50,7 @@ type FormState = {
   genre: "" | "M" | "F";
   club: string;
   points: string;
-  categoryId: string;
+  categoryIds: string[];
 };
 
 const initialForm: FormState = {
@@ -60,7 +60,7 @@ const initialForm: FormState = {
   genre: "",
   club: "",
   points: "",
-  categoryId: "",
+  categoryIds: [],
 };
 
 export function InscriptionForm({
@@ -72,7 +72,6 @@ export function InscriptionForm({
 }) {
   const [form, setForm] = useState<FormState>(initialForm);
   const [loading, setLoading] = useState(false);
-  const [filterByPoints, setFilterByPoints] = useState(true);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const parsedPoints = useMemo(() => {
@@ -85,12 +84,12 @@ export function InscriptionForm({
   }, [form.points]);
 
   const visibleCategories = useMemo(() => {
-    if (!filterByPoints || parsedPoints === null) {
+    if (parsedPoints === null) {
       return categories;
     }
 
     return categories.filter((category) => matchesPoints(category, parsedPoints));
-  }, [categories, filterByPoints, parsedPoints]);
+  }, [categories, parsedPoints]);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -105,7 +104,7 @@ export function InscriptionForm({
       club: form.club.trim(),
       points: form.points ? Number.parseInt(form.points, 10) : null,
       tournamentId,
-      categoryId: form.categoryId,
+      categoryIds: form.categoryIds,
     };
 
     const res = await fetch("/api/registration", {
@@ -210,15 +209,6 @@ export function InscriptionForm({
       <div className="space-y-1 md:col-span-2">
         <span className="text-sm font-medium">Tableau (catégorie) *</span>
         <div className="rounded-md border border-input bg-background p-4 shadow-sm">
-          <label className="mb-3 flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={filterByPoints}
-              onChange={(e) => setFilterByPoints(e.target.checked)}
-            />
-            Filtrer les tableaux selon mes points FFTT
-          </label>
-
           <div className="space-y-2">
             {visibleCategories.length === 0 ? (
               <p className="text-sm text-muted-foreground">
@@ -228,12 +218,18 @@ export function InscriptionForm({
               visibleCategories.map((category) => (
                 <label key={category.id} className="flex items-center gap-2 text-sm text-foreground/90">
                   <input
-                    type="radio"
-                    name="categoryId"
-                    required
+                    type="checkbox"
+                    name="categoryIds"
                     value={category.id}
-                    checked={form.categoryId === category.id}
-                    onChange={(e) => setForm((prev) => ({ ...prev, categoryId: e.target.value }))}
+                    checked={form.categoryIds.includes(category.id)}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        categoryIds: e.target.checked
+                          ? [...prev.categoryIds, category.id]
+                          : prev.categoryIds.filter((id) => id !== category.id),
+                      }))
+                    }
                   />
                   <span>
                     {category.nom} ({formatPointsRange(category.minPoints, category.maxPoints)})
@@ -242,11 +238,15 @@ export function InscriptionForm({
               ))
             )}
           </div>
+
+          {form.categoryIds.length === 0 && (
+            <p className="mt-3 text-sm text-destructive">Sélectionnez au moins un tableau.</p>
+          )}
         </div>
       </div>
 
       <div className="md:col-span-2">
-        <Button type="submit" disabled={loading} className="w-full">
+        <Button type="submit" disabled={loading || form.categoryIds.length === 0} className="w-full">
           {loading ? "Envoi..." : "S'inscrire"}
         </Button>
       </div>
