@@ -260,6 +260,7 @@ export default async function AdminInscriptionsPage({
           prenom: true,
           numeroLicence: true,
           club: true,
+          points: true,
           statut: true,
           category: {
             select: {
