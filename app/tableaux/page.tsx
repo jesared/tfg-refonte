@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export default async function TableauxPage() {
   const categories = await prisma.category.findMany({
     orderBy: [{ nom: "asc" }, { heureDebut: "asc" }],
