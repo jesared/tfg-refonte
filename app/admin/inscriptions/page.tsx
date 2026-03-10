@@ -87,7 +87,7 @@ async function resetRegistration(formData: FormData) {
 export default async function AdminInscriptionsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ updated?: string; scope?: string }>;
+  searchParams?: Promise<{ updated?: string; scope?: string; status?: string }>;
 }) {
   const session = await getServerSession(authOptions);
 
@@ -97,6 +97,9 @@ export default async function AdminInscriptionsPage({
 
   const params = await searchParams;
   const scope = params?.scope === "all" || params?.scope === "past" ? params.scope : "active";
+
+  const statusFilter =
+    params?.status === "VALIDE" || params?.status === "EN_ATTENTE" ? params.status : "all";
 
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -115,6 +118,7 @@ export default async function AdminInscriptionsPage({
       date: true,
       salleVille: true,
       registrations: {
+        where: statusFilter === "all" ? undefined : { statut: statusFilter },
         orderBy: [{ statut: "asc" }, { createdAt: "asc" }],
         select: {
           id: true,
@@ -166,13 +170,16 @@ export default async function AdminInscriptionsPage({
       <section className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
           <p className="text-sm text-muted-foreground">
-            Astuce volume : affichage par défaut des tournois <strong className="text-foreground">à venir / en cours</strong>.
+            Astuce volume : affichage par défaut des tournois{" "}
+            <strong className="text-foreground">à venir / en cours</strong>.
           </p>
           <div className="flex flex-wrap gap-2 text-xs font-semibold">
             <a
               href="/admin/inscriptions?scope=active"
               className={`rounded-full border px-3 py-1.5 transition ${
-                scope === "active" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-foreground hover:bg-muted"
+                scope === "active"
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-background text-foreground hover:bg-muted"
               }`}
             >
               À venir / en cours
@@ -180,7 +187,9 @@ export default async function AdminInscriptionsPage({
             <a
               href="/admin/inscriptions?scope=all"
               className={`rounded-full border px-3 py-1.5 transition ${
-                scope === "all" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-foreground hover:bg-muted"
+                scope === "all"
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-background text-foreground hover:bg-muted"
               }`}
             >
               Tous
@@ -188,10 +197,51 @@ export default async function AdminInscriptionsPage({
             <a
               href="/admin/inscriptions?scope=past"
               className={`rounded-full border px-3 py-1.5 transition ${
-                scope === "past" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-foreground hover:bg-muted"
+                scope === "past"
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-background text-foreground hover:bg-muted"
               }`}
             >
               Passés
+            </a>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
+          <p className="text-sm text-muted-foreground">
+            Filtrer rapidement les dossiers <strong className="text-foreground">en attente</strong>{" "}
+            ou <strong className="text-foreground">validés</strong>.
+          </p>
+          <div className="flex flex-wrap gap-2 text-xs font-semibold">
+            <a
+              href={`/admin/inscriptions?scope=${scope}&status=all`}
+              className={`rounded-full border px-3 py-1.5 transition ${
+                statusFilter === "all"
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-background text-foreground hover:bg-muted"
+              }`}
+            >
+              Tous statuts
+            </a>
+            <a
+              href={`/admin/inscriptions?scope=${scope}&status=EN_ATTENTE`}
+              className={`rounded-full border px-3 py-1.5 transition ${
+                statusFilter === "EN_ATTENTE"
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-background text-foreground hover:bg-muted"
+              }`}
+            >
+              En attente
+            </a>
+            <a
+              href={`/admin/inscriptions?scope=${scope}&status=VALIDE`}
+              className={`rounded-full border px-3 py-1.5 transition ${
+                statusFilter === "VALIDE"
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-background text-foreground hover:bg-muted"
+              }`}
+            >
+              Validés
             </a>
           </div>
         </div>
@@ -203,7 +253,10 @@ export default async function AdminInscriptionsPage({
         )}
 
         {tournaments.map((tournament) => (
-          <article key={tournament.id} className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <article
+            key={tournament.id}
+            className="rounded-2xl border border-border bg-card p-6 shadow-sm"
+          >
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <div>
                 {(() => {
@@ -227,7 +280,8 @@ export default async function AdminInscriptionsPage({
               </div>
               <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-foreground/90">
                 <Trophy className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-                {tournament.registrations.length} inscrit{tournament.registrations.length > 1 ? "s" : ""}
+                {tournament.registrations.length} inscrit
+                {tournament.registrations.length > 1 ? "s" : ""}
               </span>
             </div>
 
@@ -254,13 +308,20 @@ export default async function AdminInscriptionsPage({
                       const canReset = registration.statut !== "EN_ATTENTE";
 
                       return (
-                        <tr key={registration.id} className="border-b border-border/60 last:border-0">
+                        <tr
+                          key={registration.id}
+                          className="border-b border-border/60 last:border-0"
+                        >
                           <td className="px-3 py-3 font-medium text-foreground">
                             {registration.prenom} {registration.nom}
                           </td>
-                          <td className="px-3 py-3 text-foreground/90">{registration.numeroLicence}</td>
+                          <td className="px-3 py-3 text-foreground/90">
+                            {registration.numeroLicence}
+                          </td>
                           <td className="px-3 py-3 text-foreground/90">{registration.club}</td>
-                          <td className="px-3 py-3 text-foreground/90">{registration.category.nom}</td>
+                          <td className="px-3 py-3 text-foreground/90">
+                            {registration.category.nom}
+                          </td>
                           <td className="px-3 py-3">
                             <span className="inline-flex rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-foreground/90">
                               {registration.statut}
@@ -270,7 +331,11 @@ export default async function AdminInscriptionsPage({
                             <div className="flex flex-wrap items-center gap-2">
                               {canValidate ? (
                                 <form action={validateRegistration}>
-                                  <input type="hidden" name="registrationId" value={registration.id} />
+                                  <input
+                                    type="hidden"
+                                    name="registrationId"
+                                    value={registration.id}
+                                  />
                                   <button
                                     type="submit"
                                     className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
@@ -287,7 +352,11 @@ export default async function AdminInscriptionsPage({
 
                               {canReset && (
                                 <form action={resetRegistration}>
-                                  <input type="hidden" name="registrationId" value={registration.id} />
+                                  <input
+                                    type="hidden"
+                                    name="registrationId"
+                                    value={registration.id}
+                                  />
                                   <button
                                     type="submit"
                                     className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
