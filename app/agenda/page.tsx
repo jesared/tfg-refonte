@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { unstable_noStore as noStore } from "next/cache";
 import { MapPin } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
 
 const formatAgendaDate = (date: Date) =>
@@ -10,6 +11,12 @@ const formatAgendaDate = (date: Date) =>
     month: "2-digit",
     year: "numeric",
   });
+
+const isPastTournament = (date: Date, now = new Date()) => {
+  const endOfTournamentDay = new Date(date);
+  endOfTournamentDay.setHours(23, 59, 59, 999);
+  return endOfTournamentDay < now;
+};
 
 export const metadata: Metadata = {
   title: "Agenda & salles",
@@ -93,7 +100,16 @@ export default async function AgendaPage() {
             <tbody>
               {tours.map((tour) => (
                 <tr key={tour.id} className="border-b border-border/60 last:border-0">
-                  <td className="px-3 py-3 font-semibold text-foreground">Tour {tour.tour}</td>
+                  <td className="px-3 py-3 font-semibold text-foreground">
+                    <div className="flex items-center gap-2">
+                      <span>Tour {tour.tour}</span>
+                      {isPastTournament(tour.date) ? (
+                        <Badge variant="secondary" className="uppercase tracking-wide">
+                          Tournoi passé
+                        </Badge>
+                      ) : null}
+                    </div>
+                  </td>
                   <td className="px-3 py-3 text-foreground/90">{formatAgendaDate(tour.date)}</td>
                   <td className="px-3 py-3 text-foreground/90">{tour.clubOrganisateur}</td>
                 </tr>
@@ -108,9 +124,14 @@ export default async function AgendaPage() {
           <article key={tour.id} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                  Tour {tour.tour}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Tour {tour.tour}</p>
+                  {isPastTournament(tour.date) ? (
+                    <Badge variant="secondary" className="uppercase tracking-wide">
+                      Tournoi passé
+                    </Badge>
+                  ) : null}
+                </div>
                 <h2 className="mt-1 text-xl font-semibold text-foreground">{tour.salleVille}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{tour.clubOrganisateur}</p>
               </div>
