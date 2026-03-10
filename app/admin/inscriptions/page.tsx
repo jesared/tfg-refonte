@@ -118,6 +118,106 @@ async function deletePlayerRegistrations(formData: FormData) {
   redirect("/admin/inscriptions?updated=deleted");
 }
 
+function isPointsCompatible({
+  points,
+  minPoints,
+  maxPoints,
+}: {
+  points: number | null;
+  minPoints: number | null;
+  maxPoints: number | null;
+}) {
+  if (points === null) {
+    return true;
+  }
+
+  const isAboveMin = minPoints === null || points >= minPoints;
+  const isBelowMax = maxPoints === null || points <= maxPoints;
+
+  return isAboveMin && isBelowMax;
+}
+
+async function updateRegistrationCategory(formData: FormData) {
+  "use server";
+
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user || session.user.role !== "ADMIN") {
+    redirect("/");
+  }
+
+  const registrationId = String(formData.get("registrationId") ?? "").trim();
+  const categoryId = String(formData.get("categoryId") ?? "").trim();
+
+  if (!registrationId || !categoryId) {
+    redirect("/admin/inscriptions?updated=0");
+  }
+
+  const registration = await prisma.registration.findUnique({
+    where: { id: registrationId },
+    select: {
+      id: true,
+      points: true,
+      categoryId: true,
+      numeroLicence: true,
+      tournamentId: true,
+    },
+  });
+
+  if (!registration) {
+    redirect("/admin/inscriptions?updated=0");
+  }
+
+  const targetCategory = await prisma.category.findUnique({
+    where: { id: categoryId },
+    select: {
+      id: true,
+      tournamentId: true,
+      minPoints: true,
+      maxPoints: true,
+    },
+  });
+
+  if (!targetCategory || targetCategory.tournamentId !== registration.tournamentId) {
+    redirect("/admin/inscriptions?updated=0");
+  }
+
+  if (
+    !isPointsCompatible({
+      points: registration.points,
+      minPoints: targetCategory.minPoints,
+      maxPoints: targetCategory.maxPoints,
+    })
+  ) {
+    redirect("/admin/inscriptions?updated=points_mismatch");
+  }
+
+  if (registration.categoryId === categoryId) {
+    redirect("/admin/inscriptions?updated=engagement_updated");
+  }
+
+  const duplicate = await prisma.registration.findFirst({
+    where: {
+      numeroLicence: registration.numeroLicence,
+      categoryId,
+      id: { not: registration.id },
+    },
+    select: { id: true },
+  });
+
+  if (duplicate) {
+    redirect("/admin/inscriptions?updated=duplicate");
+  }
+
+  await prisma.registration.update({
+    where: { id: registration.id },
+    data: { categoryId },
+  });
+
+  revalidatePath("/admin/inscriptions");
+  redirect("/admin/inscriptions?updated=engagement_updated");
+}
+
 export default async function AdminInscriptionsPage({
   searchParams,
 }: {
@@ -163,9 +263,19 @@ export default async function AdminInscriptionsPage({
           statut: true,
           category: {
             select: {
+              id: true,
               nom: true,
             },
           },
+        },
+      },
+      categories: {
+        orderBy: [{ minPoints: "asc" }, { nom: "asc" }],
+        select: {
+          id: true,
+          nom: true,
+          minPoints: true,
+          maxPoints: true,
         },
       },
     },
@@ -175,6 +285,9 @@ export default async function AdminInscriptionsPage({
   const isValidated = updateStatus === "validated";
   const isReset = updateStatus === "reset";
   const isDeleted = updateStatus === "deleted";
+  const isEngagementUpdated = updateStatus === "engagement_updated";
+  const isPointsMismatch = updateStatus === "points_mismatch";
+  const isDuplicate = updateStatus === "duplicate";
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-8">
@@ -205,6 +318,24 @@ export default async function AdminInscriptionsPage({
       {isDeleted && (
         <p className="rounded-xl border border-rose-300/60 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700 dark:border-rose-400/40 dark:bg-rose-500/10 dark:text-rose-200">
           🗑️ Joueur supprimé avec tous ses engagements.
+        </p>
+      )}
+
+      {isEngagementUpdated && (
+        <p className="rounded-xl border border-sky-300/60 bg-sky-50 px-4 py-3 text-sm font-medium text-sky-700 dark:border-sky-400/40 dark:bg-sky-500/10 dark:text-sky-200">
+          ✏️ Engagement modifié avec succès.
+        </p>
+      )}
+
+      {isPointsMismatch && (
+        <p className="rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-200">
+          ⚠️ Catégorie non compatible avec les points du joueur.
+        </p>
+      )}
+
+      {isDuplicate && (
+        <p className="rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-200">
+          ⚠️ Ce joueur est déjà engagé sur cette catégorie.
         </p>
       )}
 
@@ -347,6 +478,15 @@ export default async function AdminInscriptionsPage({
                     {tournament.registrations.map((registration) => {
                       const canValidate = registration.statut !== "VALIDE";
                       const canReset = registration.statut !== "EN_ATTENTE";
+                      const eligibleCategories = tournament.categories.filter(
+                        (category) =>
+                          category.id === registration.category.id ||
+                          isPointsCompatible({
+                            points: registration.points,
+                            minPoints: category.minPoints,
+                            maxPoints: category.maxPoints,
+                          }),
+                      );
 
                       return (
                         <tr
@@ -361,7 +501,35 @@ export default async function AdminInscriptionsPage({
                           </td>
                           <td className="px-3 py-3 text-foreground/90">{registration.club}</td>
                           <td className="px-3 py-3 text-foreground/90">
-                            {registration.category.nom}
+                            <div className="flex flex-col gap-2">
+                              <InlineActionForm
+                                action={updateRegistrationCategory}
+                                registrationId={registration.id}
+                              >
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <select
+                                    name="categoryId"
+                                    defaultValue={registration.category.id}
+                                    className="rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground"
+                                  >
+                                    {eligibleCategories.map((category) => (
+                                      <option key={category.id} value={category.id}>
+                                        {category.nom}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <button
+                                    type="submit"
+                                    className="inline-flex items-center rounded-md border border-border bg-background px-2 py-1 text-xs font-medium text-foreground transition hover:bg-muted"
+                                  >
+                                    Modifier
+                                  </button>
+                                </div>
+                              </InlineActionForm>
+                              <span className="text-xs text-muted-foreground">
+                                Points: {registration.points ?? "non renseignés"}
+                              </span>
+                            </div>
                           </td>
                           <td className="px-3 py-3">
                             <span className="inline-flex rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-foreground/90">
@@ -390,7 +558,10 @@ export default async function AdminInscriptionsPage({
                               )}
 
                               {canReset && (
-                                <InlineActionForm action={resetRegistration} registrationId={registration.id}>
+                                <InlineActionForm
+                                  action={resetRegistration}
+                                  registrationId={registration.id}
+                                >
                                   <button
                                     type="submit"
                                     className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
