@@ -242,7 +242,7 @@ export function InscriptionForm({
             )}
           </div>
 
-          {form.categoryIds.length === 0 && (
+          {parsedPoints !== null && visibleCategories.length > 0 && form.categoryIds.length === 0 && (
             <p className="mt-3 text-sm text-destructive">Sélectionnez au moins un tableau.</p>
           )}
         </div>
