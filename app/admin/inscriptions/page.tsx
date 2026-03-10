@@ -1,4 +1,4 @@
-import { Check, ShieldCheck, Trophy, X } from "lucide-react";
+import { Check, Dot, ShieldCheck, Trophy, X } from "lucide-react";
 import type { Metadata } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -579,14 +579,14 @@ export default async function AdminInscriptionsPage({
                   Aucun inscrit sur ce tour pour le moment.
                 </p>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[760px] text-left text-sm">
+                <div>
+                  <table className="w-full table-fixed text-left text-sm">
                     <thead>
                       <tr className="border-b border-border text-muted-foreground">
-                        <th className="px-3 py-2 font-medium">Joueur</th>
+                        <th className="w-[18%] px-3 py-2 font-medium">Joueur</th>
                         <th className="px-3 py-2 font-medium">Licence</th>
                         <th className="px-3 py-2 font-medium">Club</th>
-                        <th className="px-3 py-2 font-medium">Catégorie</th>
+                        <th className="w-[32%] px-3 py-2 font-medium">Catégorie</th>
                         <th className="px-3 py-2 font-medium">Statut</th>
                         <th className="px-3 py-2 font-medium">Action</th>
                       </tr>
@@ -627,7 +627,9 @@ export default async function AdminInscriptionsPage({
                             <td className="px-3 py-3 text-foreground/90">
                               {registration.numeroLicence}
                             </td>
-                            <td className="px-3 py-3 text-foreground/90">{registration.club}</td>
+                            <td className="px-3 py-3 text-foreground/90 break-words">
+                              {registration.club}
+                            </td>
                             <td className="px-3 py-3 text-foreground/90">
                               <div className="flex flex-col gap-2">
                                 <span className="text-xs font-semibold text-foreground">
@@ -680,7 +682,7 @@ export default async function AdminInscriptionsPage({
                                     </details>
                                   </div>
                                 </InlineActionForm>
-                                <span className="text-xs text-muted-foreground">
+                                <span className="text-xs text-muted-foreground break-words">
                                   Points: {registration.points ?? "non renseignés"}
                                 </span>
                                 <span className="text-xs text-muted-foreground">
@@ -713,10 +715,10 @@ export default async function AdminInscriptionsPage({
                             <td className="px-3 py-3">
                               <div className="relative inline-block">
                                 <details className="group">
-                                  <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted">
-                                    Actions
+                                  <summary className="inline-flex cursor-pointer list-none items-center rounded-md bg-[#1e2238] p-2 text-[#c5cbf7] transition hover:bg-[#2a2f4b]">
+                                    <Dot className="h-4 w-4" aria-hidden="true" />
                                   </summary>
-                                  <div className="absolute right-0 top-full z-10 mt-2 flex w-48 flex-col gap-1 rounded-lg border border-border bg-popover p-2 shadow-lg">
+                                  <div className="absolute right-0 top-full z-10 mt-2 flex w-44 flex-col overflow-hidden rounded-md border border-[#3a3f5e] bg-[#4b4f6a] py-1 text-sm text-[#e4e7ff] shadow-xl">
                                     {canValidate ? (
                                       <InlineActionForm
                                         action={validateRegistration}
@@ -724,14 +726,14 @@ export default async function AdminInscriptionsPage({
                                       >
                                         <button
                                           type="submit"
-                                          className="inline-flex w-full items-center gap-1 rounded-md bg-primary px-2.5 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
+                                          className="inline-flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition hover:bg-[#5c617d]"
                                         >
                                           <Check className="h-3.5 w-3.5" aria-hidden="true" />
                                           Valider
                                         </button>
                                       </InlineActionForm>
                                     ) : (
-                                      <span className="px-2.5 py-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-300">
+                                      <span className="px-3 py-2 text-sm text-emerald-200">
                                         Déjà validée
                                       </span>
                                     )}
@@ -743,12 +745,14 @@ export default async function AdminInscriptionsPage({
                                       >
                                         <button
                                           type="submit"
-                                          className="inline-flex w-full items-center rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
+                                          className="inline-flex w-full items-center px-3 py-2 text-left text-sm transition hover:bg-[#5c617d]"
                                         >
                                           Remettre en attente
                                         </button>
                                       </InlineActionForm>
                                     )}
+
+                                    <div className="my-1 border-t border-[#666a86]" />
 
                                     <InlineActionForm
                                       action={deletePlayerRegistrations}
@@ -757,7 +761,7 @@ export default async function AdminInscriptionsPage({
                                     >
                                       <button
                                         type="submit"
-                                        className="inline-flex w-full items-center gap-1 rounded-md border border-rose-300/70 bg-rose-50 px-2.5 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/20"
+                                        className="inline-flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-rose-300 transition hover:bg-[#5c617d] hover:text-rose-200"
                                       >
                                         <X className="h-3.5 w-3.5" aria-hidden="true" />
                                         Supprimer joueur
