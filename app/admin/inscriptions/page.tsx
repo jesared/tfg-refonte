@@ -1,0 +1,200 @@
+import { Check, ShieldCheck, Trophy } from "lucide-react";
+import type { Metadata } from "next";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+
+import { prisma } from "@/lib/prisma";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
+
+export const metadata: Metadata = {
+  title: "Admin - Inscriptions",
+  description: "Suivi des joueurs inscrits par tour et validation des inscriptions.",
+};
+
+async function validateRegistration(formData: FormData) {
+  "use server";
+
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user || session.user.role !== "ADMIN") {
+    redirect("/");
+  }
+
+  const registrationId = String(formData.get("registrationId") ?? "").trim();
+
+  if (!registrationId) {
+    redirect("/admin/inscriptions?updated=0");
+  }
+
+  const existing = await prisma.registration.findUnique({
+    where: { id: registrationId },
+    select: { id: true },
+  });
+
+  if (!existing) {
+    redirect("/admin/inscriptions?updated=0");
+  }
+
+  await prisma.registration.update({
+    where: { id: registrationId },
+    data: {
+      statut: "VALIDE",
+      licenceVerified: true,
+    },
+  });
+
+  revalidatePath("/admin/inscriptions");
+  redirect("/admin/inscriptions?updated=1");
+}
+
+export default async function AdminInscriptionsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ updated?: string }>;
+}) {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user || session.user.role !== "ADMIN") {
+    redirect("/");
+  }
+
+  const tournaments = await prisma.tournament.findMany({
+    orderBy: [{ tour: "asc" }, { date: "asc" }],
+    select: {
+      id: true,
+      nom: true,
+      tour: true,
+      date: true,
+      salleVille: true,
+      registrations: {
+        orderBy: [{ createdAt: "asc" }],
+        select: {
+          id: true,
+          nom: true,
+          prenom: true,
+          numeroLicence: true,
+          club: true,
+          statut: true,
+          category: {
+            select: {
+              nom: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const params = await searchParams;
+  const isUpdated = params?.updated === "1";
+
+  return (
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-8">
+      <header className="rounded-2xl border border-border bg-card px-6 py-7 shadow-sm">
+        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+          <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+          Administration
+        </div>
+        <h1 className="mt-4 text-3xl font-semibold text-foreground">Inscriptions</h1>
+        <p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">
+          Consultez la liste des inscrits par tour, avec leur catégorie, puis validez les dossiers
+          en attente.
+        </p>
+      </header>
+
+      {isUpdated && (
+        <p className="rounded-xl border border-emerald-300/60 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 dark:border-emerald-400/40 dark:bg-emerald-500/10 dark:text-emerald-200">
+          ✅ Inscription validée avec succès.
+        </p>
+      )}
+
+      <section className="space-y-4">
+        {tournaments.map((tournament) => (
+          <article key={tournament.id} className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 className="text-xl font-semibold text-foreground">
+                  Tour {tournament.tour} · {tournament.nom}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {new Intl.DateTimeFormat("fr-FR", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  }).format(tournament.date)}
+                  {" · "}
+                  {tournament.salleVille}
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-foreground/90">
+                <Trophy className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                {tournament.registrations.length} inscrit{tournament.registrations.length > 1 ? "s" : ""}
+              </span>
+            </div>
+
+            {tournament.registrations.length === 0 ? (
+              <p className="rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
+                Aucun inscrit sur ce tour pour le moment.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[760px] text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-border text-muted-foreground">
+                      <th className="px-3 py-2 font-medium">Joueur</th>
+                      <th className="px-3 py-2 font-medium">Licence</th>
+                      <th className="px-3 py-2 font-medium">Club</th>
+                      <th className="px-3 py-2 font-medium">Catégorie</th>
+                      <th className="px-3 py-2 font-medium">Statut</th>
+                      <th className="px-3 py-2 font-medium">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tournament.registrations.map((registration) => {
+                      const canValidate = registration.statut !== "VALIDE";
+
+                      return (
+                        <tr key={registration.id} className="border-b border-border/60 last:border-0">
+                          <td className="px-3 py-3 font-medium text-foreground">
+                            {registration.prenom} {registration.nom}
+                          </td>
+                          <td className="px-3 py-3 text-foreground/90">{registration.numeroLicence}</td>
+                          <td className="px-3 py-3 text-foreground/90">{registration.club}</td>
+                          <td className="px-3 py-3 text-foreground/90">{registration.category.nom}</td>
+                          <td className="px-3 py-3">
+                            <span className="inline-flex rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-foreground/90">
+                              {registration.statut}
+                            </span>
+                          </td>
+                          <td className="px-3 py-3">
+                            {canValidate ? (
+                              <form action={validateRegistration}>
+                                <input type="hidden" name="registrationId" value={registration.id} />
+                                <button
+                                  type="submit"
+                                  className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
+                                >
+                                  <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                                  Valider
+                                </button>
+                              </form>
+                            ) : (
+                              <span className="text-xs font-medium text-emerald-600 dark:text-emerald-300">
+                                Déjà validée
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </article>
+        ))}
+      </section>
+    </main>
+  );
+}
