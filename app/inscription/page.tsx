@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 
 import { InscriptionForm } from "./InscriptionForm";
 
+export const dynamic = "force-dynamic";
+
 function formatTournamentDate(date: Date) {
   return new Intl.DateTimeFormat("fr-FR", {
     day: "2-digit",
