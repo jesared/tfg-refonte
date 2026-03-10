@@ -5,7 +5,25 @@ import { FormEvent, useState } from "react";
 type CategoryOption = {
   id: string;
   nom: string;
+  minPoints: number | null;
+  maxPoints: number | null;
 };
+
+function formatPointsRange(minPoints: number | null, maxPoints: number | null) {
+  if (minPoints !== null && maxPoints !== null) {
+    return `${minPoints} - ${maxPoints} pts`;
+  }
+
+  if (minPoints !== null) {
+    return `≥ ${minPoints} pts`;
+  }
+
+  if (maxPoints !== null) {
+    return `≤ ${maxPoints} pts`;
+  }
+
+  return "Tous points";
+}
 
 type FormState = {
   nom: string;
@@ -163,7 +181,7 @@ export function InscriptionForm({
           <option value="">Choisir un tableau</option>
           {categories.map((category) => (
             <option key={category.id} value={category.id}>
-              {category.nom}
+              {category.nom} ({formatPointsRange(category.minPoints, category.maxPoints)})
             </option>
           ))}
         </select>
