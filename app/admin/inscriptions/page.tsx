@@ -9,6 +9,20 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
 import { InlineActionForm } from "./_components/inline-action-form";
 
+const INSCRIPTIONS_PATH = "/admin/inscriptions";
+
+async function requireAdminSession() {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user || session.user.role !== "ADMIN") {
+    redirect("/");
+  }
+}
+
+function getRegistrationId(formData: FormData) {
+  return String(formData.get("registrationId") ?? "").trim();
+}
+
 export const metadata: Metadata = {
   title: "Admin - Inscriptions",
   description: "Suivi des joueurs inscrits par tour et validation des inscriptions.",
@@ -17,16 +31,12 @@ export const metadata: Metadata = {
 async function validateRegistration(formData: FormData) {
   "use server";
 
-  const session = await getServerSession(authOptions);
+  await requireAdminSession();
 
-  if (!session?.user || session.user.role !== "ADMIN") {
-    redirect("/");
-  }
-
-  const registrationId = String(formData.get("registrationId") ?? "").trim();
+  const registrationId = getRegistrationId(formData);
 
   if (!registrationId) {
-    redirect("/admin/inscriptions?updated=0");
+    redirect(`${INSCRIPTIONS_PATH}?updated=0`);
   }
 
   const existing = await prisma.registration.findUnique({
@@ -35,7 +45,7 @@ async function validateRegistration(formData: FormData) {
   });
 
   if (!existing) {
-    redirect("/admin/inscriptions?updated=0");
+    redirect(`${INSCRIPTIONS_PATH}?updated=0`);
   }
 
   await prisma.registration.update({
@@ -46,23 +56,19 @@ async function validateRegistration(formData: FormData) {
     },
   });
 
-  revalidatePath("/admin/inscriptions");
-  redirect("/admin/inscriptions?updated=validated");
+  revalidatePath(INSCRIPTIONS_PATH);
+  redirect(`${INSCRIPTIONS_PATH}?updated=validated`);
 }
 
 async function resetRegistration(formData: FormData) {
   "use server";
 
-  const session = await getServerSession(authOptions);
+  await requireAdminSession();
 
-  if (!session?.user || session.user.role !== "ADMIN") {
-    redirect("/");
-  }
-
-  const registrationId = String(formData.get("registrationId") ?? "").trim();
+  const registrationId = getRegistrationId(formData);
 
   if (!registrationId) {
-    redirect("/admin/inscriptions?updated=0");
+    redirect(`${INSCRIPTIONS_PATH}?updated=0`);
   }
 
   const existing = await prisma.registration.findUnique({
@@ -71,7 +77,7 @@ async function resetRegistration(formData: FormData) {
   });
 
   if (!existing) {
-    redirect("/admin/inscriptions?updated=0");
+    redirect(`${INSCRIPTIONS_PATH}?updated=0`);
   }
 
   await prisma.registration.update({
@@ -82,23 +88,19 @@ async function resetRegistration(formData: FormData) {
     },
   });
 
-  revalidatePath("/admin/inscriptions");
-  redirect("/admin/inscriptions?updated=reset");
+  revalidatePath(INSCRIPTIONS_PATH);
+  redirect(`${INSCRIPTIONS_PATH}?updated=reset`);
 }
 
 async function deletePlayerRegistrations(formData: FormData) {
   "use server";
 
-  const session = await getServerSession(authOptions);
+  await requireAdminSession();
 
-  if (!session?.user || session.user.role !== "ADMIN") {
-    redirect("/");
-  }
-
-  const registrationId = String(formData.get("registrationId") ?? "").trim();
+  const registrationId = getRegistrationId(formData);
 
   if (!registrationId) {
-    redirect("/admin/inscriptions?updated=0");
+    redirect(`${INSCRIPTIONS_PATH}?updated=0`);
   }
 
   const existing = await prisma.registration.findUnique({
@@ -107,15 +109,15 @@ async function deletePlayerRegistrations(formData: FormData) {
   });
 
   if (!existing) {
-    redirect("/admin/inscriptions?updated=0");
+    redirect(`${INSCRIPTIONS_PATH}?updated=0`);
   }
 
   await prisma.registration.deleteMany({
     where: { numeroLicence: existing.numeroLicence },
   });
 
-  revalidatePath("/admin/inscriptions");
-  redirect("/admin/inscriptions?updated=deleted");
+  revalidatePath(INSCRIPTIONS_PATH);
+  redirect(`${INSCRIPTIONS_PATH}?updated=deleted`);
 }
 
 function isPointsCompatible({
@@ -140,19 +142,15 @@ function isPointsCompatible({
 async function updateRegistrationEngagements(formData: FormData) {
   "use server";
 
-  const session = await getServerSession(authOptions);
+  await requireAdminSession();
 
-  if (!session?.user || session.user.role !== "ADMIN") {
-    redirect("/");
-  }
-
-  const registrationId = String(formData.get("registrationId") ?? "").trim();
+  const registrationId = getRegistrationId(formData);
   const selectedCategoryIds = Array.from(formData.getAll("categoryIds"))
     .map((value) => String(value).trim())
     .filter(Boolean);
 
   if (!registrationId || selectedCategoryIds.length === 0) {
-    redirect("/admin/inscriptions?updated=0");
+    redirect(`${INSCRIPTIONS_PATH}?updated=0`);
   }
 
   const registration = await prisma.registration.findUnique({
@@ -174,7 +172,7 @@ async function updateRegistrationEngagements(formData: FormData) {
   });
 
   if (!registration) {
-    redirect("/admin/inscriptions?updated=0");
+    redirect(`${INSCRIPTIONS_PATH}?updated=0`);
   }
 
   const uniqueCategoryIds = Array.from(new Set(selectedCategoryIds));
@@ -192,7 +190,7 @@ async function updateRegistrationEngagements(formData: FormData) {
   });
 
   if (categories.length !== uniqueCategoryIds.length) {
-    redirect("/admin/inscriptions?updated=0");
+    redirect(`${INSCRIPTIONS_PATH}?updated=0`);
   }
 
   const hasInvalidPointsCategory = categories.some(
@@ -205,7 +203,7 @@ async function updateRegistrationEngagements(formData: FormData) {
   );
 
   if (hasInvalidPointsCategory) {
-    redirect("/admin/inscriptions?updated=points_mismatch");
+    redirect(`${INSCRIPTIONS_PATH}?updated=points_mismatch`);
   }
 
   const existingEngagements = await prisma.registration.findMany({
@@ -255,39 +253,42 @@ async function updateRegistrationEngagements(formData: FormData) {
     },
   );
 
-  const categoriesToCreate = uniqueCategoryIds.filter((categoryId) => {
-    const current = engagementsByCategory.get(categoryId) ?? [];
-    return current.length === 0;
-  });
-
   await prisma.$transaction(async (tx) => {
-    await tx.registration.deleteMany({
-      where: {
-        numeroLicence: registration.numeroLicence,
-        tournamentId: registration.tournamentId,
-      },
+    if (idsToDelete.length > 0) {
+      await tx.registration.deleteMany({
+        where: {
+          id: { in: idsToDelete },
+        },
+      });
+    }
+
+    const categoriesToCreate = uniqueCategoryIds.filter((categoryId) => {
+      const current = engagementsByCategory.get(categoryId) ?? [];
+      return current.length === 0;
     });
 
-    await tx.registration.createMany({
-      data: uniqueCategoryIds.map((categoryId) => ({
-        nom: registration.nom,
-        prenom: registration.prenom,
-        numeroLicence: registration.numeroLicence,
-        genre: registration.genre,
-        club: registration.club,
-        points: registration.points,
-        statut: registration.statut,
-        licenceVerified: registration.licenceVerified,
-        present: registration.present,
-        tournamentId: registration.tournamentId,
-        categoryId,
-        userId: registration.userId,
-      })),
-    });
+    if (categoriesToCreate.length > 0) {
+      await tx.registration.createMany({
+        data: categoriesToCreate.map((categoryId) => ({
+          nom: registration.nom,
+          prenom: registration.prenom,
+          numeroLicence: registration.numeroLicence,
+          genre: registration.genre,
+          club: registration.club,
+          points: registration.points,
+          statut: registration.statut,
+          licenceVerified: registration.licenceVerified,
+          present: registration.present,
+          tournamentId: registration.tournamentId,
+          categoryId,
+          userId: registration.userId,
+        })),
+      });
+    }
   });
 
-  revalidatePath("/admin/inscriptions");
-  redirect("/admin/inscriptions?updated=engagement_updated");
+  revalidatePath(INSCRIPTIONS_PATH);
+  redirect(`${INSCRIPTIONS_PATH}?updated=engagement_updated`);
 }
 
 export default async function AdminInscriptionsPage({
@@ -295,11 +296,7 @@ export default async function AdminInscriptionsPage({
 }: {
   searchParams?: Promise<{ updated?: string; scope?: string; status?: string }>;
 }) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user || session.user.role !== "ADMIN") {
-    redirect("/");
-  }
+  await requireAdminSession();
 
   const params = await searchParams;
   const scope = params?.scope === "all" || params?.scope === "past" ? params.scope : "active";
@@ -370,12 +367,15 @@ export default async function AdminInscriptionsPage({
     ),
   );
 
+  const displayedTournamentIds = tournaments.map((tournament) => tournament.id);
+
   const playerEngagements =
     displayedLicences.length === 0
       ? []
       : await prisma.registration.findMany({
           where: {
             numeroLicence: { in: displayedLicences },
+            tournamentId: { in: displayedTournamentIds },
           },
           orderBy: [{ tournament: { date: "asc" } }, { createdAt: "asc" }],
           select: {
@@ -603,8 +603,8 @@ export default async function AdminInscriptionsPage({
                   Aucun inscrit sur ce tour pour le moment.
                 </p>
               ) : (
-                <div>
-                  <table className="w-full table-fixed text-left text-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[780px] table-fixed text-left text-sm">
                     <thead>
                       <tr className="border-b border-border text-muted-foreground">
                         <th className="w-[18%] px-3 py-2 font-medium">Joueur</th>
