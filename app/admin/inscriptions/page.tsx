@@ -7,6 +7,8 @@ import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
+import { InlineActionForm } from "./_components/inline-action-form";
+
 export const metadata: Metadata = {
   title: "Admin - Inscriptions",
   description: "Suivi des joueurs inscrits par tour et validation des inscriptions.",
@@ -369,12 +371,10 @@ export default async function AdminInscriptionsPage({
                           <td className="px-3 py-3">
                             <div className="flex flex-wrap items-center gap-2">
                               {canValidate ? (
-                                <form action={validateRegistration}>
-                                  <input
-                                    type="hidden"
-                                    name="registrationId"
-                                    value={registration.id}
-                                  />
+                                <InlineActionForm
+                                  action={validateRegistration}
+                                  registrationId={registration.id}
+                                >
                                   <button
                                     type="submit"
                                     className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
@@ -382,7 +382,7 @@ export default async function AdminInscriptionsPage({
                                     <Check className="h-3.5 w-3.5" aria-hidden="true" />
                                     Valider
                                   </button>
-                                </form>
+                                </InlineActionForm>
                               ) : (
                                 <span className="text-xs font-medium text-emerald-600 dark:text-emerald-300">
                                   Déjà validée
@@ -390,23 +390,21 @@ export default async function AdminInscriptionsPage({
                               )}
 
                               {canReset && (
-                                <form action={resetRegistration}>
-                                  <input
-                                    type="hidden"
-                                    name="registrationId"
-                                    value={registration.id}
-                                  />
+                                <InlineActionForm action={resetRegistration} registrationId={registration.id}>
                                   <button
                                     type="submit"
                                     className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
                                   >
                                     Remettre en attente
                                   </button>
-                                </form>
+                                </InlineActionForm>
                               )}
 
-                              <form action={deletePlayerRegistrations}>
-                                <input type="hidden" name="registrationId" value={registration.id} />
+                              <InlineActionForm
+                                action={deletePlayerRegistrations}
+                                registrationId={registration.id}
+                                confirmMessage="Confirmer la suppression de ce joueur et de toutes ses inscriptions ?"
+                              >
                                 <button
                                   type="submit"
                                   className="inline-flex items-center gap-1 rounded-lg border border-rose-300/70 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/20"
@@ -414,7 +412,7 @@ export default async function AdminInscriptionsPage({
                                   <X className="h-3.5 w-3.5" aria-hidden="true" />
                                   Supprimer joueur
                                 </button>
-                              </form>
+                              </InlineActionForm>
                             </div>
                           </td>
                         </tr>
