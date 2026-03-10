@@ -156,11 +156,19 @@ export function InscriptionForm({
         <input
           name="numeroLicence"
           required
-          minLength={6}
+          inputMode="numeric"
+          pattern="[0-9]{8}"
+          minLength={8}
+          maxLength={8}
           value={form.numeroLicence}
-          onChange={(e) => setForm((prev) => ({ ...prev, numeroLicence: e.target.value }))}
+          onChange={(e) =>
+            setForm((prev) => ({
+              ...prev,
+              numeroLicence: e.target.value.replace(/\D/g, "").slice(0, 8),
+            }))
+          }
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          placeholder="123456"
+          placeholder="12345678"
         />
       </label>
 
@@ -218,7 +226,10 @@ export function InscriptionForm({
               </p>
             ) : (
               visibleCategories.map((category) => (
-                <label key={category.id} className="flex items-center gap-2 text-sm text-foreground/90">
+                <label
+                  key={category.id}
+                  className="flex items-center gap-2 text-sm text-foreground/90"
+                >
                   <input
                     type="checkbox"
                     name="categoryIds"
@@ -242,14 +253,20 @@ export function InscriptionForm({
             )}
           </div>
 
-          {parsedPoints !== null && visibleCategories.length > 0 && form.categoryIds.length === 0 && (
-            <p className="mt-3 text-sm text-destructive">Sélectionnez au moins un tableau.</p>
-          )}
+          {parsedPoints !== null &&
+            visibleCategories.length > 0 &&
+            form.categoryIds.length === 0 && (
+              <p className="mt-3 text-sm text-destructive">Sélectionnez au moins un tableau.</p>
+            )}
         </div>
       </div>
 
       <div className="md:col-span-2">
-        <Button type="submit" disabled={loading || form.categoryIds.length === 0} className="w-full">
+        <Button
+          type="submit"
+          disabled={loading || form.categoryIds.length === 0}
+          className="w-full"
+        >
           {loading ? "Envoi..." : "S'inscrire"}
         </Button>
       </div>

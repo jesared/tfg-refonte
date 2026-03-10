@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 
+const LICENCE_REGEX = /^\d{8}$/;
+
 export async function POST(req: Request) {
   const body = await req.json();
 
@@ -23,6 +25,13 @@ export async function POST(req: Request) {
 
   if (!nom || !prenom || !numeroLicence || !club || !tournamentId || categoryIds.length === 0) {
     return NextResponse.json({ error: "Champs obligatoires manquants." }, { status: 400 });
+  }
+
+  if (!LICENCE_REGEX.test(numeroLicence)) {
+    return NextResponse.json(
+      { error: "Le numéro de licence doit contenir exactement 8 chiffres." },
+      { status: 400 },
+    );
   }
 
   if (points !== null && (Number.isNaN(points) || points < 0)) {
@@ -46,7 +55,10 @@ export async function POST(req: Request) {
   });
 
   if (categoriesCount !== categoryIds.length) {
-    return NextResponse.json({ error: "Au moins un tableau sélectionné est invalide." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Au moins un tableau sélectionné est invalide." },
+      { status: 400 },
+    );
   }
 
   try {
