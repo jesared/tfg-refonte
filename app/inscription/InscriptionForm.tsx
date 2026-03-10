@@ -156,19 +156,19 @@ export function InscriptionForm({
         <input
           name="numeroLicence"
           required
-          inputMode="numeric"
-          pattern="[0-9]{8}"
-          minLength={8}
-          maxLength={8}
+          inputMode="text"
+          pattern="[A-Za-z0-9]{3,9}"
+          minLength={3}
+          maxLength={9}
           value={form.numeroLicence}
           onChange={(e) =>
             setForm((prev) => ({
               ...prev,
-              numeroLicence: e.target.value.replace(/\D/g, "").slice(0, 8),
+              numeroLicence: e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 9),
             }))
           }
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          placeholder="12345678"
+          placeholder="123ABC456"
         />
       </label>
 
