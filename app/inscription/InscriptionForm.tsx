@@ -85,7 +85,7 @@ export function InscriptionForm({
 
   const visibleCategories = useMemo(() => {
     if (parsedPoints === null) {
-      return categories;
+      return [];
     }
 
     return categories.filter((category) => matchesPoints(category, parsedPoints));
@@ -212,7 +212,9 @@ export function InscriptionForm({
           <div className="space-y-2">
             {visibleCategories.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Aucun tableau ne correspond au nombre de points saisi.
+                {parsedPoints === null
+                  ? "Renseignez vos points FFTT pour sélectionner un tableau."
+                  : "Aucun tableau ne correspond au nombre de points saisi."}
               </p>
             ) : (
               visibleCategories.map((category) => (
@@ -222,6 +224,7 @@ export function InscriptionForm({
                     name="categoryIds"
                     value={category.id}
                     checked={form.categoryIds.includes(category.id)}
+                    disabled={parsedPoints === null}
                     onChange={(e) =>
                       setForm((prev) => ({
                         ...prev,
