@@ -45,7 +45,43 @@ async function validateRegistration(formData: FormData) {
   });
 
   revalidatePath("/admin/inscriptions");
-  redirect("/admin/inscriptions?updated=1");
+  redirect("/admin/inscriptions?updated=validated");
+}
+
+async function resetRegistration(formData: FormData) {
+  "use server";
+
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user || session.user.role !== "ADMIN") {
+    redirect("/");
+  }
+
+  const registrationId = String(formData.get("registrationId") ?? "").trim();
+
+  if (!registrationId) {
+    redirect("/admin/inscriptions?updated=0");
+  }
+
+  const existing = await prisma.registration.findUnique({
+    where: { id: registrationId },
+    select: { id: true },
+  });
+
+  if (!existing) {
+    redirect("/admin/inscriptions?updated=0");
+  }
+
+  await prisma.registration.update({
+    where: { id: registrationId },
+    data: {
+      statut: "EN_ATTENTE",
+      licenceVerified: false,
+    },
+  });
+
+  revalidatePath("/admin/inscriptions");
+  redirect("/admin/inscriptions?updated=reset");
 }
 
 export default async function AdminInscriptionsPage({
@@ -87,7 +123,9 @@ export default async function AdminInscriptionsPage({
   });
 
   const params = await searchParams;
-  const isUpdated = params?.updated === "1";
+  const updateStatus = params?.updated;
+  const isValidated = updateStatus === "validated";
+  const isReset = updateStatus === "reset";
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-8">
@@ -103,9 +141,15 @@ export default async function AdminInscriptionsPage({
         </p>
       </header>
 
-      {isUpdated && (
+      {isValidated && (
         <p className="rounded-xl border border-emerald-300/60 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 dark:border-emerald-400/40 dark:bg-emerald-500/10 dark:text-emerald-200">
           ✅ Inscription validée avec succès.
+        </p>
+      )}
+
+      {isReset && (
+        <p className="rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-200">
+          ↩️ Inscription remise en attente.
         </p>
       )}
 
@@ -114,9 +158,15 @@ export default async function AdminInscriptionsPage({
           <article key={tournament.id} className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h2 className="text-xl font-semibold text-foreground">
-                  Tour {tournament.tour} · {tournament.nom}
-                </h2>
+                {(() => {
+                  const defaultRoundName = `Tour ${tournament.tour}`;
+                  const title =
+                    tournament.nom.trim().toLowerCase() === defaultRoundName.toLowerCase()
+                      ? defaultRoundName
+                      : `${defaultRoundName} · ${tournament.nom}`;
+
+                  return <h2 className="text-xl font-semibold text-foreground">{title}</h2>;
+                })()}
                 <p className="text-sm text-muted-foreground">
                   {new Intl.DateTimeFormat("fr-FR", {
                     day: "2-digit",
@@ -153,6 +203,7 @@ export default async function AdminInscriptionsPage({
                   <tbody>
                     {tournament.registrations.map((registration) => {
                       const canValidate = registration.statut !== "VALIDE";
+                      const canReset = registration.statut !== "EN_ATTENTE";
 
                       return (
                         <tr key={registration.id} className="border-b border-border/60 last:border-0">
@@ -168,22 +219,36 @@ export default async function AdminInscriptionsPage({
                             </span>
                           </td>
                           <td className="px-3 py-3">
-                            {canValidate ? (
-                              <form action={validateRegistration}>
-                                <input type="hidden" name="registrationId" value={registration.id} />
-                                <button
-                                  type="submit"
-                                  className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
-                                >
-                                  <Check className="h-3.5 w-3.5" aria-hidden="true" />
-                                  Valider
-                                </button>
-                              </form>
-                            ) : (
-                              <span className="text-xs font-medium text-emerald-600 dark:text-emerald-300">
-                                Déjà validée
-                              </span>
-                            )}
+                            <div className="flex flex-wrap items-center gap-2">
+                              {canValidate ? (
+                                <form action={validateRegistration}>
+                                  <input type="hidden" name="registrationId" value={registration.id} />
+                                  <button
+                                    type="submit"
+                                    className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
+                                  >
+                                    <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                                    Valider
+                                  </button>
+                                </form>
+                              ) : (
+                                <span className="text-xs font-medium text-emerald-600 dark:text-emerald-300">
+                                  Déjà validée
+                                </span>
+                              )}
+
+                              {canReset && (
+                                <form action={resetRegistration}>
+                                  <input type="hidden" name="registrationId" value={registration.id} />
+                                  <button
+                                    type="submit"
+                                    className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
+                                  >
+                                    Remettre en attente
+                                  </button>
+                                </form>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );
