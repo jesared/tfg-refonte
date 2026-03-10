@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 
 type CategoryOption = {
   id: string;
@@ -23,6 +23,22 @@ function formatPointsRange(minPoints: number | null, maxPoints: number | null) {
   }
 
   return "Tous points";
+}
+
+function matchesPoints(category: CategoryOption, points: number | null) {
+  if (points === null) {
+    return true;
+  }
+
+  if (category.minPoints !== null && points < category.minPoints) {
+    return false;
+  }
+
+  if (category.maxPoints !== null && points > category.maxPoints) {
+    return false;
+  }
+
+  return true;
 }
 
 type FormState = {
@@ -54,7 +70,25 @@ export function InscriptionForm({
 }) {
   const [form, setForm] = useState<FormState>(initialForm);
   const [loading, setLoading] = useState(false);
+  const [filterByPoints, setFilterByPoints] = useState(true);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const parsedPoints = useMemo(() => {
+    if (!form.points) {
+      return null;
+    }
+
+    const value = Number.parseInt(form.points, 10);
+    return Number.isNaN(value) ? null : value;
+  }, [form.points]);
+
+  const visibleCategories = useMemo(() => {
+    if (!filterByPoints || parsedPoints === null) {
+      return categories;
+    }
+
+    return categories.filter((category) => matchesPoints(category, parsedPoints));
+  }, [categories, filterByPoints, parsedPoints]);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -134,7 +168,9 @@ export function InscriptionForm({
         <select
           name="genre"
           value={form.genre}
-          onChange={(e) => setForm((prev) => ({ ...prev, genre: e.target.value as "" | "M" | "F" }))}
+          onChange={(e) =>
+            setForm((prev) => ({ ...prev, genre: e.target.value as "" | "M" | "F" }))
+          }
           className="w-full rounded-md border border-input bg-background px-3 py-2"
         >
           <option value="">Non précisé</option>
@@ -169,23 +205,43 @@ export function InscriptionForm({
         />
       </label>
 
-      <label className="space-y-1 md:col-span-2">
+      <div className="space-y-1 md:col-span-2">
         <span className="text-sm font-medium">Tableau (catégorie) *</span>
-        <select
-          name="categoryId"
-          required
-          value={form.categoryId}
-          onChange={(e) => setForm((prev) => ({ ...prev, categoryId: e.target.value }))}
-          className="w-full rounded-md border border-input bg-background px-3 py-2"
-        >
-          <option value="">Choisir un tableau</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.nom} ({formatPointsRange(category.minPoints, category.maxPoints)})
-            </option>
-          ))}
-        </select>
-      </label>
+        <div className="rounded-md border border-input bg-background p-3">
+          <label className="mb-3 flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={filterByPoints}
+              onChange={(e) => setFilterByPoints(e.target.checked)}
+            />
+            Filtrer les tableaux selon mes points FFTT
+          </label>
+
+          <div className="space-y-2">
+            {visibleCategories.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Aucun tableau ne correspond au nombre de points saisi.
+              </p>
+            ) : (
+              visibleCategories.map((category) => (
+                <label key={category.id} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="categoryId"
+                    required
+                    value={category.id}
+                    checked={form.categoryId === category.id}
+                    onChange={(e) => setForm((prev) => ({ ...prev, categoryId: e.target.value }))}
+                  />
+                  <span>
+                    {category.nom} ({formatPointsRange(category.minPoints, category.maxPoints)})
+                  </span>
+                </label>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
 
       <div className="md:col-span-2">
         <button
