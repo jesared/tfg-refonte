@@ -633,29 +633,18 @@ export default async function AdminInscriptionsPage({
                             <td className="px-3 py-3 text-foreground/90">
                               <div className="flex flex-col gap-2">
                                 <span className="text-xs font-semibold text-foreground">
-                                  Engagement actuel : {registration.category.nom}
-                                </span>
-                                <span className="text-xs text-muted-foreground break-words">
-                                  Points: {registration.points ?? "non renseignés"}
+                                  {registration.category.nom}
                                 </span>
                                 <span className="text-xs text-muted-foreground">
                                   {allEngagements.length > 0 ? (
                                     <>
-                                      Autres engagements :{" "}
+                                      Autres :{" "}
                                       {allEngagements
-                                        .map((engagement) => {
-                                          const formattedDate = new Intl.DateTimeFormat("fr-FR", {
-                                            day: "2-digit",
-                                            month: "2-digit",
-                                            year: "numeric",
-                                          }).format(engagement.tournamentDate);
-
-                                          return `${engagement.tournamentLabel} (${formattedDate}) · ${engagement.categoryName}`;
-                                        })
-                                        .join(" | ")}
+                                        .map((engagement) => engagement.categoryName)
+                                        .join(" · ")}
                                     </>
                                   ) : (
-                                    "Autres engagements : aucun"
+                                    "Autres : aucun"
                                   )}
                                 </span>
                               </div>
@@ -676,44 +665,57 @@ export default async function AdminInscriptionsPage({
                                       action={updateRegistrationEngagements}
                                       registrationId={registration.id}
                                     >
-                                      <details>
+                                      <details className="group/modal">
                                         <summary className="cursor-pointer list-none px-3 py-2 text-left text-sm transition hover:bg-[#5c617d]">
-                                          Modifier engagements
+                                          Modifier
                                         </summary>
-                                        <div className="space-y-2 px-3 pb-3 pt-1">
-                                          <p className="text-xs text-[#d2d6f8]">
-                                            Choisir un ou plusieurs tableaux
-                                          </p>
-                                          <div className="max-h-40 space-y-1 overflow-y-auto rounded border border-[#666a86] p-2">
-                                            {eligibleCategories.map((category) => (
-                                              <label
-                                                key={category.id}
-                                                className="flex items-start gap-2 text-xs text-[#e4e7ff]"
+                                        <div className="fixed inset-0 z-20 hidden items-center justify-center bg-black/55 p-4 group-open/modal:flex">
+                                          <div className="w-full max-w-md space-y-2 rounded-lg border border-[#666a86] bg-[#4b4f6a] p-4 shadow-2xl">
+                                            <h3 className="text-sm font-semibold text-[#e4e7ff]">
+                                              Modifier
+                                            </h3>
+                                            <p className="text-xs text-[#d2d6f8]">
+                                              Choisir un ou plusieurs tableaux
+                                            </p>
+                                            <div className="max-h-52 space-y-1 overflow-y-auto rounded border border-[#666a86] p-2">
+                                              {eligibleCategories.map((category) => (
+                                                <label
+                                                  key={category.id}
+                                                  className="flex items-start gap-2 text-xs text-[#e4e7ff]"
+                                                >
+                                                  <input
+                                                    type="checkbox"
+                                                    name="categoryIds"
+                                                    value={category.id}
+                                                    defaultChecked={selectedCategoryIds.includes(
+                                                      category.id,
+                                                    )}
+                                                  />
+                                                  <span>
+                                                    {category.nom}
+                                                    {category.minPoints !== null ||
+                                                    category.maxPoints !== null
+                                                      ? ` (${category.minPoints ?? 0}-${category.maxPoints ?? "∞"} pts)`
+                                                      : ""}
+                                                  </span>
+                                                </label>
+                                              ))}
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                              <button
+                                                type="submit"
+                                                className="inline-flex items-center rounded-md border border-[#7f85aa] px-2 py-1 text-xs transition hover:bg-[#5c617d]"
                                               >
-                                                <input
-                                                  type="checkbox"
-                                                  name="categoryIds"
-                                                  value={category.id}
-                                                  defaultChecked={selectedCategoryIds.includes(
-                                                    category.id,
-                                                  )}
-                                                />
-                                                <span>
-                                                  {category.nom}
-                                                  {category.minPoints !== null ||
-                                                  category.maxPoints !== null
-                                                    ? ` (${category.minPoints ?? 0}-${category.maxPoints ?? "∞"} pts)`
-                                                    : ""}
-                                                </span>
-                                              </label>
-                                            ))}
+                                                Enregistrer
+                                              </button>
+                                              <a
+                                                href={`/admin/inscriptions?scope=${scope}&status=${status}`}
+                                                className="inline-flex items-center rounded-md border border-[#7f85aa] px-2 py-1 text-xs text-[#d2d6f8] transition hover:bg-[#5c617d]"
+                                              >
+                                                Fermer
+                                              </a>
+                                            </div>
                                           </div>
-                                          <button
-                                            type="submit"
-                                            className="inline-flex items-center rounded-md border border-[#7f85aa] px-2 py-1 text-xs transition hover:bg-[#5c617d]"
-                                          >
-                                            Enregistrer
-                                          </button>
                                         </div>
                                       </details>
                                     </InlineActionForm>
