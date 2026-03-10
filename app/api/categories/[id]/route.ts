@@ -78,7 +78,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     );
   }
 
-  const category = await prisma.category.findUnique({ where: { id }, select: { id: true } });
+  const category = await prisma.category.findUnique({ where: { id }, select: { id: true, nom: true } });
 
   if (!category) {
     return NextResponse.json({ error: "Category not found" }, { status: 404 });
