@@ -10,7 +10,7 @@ export async function POST(req: Request) {
 
   const nom = String(body?.nom ?? "").trim();
   const prenom = String(body?.prenom ?? "").trim();
-  const numeroLicence = String(body?.numeroLicence ?? "").trim();
+  const numeroLicence = String(body?.numeroLicence ?? "").trim().toUpperCase();
   const club = String(body?.club ?? "").trim();
   const genre = body?.genre === "M" || body?.genre === "F" ? body.genre : null;
   const tournamentId = String(body?.tournamentId ?? "").trim();
@@ -40,13 +40,30 @@ export async function POST(req: Request) {
 
   const tournament = await prisma.tournament.findFirst({
     where: { id: tournamentId, inscriptionOuverte: true },
-    select: { id: true },
+    select: { id: true, tour: true },
   });
 
   if (!tournament) {
     return NextResponse.json(
       { error: "Le tournoi sélectionné n'accepte pas les inscriptions." },
       { status: 400 },
+    );
+  }
+
+  const existingRegistrationOnTour = await prisma.registration.findFirst({
+    where: {
+      numeroLicence,
+      tournament: {
+        tour: tournament.tour,
+      },
+    },
+    select: { id: true },
+  });
+
+  if (existingRegistrationOnTour) {
+    return NextResponse.json(
+      { error: "Cette licence est déjà inscrite sur ce tour." },
+      { status: 409 },
     );
   }
 
