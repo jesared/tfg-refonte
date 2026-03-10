@@ -290,6 +290,66 @@ export default async function AdminInscriptionsPage({
   const isPointsMismatch = updateStatus === "points_mismatch";
   const isDuplicate = updateStatus === "duplicate";
 
+  const displayedLicences = Array.from(
+    new Set(
+      tournaments.flatMap((tournament) =>
+        tournament.registrations.map((registration) => registration.numeroLicence),
+      ),
+    ),
+  );
+
+  const playerEngagements =
+    displayedLicences.length === 0
+      ? []
+      : await prisma.registration.findMany({
+          where: {
+            numeroLicence: { in: displayedLicences },
+          },
+          orderBy: [{ tournament: { date: "asc" } }, { createdAt: "asc" }],
+          select: {
+            numeroLicence: true,
+            id: true,
+            tournament: {
+              select: {
+                tour: true,
+                nom: true,
+                date: true,
+              },
+            },
+            category: {
+              select: {
+                nom: true,
+              },
+            },
+          },
+        });
+
+  const engagementsByLicence = playerEngagements.reduce<
+    Record<
+      string,
+      Array<{ id: string; tournamentLabel: string; tournamentDate: Date; categoryName: string }>
+    >
+  >((acc, engagement) => {
+    const defaultRoundName = `Tour ${engagement.tournament.tour}`;
+    const tournamentLabel =
+      engagement.tournament.nom.trim().toLowerCase() === defaultRoundName.toLowerCase()
+        ? defaultRoundName
+        : `${defaultRoundName} · ${engagement.tournament.nom}`;
+
+    if (!acc[engagement.numeroLicence]) {
+      acc[engagement.numeroLicence] = [];
+    }
+
+    acc[engagement.numeroLicence].push({
+      id: engagement.id,
+      tournamentLabel,
+      tournamentDate: engagement.tournament.date,
+      categoryName: engagement.category.nom,
+    });
+
+    return acc;
+  }, {});
+
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-8">
       <header className="rounded-2xl border border-border bg-card px-6 py-7 shadow-sm">
@@ -479,6 +539,11 @@ export default async function AdminInscriptionsPage({
                     {tournament.registrations.map((registration) => {
                       const canValidate = registration.statut !== "VALIDE";
                       const canReset = registration.statut !== "EN_ATTENTE";
+                      const allEngagements =
+                        engagementsByLicence[registration.numeroLicence]?.filter(
+                          (engagement) => engagement.id !== registration.id,
+                        ) ?? [];
+
                       const eligibleCategories = tournament.categories.filter(
                         (category) =>
                           category.id === registration.category.id ||
@@ -503,12 +568,19 @@ export default async function AdminInscriptionsPage({
                           <td className="px-3 py-3 text-foreground/90">{registration.club}</td>
                           <td className="px-3 py-3 text-foreground/90">
                             <div className="flex flex-col gap-2">
+                              <span className="text-xs font-semibold text-foreground">
+                                Engagement actuel : {registration.category.nom}
+                              </span>
                               <InlineActionForm
                                 action={updateRegistrationCategory}
                                 registrationId={registration.id}
                               >
                                 <div className="flex flex-wrap items-center gap-2">
+                                  <label htmlFor={`category-${registration.id}`} className="text-xs">
+                                    Changer vers
+                                  </label>
                                   <select
+                                    id={`category-${registration.id}`}
                                     name="categoryId"
                                     defaultValue={registration.category.id}
                                     className="rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground"
@@ -516,6 +588,9 @@ export default async function AdminInscriptionsPage({
                                     {eligibleCategories.map((category) => (
                                       <option key={category.id} value={category.id}>
                                         {category.nom}
+                                        {category.minPoints !== null || category.maxPoints !== null
+                                          ? ` (${category.minPoints ?? 0}-${category.maxPoints ?? "∞"} pts)`
+                                          : ""}
                                       </option>
                                     ))}
                                   </select>
@@ -529,6 +604,24 @@ export default async function AdminInscriptionsPage({
                               </InlineActionForm>
                               <span className="text-xs text-muted-foreground">
                                 Points: {registration.points ?? "non renseignés"}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {allEngagements.length > 0 ? (
+                                  <>
+                                    Autres engagements :{" "}
+                                    {allEngagements.map((engagement) => {
+                                      const formattedDate = new Intl.DateTimeFormat("fr-FR", {
+                                        day: "2-digit",
+                                        month: "2-digit",
+                                        year: "numeric",
+                                      }).format(engagement.tournamentDate);
+
+                                      return `${engagement.tournamentLabel} (${formattedDate}) · ${engagement.categoryName}`;
+                                    }).join(" | ")}
+                                  </>
+                                ) : (
+                                  "Autres engagements : aucun"
+                                )}
                               </span>
                             </div>
                           </td>
