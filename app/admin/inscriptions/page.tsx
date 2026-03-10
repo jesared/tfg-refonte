@@ -87,7 +87,7 @@ async function resetRegistration(formData: FormData) {
 export default async function AdminInscriptionsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ updated?: string }>;
+  searchParams?: Promise<{ updated?: string; scope?: string }>;
 }) {
   const session = await getServerSession(authOptions);
 
@@ -95,7 +95,18 @@ export default async function AdminInscriptionsPage({
     redirect("/");
   }
 
+  const params = await searchParams;
+  const scope = params?.scope === "all" || params?.scope === "past" ? params.scope : "active";
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const tournamentDateFilter =
+    scope === "all" ? {} : scope === "past" ? { lt: startOfToday } : { gte: startOfToday };
+
   const tournaments = await prisma.tournament.findMany({
+    where: {
+      ...(scope === "all" ? {} : { date: tournamentDateFilter }),
+    },
     orderBy: [{ tour: "asc" }, { date: "asc" }],
     select: {
       id: true,
@@ -104,7 +115,7 @@ export default async function AdminInscriptionsPage({
       date: true,
       salleVille: true,
       registrations: {
-        orderBy: [{ createdAt: "asc" }],
+        orderBy: [{ statut: "asc" }, { createdAt: "asc" }],
         select: {
           id: true,
           nom: true,
@@ -122,7 +133,6 @@ export default async function AdminInscriptionsPage({
     },
   });
 
-  const params = await searchParams;
   const updateStatus = params?.updated;
   const isValidated = updateStatus === "validated";
   const isReset = updateStatus === "reset";
@@ -154,6 +164,44 @@ export default async function AdminInscriptionsPage({
       )}
 
       <section className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
+          <p className="text-sm text-muted-foreground">
+            Astuce volume : affichage par défaut des tournois <strong className="text-foreground">à venir / en cours</strong>.
+          </p>
+          <div className="flex flex-wrap gap-2 text-xs font-semibold">
+            <a
+              href="/admin/inscriptions?scope=active"
+              className={`rounded-full border px-3 py-1.5 transition ${
+                scope === "active" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-foreground hover:bg-muted"
+              }`}
+            >
+              À venir / en cours
+            </a>
+            <a
+              href="/admin/inscriptions?scope=all"
+              className={`rounded-full border px-3 py-1.5 transition ${
+                scope === "all" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-foreground hover:bg-muted"
+              }`}
+            >
+              Tous
+            </a>
+            <a
+              href="/admin/inscriptions?scope=past"
+              className={`rounded-full border px-3 py-1.5 transition ${
+                scope === "past" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-foreground hover:bg-muted"
+              }`}
+            >
+              Passés
+            </a>
+          </div>
+        </div>
+
+        {tournaments.length === 0 && (
+          <p className="rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
+            Aucun tournoi trouvé pour ce filtre.
+          </p>
+        )}
+
         {tournaments.map((tournament) => (
           <article key={tournament.id} className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
