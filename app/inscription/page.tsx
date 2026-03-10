@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { CalendarDays, Trophy } from "lucide-react";
 
 import { InscriptionForm } from "./InscriptionForm";
 
@@ -59,16 +60,22 @@ export default async function InscriptionPage() {
 
   return (
     <section className="mx-auto max-w-3xl px-4 py-8 sm:px-6 md:py-12">
-      <div className="rounded-xl border border-border bg-card p-6 shadow-sm md:p-8">
-        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8">
+        <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+          <Trophy className="h-4 w-4" aria-hidden="true" />
+          Inscriptions
+        </p>
+
+        <h1 className="mt-3 text-2xl font-bold tracking-tight md:text-3xl">
           Inscription au tournoi{" "}
-          {tournament ? <span className="text-blue-600">· Tour {tournament.tour}</span> : null}
+          {tournament ? <span className="text-primary">· Tour {tournament.tour}</span> : null}
         </h1>
 
         {tournament ? (
           <>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Tournoi à venir : <strong>{tournament.salleVille}</strong> le{" "}
+            <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+              <CalendarDays className="h-4 w-4 text-primary" aria-hidden="true" />
+              Tournoi à venir : <strong className="text-foreground">{tournament.salleVille}</strong> le{" "}
               {formatTournamentDate(tournament.date)}.
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -79,13 +86,13 @@ export default async function InscriptionPage() {
             {tournament.categories.length > 0 ? (
               <InscriptionForm tournamentId={tournament.id} categories={tournament.categories} />
             ) : (
-              <p className="mt-6 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+              <p className="mt-6 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
                 Aucune catégorie (tableau) n&apos;est encore configurée.
               </p>
             )}
           </>
         ) : (
-          <p className="mt-6 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+          <p className="mt-6 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
             Aucun tournoi à venir avec inscriptions ouvertes pour le moment.
           </p>
         )}
