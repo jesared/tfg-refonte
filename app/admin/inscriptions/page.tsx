@@ -1,4 +1,4 @@
-import { Check, EllipsisVertical, ShieldCheck, Trophy, X } from "lucide-react";
+import { Check, EllipsisVertical, Pencil, ShieldCheck, Trophy, X } from "lucide-react";
 import type { Metadata } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -211,7 +211,6 @@ async function updateRegistrationEngagements(formData: FormData) {
   const existingEngagements = await prisma.registration.findMany({
     where: {
       numeroLicence: registration.numeroLicence,
-      userId: registration.userId,
       tournamentId: registration.tournamentId,
     },
     select: {
@@ -668,6 +667,7 @@ export default async function AdminInscriptionsPage({
                                     >
                                       <details className="group/modal">
                                         <summary className="cursor-pointer list-none px-3 py-2 text-left text-sm transition hover:bg-[#5c617d]">
+                                          <Pencil className="mr-2 inline h-3.5 w-3.5" aria-hidden="true" />
                                           Modifier
                                         </summary>
                                         <div className="fixed inset-0 z-20 hidden items-center justify-center bg-black/55 p-4 group-open/modal:flex">

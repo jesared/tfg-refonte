@@ -19,6 +19,7 @@ const SEGMENT_LABELS: Record<string, string> = {
   contact: "Contact",
   inscription: "Inscription",
   inscriptions: "Inscriptions",
+  "mes-inscriptions": "À vos inscriptions",
   profile: "Profil",
   recompenses: "Récompenses",
   salles: "Salles",

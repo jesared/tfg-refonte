@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 
@@ -70,6 +71,7 @@ export function InscriptionForm({
   tournamentId: string;
   categories: CategoryOption[];
 }) {
+  const router = useRouter();
   const [form, setForm] = useState<FormState>(initialForm);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -116,8 +118,8 @@ export function InscriptionForm({
     const data = (await res.json()) as { error?: string };
 
     if (res.ok) {
-      setMessage({ type: "success", text: "Inscription enregistrée avec succès." });
-      setForm(initialForm);
+      router.push("/mes-inscriptions?created=1");
+      router.refresh();
     } else {
       setMessage({ type: "error", text: data.error || "Erreur lors de l'inscription." });
     }
