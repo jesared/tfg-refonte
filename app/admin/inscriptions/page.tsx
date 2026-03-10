@@ -1,4 +1,4 @@
-import { Check, Dot, ShieldCheck, Trophy, X } from "lucide-react";
+import { Check, EllipsisVertical, ShieldCheck, Trophy, X } from "lucide-react";
 import type { Metadata } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -635,53 +635,6 @@ export default async function AdminInscriptionsPage({
                                 <span className="text-xs font-semibold text-foreground">
                                   Engagement actuel : {registration.category.nom}
                                 </span>
-                                <InlineActionForm
-                                  action={updateRegistrationEngagements}
-                                  registrationId={registration.id}
-                                >
-                                  <div className="relative">
-                                    <details className="group">
-                                      <summary className="cursor-pointer list-none rounded-md border border-border bg-background px-2 py-1 text-xs font-medium text-foreground transition hover:bg-muted">
-                                        Modifier engagements
-                                      </summary>
-                                      <div className="absolute left-0 top-full z-10 mt-2 w-72 rounded-lg border border-border bg-popover p-3 shadow-lg">
-                                        <p className="mb-2 text-xs font-semibold text-foreground">
-                                          Choisir un ou plusieurs tableaux
-                                        </p>
-                                        <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
-                                          {eligibleCategories.map((category) => (
-                                            <label
-                                              key={category.id}
-                                              className="flex items-start gap-2 text-xs text-foreground/90"
-                                            >
-                                              <input
-                                                type="checkbox"
-                                                name="categoryIds"
-                                                value={category.id}
-                                                defaultChecked={selectedCategoryIds.includes(
-                                                  category.id,
-                                                )}
-                                              />
-                                              <span>
-                                                {category.nom}
-                                                {category.minPoints !== null ||
-                                                category.maxPoints !== null
-                                                  ? ` (${category.minPoints ?? 0}-${category.maxPoints ?? "∞"} pts)`
-                                                  : ""}
-                                              </span>
-                                            </label>
-                                          ))}
-                                        </div>
-                                        <button
-                                          type="submit"
-                                          className="mt-3 inline-flex items-center rounded-md border border-border bg-background px-2 py-1 text-xs font-medium text-foreground transition hover:bg-muted"
-                                        >
-                                          Enregistrer
-                                        </button>
-                                      </div>
-                                    </details>
-                                  </div>
-                                </InlineActionForm>
                                 <span className="text-xs text-muted-foreground break-words">
                                   Points: {registration.points ?? "non renseignés"}
                                 </span>
@@ -716,9 +669,55 @@ export default async function AdminInscriptionsPage({
                               <div className="relative inline-block">
                                 <details className="group">
                                   <summary className="inline-flex cursor-pointer list-none items-center rounded-md bg-[#1e2238] p-2 text-[#c5cbf7] transition hover:bg-[#2a2f4b]">
-                                    <Dot className="h-4 w-4" aria-hidden="true" />
+                                    <EllipsisVertical className="h-4 w-4" aria-hidden="true" />
                                   </summary>
-                                  <div className="absolute right-0 top-full z-10 mt-2 flex w-44 flex-col overflow-hidden rounded-md border border-[#3a3f5e] bg-[#4b4f6a] py-1 text-sm text-[#e4e7ff] shadow-xl">
+                                  <div className="absolute right-0 top-full z-10 mt-2 flex w-72 flex-col overflow-hidden rounded-md border border-[#3a3f5e] bg-[#4b4f6a] py-1 text-sm text-[#e4e7ff] shadow-xl">
+                                    <InlineActionForm
+                                      action={updateRegistrationEngagements}
+                                      registrationId={registration.id}
+                                    >
+                                      <details>
+                                        <summary className="cursor-pointer list-none px-3 py-2 text-left text-sm transition hover:bg-[#5c617d]">
+                                          Modifier engagements
+                                        </summary>
+                                        <div className="space-y-2 px-3 pb-3 pt-1">
+                                          <p className="text-xs text-[#d2d6f8]">
+                                            Choisir un ou plusieurs tableaux
+                                          </p>
+                                          <div className="max-h-40 space-y-1 overflow-y-auto rounded border border-[#666a86] p-2">
+                                            {eligibleCategories.map((category) => (
+                                              <label
+                                                key={category.id}
+                                                className="flex items-start gap-2 text-xs text-[#e4e7ff]"
+                                              >
+                                                <input
+                                                  type="checkbox"
+                                                  name="categoryIds"
+                                                  value={category.id}
+                                                  defaultChecked={selectedCategoryIds.includes(
+                                                    category.id,
+                                                  )}
+                                                />
+                                                <span>
+                                                  {category.nom}
+                                                  {category.minPoints !== null ||
+                                                  category.maxPoints !== null
+                                                    ? ` (${category.minPoints ?? 0}-${category.maxPoints ?? "∞"} pts)`
+                                                    : ""}
+                                                </span>
+                                              </label>
+                                            ))}
+                                          </div>
+                                          <button
+                                            type="submit"
+                                            className="inline-flex items-center rounded-md border border-[#7f85aa] px-2 py-1 text-xs transition hover:bg-[#5c617d]"
+                                          >
+                                            Enregistrer
+                                          </button>
+                                        </div>
+                                      </details>
+                                    </InlineActionForm>
+
                                     {canValidate ? (
                                       <InlineActionForm
                                         action={validateRegistration}
