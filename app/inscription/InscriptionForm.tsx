@@ -2,6 +2,8 @@
 
 import { FormEvent, useMemo, useState } from "react";
 
+import { Button } from "@/components/ui/button";
+
 type CategoryOption = {
   id: string;
   nom: string;
@@ -133,7 +135,7 @@ export function InscriptionForm({
           required
           value={form.nom}
           onChange={(e) => setForm((prev) => ({ ...prev, nom: e.target.value }))}
-          className="w-full rounded-md border border-input bg-background px-3 py-2"
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           placeholder="Dupont"
         />
       </label>
@@ -145,7 +147,7 @@ export function InscriptionForm({
           required
           value={form.prenom}
           onChange={(e) => setForm((prev) => ({ ...prev, prenom: e.target.value }))}
-          className="w-full rounded-md border border-input bg-background px-3 py-2"
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           placeholder="Jean"
         />
       </label>
@@ -158,7 +160,7 @@ export function InscriptionForm({
           minLength={6}
           value={form.numeroLicence}
           onChange={(e) => setForm((prev) => ({ ...prev, numeroLicence: e.target.value }))}
-          className="w-full rounded-md border border-input bg-background px-3 py-2"
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           placeholder="123456"
         />
       </label>
@@ -171,7 +173,7 @@ export function InscriptionForm({
           onChange={(e) =>
             setForm((prev) => ({ ...prev, genre: e.target.value as "" | "M" | "F" }))
           }
-          className="w-full rounded-md border border-input bg-background px-3 py-2"
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <option value="">Non précisé</option>
           <option value="M">Masculin</option>
@@ -186,7 +188,7 @@ export function InscriptionForm({
           required
           value={form.club}
           onChange={(e) => setForm((prev) => ({ ...prev, club: e.target.value }))}
-          className="w-full rounded-md border border-input bg-background px-3 py-2"
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           placeholder="TT Strasbourg"
         />
       </label>
@@ -200,14 +202,14 @@ export function InscriptionForm({
           min={0}
           value={form.points}
           onChange={(e) => setForm((prev) => ({ ...prev, points: e.target.value }))}
-          className="w-full rounded-md border border-input bg-background px-3 py-2"
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           placeholder="1050"
         />
       </label>
 
       <div className="space-y-1 md:col-span-2">
         <span className="text-sm font-medium">Tableau (catégorie) *</span>
-        <div className="rounded-md border border-input bg-background p-3">
+        <div className="rounded-md border border-input bg-background p-4 shadow-sm">
           <label className="mb-3 flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -224,7 +226,7 @@ export function InscriptionForm({
               </p>
             ) : (
               visibleCategories.map((category) => (
-                <label key={category.id} className="flex items-center gap-2 text-sm">
+                <label key={category.id} className="flex items-center gap-2 text-sm text-foreground/90">
                   <input
                     type="radio"
                     name="categoryId"
@@ -244,21 +246,17 @@ export function InscriptionForm({
       </div>
 
       <div className="md:col-span-2">
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-md bg-blue-600 px-4 py-2.5 font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
-        >
+        <Button type="submit" disabled={loading} className="w-full">
           {loading ? "Envoi..." : "S'inscrire"}
-        </button>
+        </Button>
       </div>
 
       {message && (
         <p
           className={`md:col-span-2 rounded-md border px-3 py-2 text-sm ${
             message.type === "success"
-              ? "border-green-200 bg-green-50 text-green-700"
-              : "border-red-200 bg-red-50 text-red-700"
+              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+              : "border-destructive/30 bg-destructive/10 text-destructive"
           }`}
         >
           {message.text}
