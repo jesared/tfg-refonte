@@ -216,22 +216,49 @@ async function updateRegistrationEngagements(formData: FormData) {
     select: {
       id: true,
       categoryId: true,
+      createdAt: true,
+    },
+    orderBy: {
+      createdAt: "asc",
     },
   });
 
-  const existingByCategory = new Map(
-    existingEngagements.map((engagement) => [engagement.categoryId, engagement]),
-  );
-
   const selectedSet = new Set(uniqueCategoryIds);
 
-  const idsToDelete = existingEngagements
-    .filter((engagement) => !selectedSet.has(engagement.categoryId))
-    .map((engagement) => engagement.id);
+  const engagementsByCategory = existingEngagements.reduce<
+    Map<string, Array<{ id: string; categoryId: string }>>
+  >((acc, engagement) => {
+    const current = acc.get(engagement.categoryId) ?? [];
+    current.push({ id: engagement.id, categoryId: engagement.categoryId });
+    acc.set(engagement.categoryId, current);
 
-  const categoriesToCreate = uniqueCategoryIds.filter(
-    (categoryId) => !existingByCategory.has(categoryId),
+    return acc;
+  }, new Map());
+
+  const idsToDelete = Array.from(engagementsByCategory.entries()).flatMap(
+    ([categoryId, categoryEngagements]) => {
+      if (!selectedSet.has(categoryId)) {
+        return categoryEngagements.map((engagement) => engagement.id);
+      }
+
+      if (categoryEngagements.length <= 1) {
+        return [];
+      }
+
+      const preferredEngagement =
+        categoryEngagements.find((engagement) => engagement.id === registration.id) ??
+        categoryEngagements[0];
+
+      return categoryEngagements
+        .filter((engagement) => engagement.id !== preferredEngagement.id)
+        .map((engagement) => engagement.id);
+    },
   );
+
+  const categoriesToCreate = uniqueCategoryIds.filter((categoryId) => {
+    const current = engagementsByCategory.get(categoryId) ?? [];
+    return current.length === 0;
+  });
 
   await prisma.$transaction(async (tx) => {
     if (idsToDelete.length > 0) {
@@ -258,6 +285,7 @@ async function updateRegistrationEngagements(formData: FormData) {
           categoryId,
           userId: registration.userId,
         })),
+        skipDuplicates: true,
       });
     }
   });
