@@ -137,7 +137,7 @@ function isPointsCompatible({
   return isAboveMin && isBelowMax;
 }
 
-async function updateRegistrationCategory(formData: FormData) {
+async function updateRegistrationEngagements(formData: FormData) {
   "use server";
 
   const session = await getServerSession(authOptions);
@@ -147,9 +147,11 @@ async function updateRegistrationCategory(formData: FormData) {
   }
 
   const registrationId = String(formData.get("registrationId") ?? "").trim();
-  const categoryId = String(formData.get("categoryId") ?? "").trim();
+  const selectedCategoryIds = Array.from(formData.getAll("categoryIds"))
+    .map((value) => String(value).trim())
+    .filter(Boolean);
 
-  if (!registrationId || !categoryId) {
+  if (!registrationId || selectedCategoryIds.length === 0) {
     redirect("/admin/inscriptions?updated=0");
   }
 
@@ -157,9 +159,16 @@ async function updateRegistrationCategory(formData: FormData) {
     where: { id: registrationId },
     select: {
       id: true,
-      points: true,
-      categoryId: true,
+      nom: true,
+      prenom: true,
       numeroLicence: true,
+      genre: true,
+      club: true,
+      points: true,
+      statut: true,
+      licenceVerified: true,
+      present: true,
+      userId: true,
       tournamentId: true,
     },
   });
@@ -168,50 +177,89 @@ async function updateRegistrationCategory(formData: FormData) {
     redirect("/admin/inscriptions?updated=0");
   }
 
-  const targetCategory = await prisma.category.findUnique({
-    where: { id: categoryId },
+  const uniqueCategoryIds = Array.from(new Set(selectedCategoryIds));
+
+  const categories = await prisma.category.findMany({
+    where: {
+      id: { in: uniqueCategoryIds },
+      tournamentId: registration.tournamentId,
+    },
     select: {
       id: true,
-      tournamentId: true,
       minPoints: true,
       maxPoints: true,
     },
   });
 
-  if (!targetCategory || targetCategory.tournamentId !== registration.tournamentId) {
+  if (categories.length !== uniqueCategoryIds.length) {
     redirect("/admin/inscriptions?updated=0");
   }
 
-  if (
-    !isPointsCompatible({
-      points: registration.points,
-      minPoints: targetCategory.minPoints,
-      maxPoints: targetCategory.maxPoints,
-    })
-  ) {
+  const hasInvalidPointsCategory = categories.some(
+    (category) =>
+      !isPointsCompatible({
+        points: registration.points,
+        minPoints: category.minPoints,
+        maxPoints: category.maxPoints,
+      }),
+  );
+
+  if (hasInvalidPointsCategory) {
     redirect("/admin/inscriptions?updated=points_mismatch");
   }
 
-  if (registration.categoryId === categoryId) {
-    redirect("/admin/inscriptions?updated=engagement_updated");
-  }
-
-  const duplicate = await prisma.registration.findFirst({
+  const existingEngagements = await prisma.registration.findMany({
     where: {
       numeroLicence: registration.numeroLicence,
-      categoryId,
-      id: { not: registration.id },
+      tournamentId: registration.tournamentId,
     },
-    select: { id: true },
+    select: {
+      id: true,
+      categoryId: true,
+    },
   });
 
-  if (duplicate) {
-    redirect("/admin/inscriptions?updated=duplicate");
-  }
+  const existingByCategory = new Map(
+    existingEngagements.map((engagement) => [engagement.categoryId, engagement]),
+  );
 
-  await prisma.registration.update({
-    where: { id: registration.id },
-    data: { categoryId },
+  const selectedSet = new Set(uniqueCategoryIds);
+
+  const idsToDelete = existingEngagements
+    .filter((engagement) => !selectedSet.has(engagement.categoryId))
+    .map((engagement) => engagement.id);
+
+  const categoriesToCreate = uniqueCategoryIds.filter(
+    (categoryId) => !existingByCategory.has(categoryId),
+  );
+
+  await prisma.$transaction(async (tx) => {
+    if (idsToDelete.length > 0) {
+      await tx.registration.deleteMany({
+        where: {
+          id: { in: idsToDelete },
+        },
+      });
+    }
+
+    if (categoriesToCreate.length > 0) {
+      await tx.registration.createMany({
+        data: categoriesToCreate.map((categoryId) => ({
+          nom: registration.nom,
+          prenom: registration.prenom,
+          numeroLicence: registration.numeroLicence,
+          genre: registration.genre,
+          club: registration.club,
+          points: registration.points,
+          statut: registration.statut,
+          licenceVerified: registration.licenceVerified,
+          present: registration.present,
+          tournamentId: registration.tournamentId,
+          categoryId,
+          userId: registration.userId,
+        })),
+      });
+    }
   });
 
   revalidatePath("/admin/inscriptions");
@@ -252,7 +300,6 @@ export default async function AdminInscriptionsPage({
       date: true,
       salleVille: true,
       registrations: {
-        where: statusFilter === "all" ? undefined : { statut: statusFilter },
         orderBy: [{ statut: "asc" }, { createdAt: "asc" }],
         select: {
           id: true,
@@ -262,6 +309,7 @@ export default async function AdminInscriptionsPage({
           club: true,
           points: true,
           statut: true,
+          categoryId: true,
           category: {
             select: {
               id: true,
@@ -485,210 +533,243 @@ export default async function AdminInscriptionsPage({
           </p>
         )}
 
-        {tournaments.map((tournament) => (
-          <article
-            key={tournament.id}
-            className="rounded-2xl border border-border bg-card p-6 shadow-sm"
-          >
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-              <div>
-                {(() => {
-                  const defaultRoundName = `Tour ${tournament.tour}`;
-                  const title =
-                    tournament.nom.trim().toLowerCase() === defaultRoundName.toLowerCase()
-                      ? defaultRoundName
-                      : `${defaultRoundName} · ${tournament.nom}`;
+        {tournaments.map((tournament) => {
+          const displayedRegistrations =
+            statusFilter === "all"
+              ? tournament.registrations
+              : tournament.registrations.filter(
+                  (registration) => registration.statut === statusFilter,
+                );
 
-                  return <h2 className="text-xl font-semibold text-foreground">{title}</h2>;
-                })()}
-                <p className="text-sm text-muted-foreground">
-                  {new Intl.DateTimeFormat("fr-FR", {
-                    day: "2-digit",
-                    month: "long",
-                    year: "numeric",
-                  }).format(tournament.date)}
-                  {" · "}
-                  {tournament.salleVille}
+          return (
+            <article
+              key={tournament.id}
+              className="rounded-2xl border border-border bg-card p-6 shadow-sm"
+            >
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  {(() => {
+                    const defaultRoundName = `Tour ${tournament.tour}`;
+                    const title =
+                      tournament.nom.trim().toLowerCase() === defaultRoundName.toLowerCase()
+                        ? defaultRoundName
+                        : `${defaultRoundName} · ${tournament.nom}`;
+
+                    return <h2 className="text-xl font-semibold text-foreground">{title}</h2>;
+                  })()}
+                  <p className="text-sm text-muted-foreground">
+                    {new Intl.DateTimeFormat("fr-FR", {
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric",
+                    }).format(tournament.date)}
+                    {" · "}
+                    {tournament.salleVille}
+                  </p>
+                </div>
+                <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-foreground/90">
+                  <Trophy className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                  {displayedRegistrations.length} inscrit
+                  {displayedRegistrations.length > 1 ? "s" : ""}
+                </span>
+              </div>
+
+              {displayedRegistrations.length === 0 ? (
+                <p className="rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
+                  Aucun inscrit sur ce tour pour le moment.
                 </p>
-              </div>
-              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-foreground/90">
-                <Trophy className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-                {tournament.registrations.length} inscrit
-                {tournament.registrations.length > 1 ? "s" : ""}
-              </span>
-            </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[760px] text-left text-sm">
+                    <thead>
+                      <tr className="border-b border-border text-muted-foreground">
+                        <th className="px-3 py-2 font-medium">Joueur</th>
+                        <th className="px-3 py-2 font-medium">Licence</th>
+                        <th className="px-3 py-2 font-medium">Club</th>
+                        <th className="px-3 py-2 font-medium">Catégorie</th>
+                        <th className="px-3 py-2 font-medium">Statut</th>
+                        <th className="px-3 py-2 font-medium">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {displayedRegistrations.map((registration) => {
+                        const canValidate = registration.statut !== "VALIDE";
+                        const canReset = registration.statut !== "EN_ATTENTE";
+                        const allEngagements =
+                          engagementsByLicence[registration.numeroLicence]?.filter(
+                            (engagement) => engagement.id !== registration.id,
+                          ) ?? [];
 
-            {tournament.registrations.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
-                Aucun inscrit sur ce tour pour le moment.
-              </p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[760px] text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-muted-foreground">
-                      <th className="px-3 py-2 font-medium">Joueur</th>
-                      <th className="px-3 py-2 font-medium">Licence</th>
-                      <th className="px-3 py-2 font-medium">Club</th>
-                      <th className="px-3 py-2 font-medium">Catégorie</th>
-                      <th className="px-3 py-2 font-medium">Statut</th>
-                      <th className="px-3 py-2 font-medium">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tournament.registrations.map((registration) => {
-                      const canValidate = registration.statut !== "VALIDE";
-                      const canReset = registration.statut !== "EN_ATTENTE";
-                      const allEngagements =
-                        engagementsByLicence[registration.numeroLicence]?.filter(
-                          (engagement) => engagement.id !== registration.id,
-                        ) ?? [];
+                        const eligibleCategories = tournament.categories.filter(
+                          (category) =>
+                            category.id === registration.category.id ||
+                            isPointsCompatible({
+                              points: registration.points,
+                              minPoints: category.minPoints,
+                              maxPoints: category.maxPoints,
+                            }),
+                        );
 
-                      const eligibleCategories = tournament.categories.filter(
-                        (category) =>
-                          category.id === registration.category.id ||
-                          isPointsCompatible({
-                            points: registration.points,
-                            minPoints: category.minPoints,
-                            maxPoints: category.maxPoints,
-                          }),
-                      );
+                        const selectedCategoryIds = tournament.registrations
+                          .filter(
+                            (engagement) => engagement.numeroLicence === registration.numeroLicence,
+                          )
+                          .map((engagement) => engagement.categoryId);
 
-                      return (
-                        <tr
-                          key={registration.id}
-                          className="border-b border-border/60 last:border-0"
-                        >
-                          <td className="px-3 py-3 font-medium text-foreground">
-                            {registration.prenom} {registration.nom}
-                          </td>
-                          <td className="px-3 py-3 text-foreground/90">
-                            {registration.numeroLicence}
-                          </td>
-                          <td className="px-3 py-3 text-foreground/90">{registration.club}</td>
-                          <td className="px-3 py-3 text-foreground/90">
-                            <div className="flex flex-col gap-2">
-                              <span className="text-xs font-semibold text-foreground">
-                                Engagement actuel : {registration.category.nom}
-                              </span>
-                              <InlineActionForm
-                                action={updateRegistrationCategory}
-                                registrationId={registration.id}
-                              >
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <label htmlFor={`category-${registration.id}`} className="text-xs">
-                                    Changer vers
-                                  </label>
-                                  <select
-                                    id={`category-${registration.id}`}
-                                    name="categoryId"
-                                    defaultValue={registration.category.id}
-                                    className="rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground"
-                                  >
-                                    {eligibleCategories.map((category) => (
-                                      <option key={category.id} value={category.id}>
-                                        {category.nom}
-                                        {category.minPoints !== null || category.maxPoints !== null
-                                          ? ` (${category.minPoints ?? 0}-${category.maxPoints ?? "∞"} pts)`
-                                          : ""}
-                                      </option>
-                                    ))}
-                                  </select>
-                                  <button
-                                    type="submit"
-                                    className="inline-flex items-center rounded-md border border-border bg-background px-2 py-1 text-xs font-medium text-foreground transition hover:bg-muted"
-                                  >
-                                    Modifier
-                                  </button>
-                                </div>
-                              </InlineActionForm>
-                              <span className="text-xs text-muted-foreground">
-                                Points: {registration.points ?? "non renseignés"}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {allEngagements.length > 0 ? (
-                                  <>
-                                    Autres engagements :{" "}
-                                    {allEngagements.map((engagement) => {
-                                      const formattedDate = new Intl.DateTimeFormat("fr-FR", {
-                                        day: "2-digit",
-                                        month: "2-digit",
-                                        year: "numeric",
-                                      }).format(engagement.tournamentDate);
-
-                                      return `${engagement.tournamentLabel} (${formattedDate}) · ${engagement.categoryName}`;
-                                    }).join(" | ")}
-                                  </>
-                                ) : (
-                                  "Autres engagements : aucun"
-                                )}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-3 py-3">
-                            <span className="inline-flex rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-foreground/90">
-                              {registration.statut}
-                            </span>
-                          </td>
-                          <td className="px-3 py-3">
-                            <div className="flex flex-wrap items-center gap-2">
-                              {canValidate ? (
-                                <InlineActionForm
-                                  action={validateRegistration}
-                                  registrationId={registration.id}
-                                >
-                                  <button
-                                    type="submit"
-                                    className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
-                                  >
-                                    <Check className="h-3.5 w-3.5" aria-hidden="true" />
-                                    Valider
-                                  </button>
-                                </InlineActionForm>
-                              ) : (
-                                <span className="text-xs font-medium text-emerald-600 dark:text-emerald-300">
-                                  Déjà validée
+                        return (
+                          <tr
+                            key={registration.id}
+                            className="border-b border-border/60 last:border-0"
+                          >
+                            <td className="px-3 py-3 font-medium text-foreground">
+                              {registration.prenom} {registration.nom}
+                            </td>
+                            <td className="px-3 py-3 text-foreground/90">
+                              {registration.numeroLicence}
+                            </td>
+                            <td className="px-3 py-3 text-foreground/90">{registration.club}</td>
+                            <td className="px-3 py-3 text-foreground/90">
+                              <div className="flex flex-col gap-2">
+                                <span className="text-xs font-semibold text-foreground">
+                                  Engagement actuel : {registration.category.nom}
                                 </span>
-                              )}
-
-                              {canReset && (
                                 <InlineActionForm
-                                  action={resetRegistration}
+                                  action={updateRegistrationEngagements}
                                   registrationId={registration.id}
+                                >
+                                  <div className="relative">
+                                    <details className="group">
+                                      <summary className="cursor-pointer list-none rounded-md border border-border bg-background px-2 py-1 text-xs font-medium text-foreground transition hover:bg-muted">
+                                        Modifier engagements
+                                      </summary>
+                                      <div className="absolute left-0 top-full z-10 mt-2 w-72 rounded-lg border border-border bg-popover p-3 shadow-lg">
+                                        <p className="mb-2 text-xs font-semibold text-foreground">
+                                          Choisir un ou plusieurs tableaux
+                                        </p>
+                                        <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
+                                          {eligibleCategories.map((category) => (
+                                            <label
+                                              key={category.id}
+                                              className="flex items-start gap-2 text-xs text-foreground/90"
+                                            >
+                                              <input
+                                                type="checkbox"
+                                                name="categoryIds"
+                                                value={category.id}
+                                                defaultChecked={selectedCategoryIds.includes(
+                                                  category.id,
+                                                )}
+                                              />
+                                              <span>
+                                                {category.nom}
+                                                {category.minPoints !== null ||
+                                                category.maxPoints !== null
+                                                  ? ` (${category.minPoints ?? 0}-${category.maxPoints ?? "∞"} pts)`
+                                                  : ""}
+                                              </span>
+                                            </label>
+                                          ))}
+                                        </div>
+                                        <button
+                                          type="submit"
+                                          className="mt-3 inline-flex items-center rounded-md border border-border bg-background px-2 py-1 text-xs font-medium text-foreground transition hover:bg-muted"
+                                        >
+                                          Enregistrer
+                                        </button>
+                                      </div>
+                                    </details>
+                                  </div>
+                                </InlineActionForm>
+                                <span className="text-xs text-muted-foreground">
+                                  Points: {registration.points ?? "non renseignés"}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {allEngagements.length > 0 ? (
+                                    <>
+                                      Autres engagements :{" "}
+                                      {allEngagements
+                                        .map((engagement) => {
+                                          const formattedDate = new Intl.DateTimeFormat("fr-FR", {
+                                            day: "2-digit",
+                                            month: "2-digit",
+                                            year: "numeric",
+                                          }).format(engagement.tournamentDate);
+
+                                          return `${engagement.tournamentLabel} (${formattedDate}) · ${engagement.categoryName}`;
+                                        })
+                                        .join(" | ")}
+                                    </>
+                                  ) : (
+                                    "Autres engagements : aucun"
+                                  )}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-3 py-3">
+                              <span className="inline-flex rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-foreground/90">
+                                {registration.statut}
+                              </span>
+                            </td>
+                            <td className="px-3 py-3">
+                              <div className="flex flex-wrap items-center gap-2">
+                                {canValidate ? (
+                                  <InlineActionForm
+                                    action={validateRegistration}
+                                    registrationId={registration.id}
+                                  >
+                                    <button
+                                      type="submit"
+                                      className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
+                                    >
+                                      <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                                      Valider
+                                    </button>
+                                  </InlineActionForm>
+                                ) : (
+                                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-300">
+                                    Déjà validée
+                                  </span>
+                                )}
+
+                                {canReset && (
+                                  <InlineActionForm
+                                    action={resetRegistration}
+                                    registrationId={registration.id}
+                                  >
+                                    <button
+                                      type="submit"
+                                      className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
+                                    >
+                                      Remettre en attente
+                                    </button>
+                                  </InlineActionForm>
+                                )}
+
+                                <InlineActionForm
+                                  action={deletePlayerRegistrations}
+                                  registrationId={registration.id}
+                                  confirmMessage="Confirmer la suppression de ce joueur et de toutes ses inscriptions ?"
                                 >
                                   <button
                                     type="submit"
-                                    className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
+                                    className="inline-flex items-center gap-1 rounded-lg border border-rose-300/70 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/20"
                                   >
-                                    Remettre en attente
+                                    <X className="h-3.5 w-3.5" aria-hidden="true" />
+                                    Supprimer joueur
                                   </button>
                                 </InlineActionForm>
-                              )}
-
-                              <InlineActionForm
-                                action={deletePlayerRegistrations}
-                                registrationId={registration.id}
-                                confirmMessage="Confirmer la suppression de ce joueur et de toutes ses inscriptions ?"
-                              >
-                                <button
-                                  type="submit"
-                                  className="inline-flex items-center gap-1 rounded-lg border border-rose-300/70 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/20"
-                                >
-                                  <X className="h-3.5 w-3.5" aria-hidden="true" />
-                                  Supprimer joueur
-                                </button>
-                              </InlineActionForm>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </article>
-        ))}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </article>
+          );
+        })}
       </section>
     </main>
   );
