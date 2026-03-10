@@ -31,15 +31,18 @@ async function validateRegistration(formData: FormData) {
 
   const existing = await prisma.registration.findUnique({
     where: { id: registrationId },
-    select: { id: true },
+    select: { numeroLicence: true, tournamentId: true },
   });
 
   if (!existing) {
     redirect("/admin/inscriptions?updated=0");
   }
 
-  await prisma.registration.update({
-    where: { id: registrationId },
+  await prisma.registration.updateMany({
+    where: {
+      numeroLicence: existing.numeroLicence,
+      tournamentId: existing.tournamentId,
+    },
     data: {
       statut: "VALIDE",
       licenceVerified: true,
@@ -67,15 +70,18 @@ async function resetRegistration(formData: FormData) {
 
   const existing = await prisma.registration.findUnique({
     where: { id: registrationId },
-    select: { id: true },
+    select: { numeroLicence: true, tournamentId: true },
   });
 
   if (!existing) {
     redirect("/admin/inscriptions?updated=0");
   }
 
-  await prisma.registration.update({
-    where: { id: registrationId },
+  await prisma.registration.updateMany({
+    where: {
+      numeroLicence: existing.numeroLicence,
+      tournamentId: existing.tournamentId,
+    },
     data: {
       statut: "EN_ATTENTE",
       licenceVerified: false,
@@ -338,66 +344,6 @@ export default async function AdminInscriptionsPage({
   const isPointsMismatch = updateStatus === "points_mismatch";
   const isDuplicate = updateStatus === "duplicate";
 
-  const displayedLicences = Array.from(
-    new Set(
-      tournaments.flatMap((tournament) =>
-        tournament.registrations.map((registration) => registration.numeroLicence),
-      ),
-    ),
-  );
-
-  const playerEngagements =
-    displayedLicences.length === 0
-      ? []
-      : await prisma.registration.findMany({
-          where: {
-            numeroLicence: { in: displayedLicences },
-          },
-          orderBy: [{ tournament: { date: "asc" } }, { createdAt: "asc" }],
-          select: {
-            numeroLicence: true,
-            id: true,
-            tournament: {
-              select: {
-                tour: true,
-                nom: true,
-                date: true,
-              },
-            },
-            category: {
-              select: {
-                nom: true,
-              },
-            },
-          },
-        });
-
-  const engagementsByLicence = playerEngagements.reduce<
-    Record<
-      string,
-      Array<{ id: string; tournamentLabel: string; tournamentDate: Date; categoryName: string }>
-    >
-  >((acc, engagement) => {
-    const defaultRoundName = `Tour ${engagement.tournament.tour}`;
-    const tournamentLabel =
-      engagement.tournament.nom.trim().toLowerCase() === defaultRoundName.toLowerCase()
-        ? defaultRoundName
-        : `${defaultRoundName} · ${engagement.tournament.nom}`;
-
-    if (!acc[engagement.numeroLicence]) {
-      acc[engagement.numeroLicence] = [];
-    }
-
-    acc[engagement.numeroLicence].push({
-      id: engagement.id,
-      tournamentLabel,
-      tournamentDate: engagement.tournament.date,
-      categoryName: engagement.category.nom,
-    });
-
-    return acc;
-  }, {});
-
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-8">
       <header className="rounded-2xl border border-border bg-card px-6 py-7 shadow-sm">
@@ -541,6 +487,51 @@ export default async function AdminInscriptionsPage({
                   (registration) => registration.statut === statusFilter,
                 );
 
+          const groupedRegistrations = Array.from(
+            displayedRegistrations
+              .reduce<
+                Map<
+                  string,
+                  {
+                    id: string;
+                    nom: string;
+                    prenom: string;
+                    numeroLicence: string;
+                    club: string;
+                    points: number | null;
+                    statut: "EN_ATTENTE" | "VALIDE";
+                    categories: Array<{ id: string; nom: string }>;
+                  }
+                >
+              >((acc, registration) => {
+                const existing = acc.get(registration.numeroLicence);
+
+                if (!existing) {
+                  acc.set(registration.numeroLicence, {
+                    id: registration.id,
+                    nom: registration.nom,
+                    prenom: registration.prenom,
+                    numeroLicence: registration.numeroLicence,
+                    club: registration.club,
+                    points: registration.points,
+                    statut: registration.statut,
+                    categories: [registration.category],
+                  });
+
+                  return acc;
+                }
+
+                existing.categories.push(registration.category);
+
+                if (existing.statut !== "EN_ATTENTE" && registration.statut === "EN_ATTENTE") {
+                  existing.statut = "EN_ATTENTE";
+                }
+
+                return acc;
+              }, new Map())
+              .values(),
+          );
+
           return (
             <article
               key={tournament.id}
@@ -569,12 +560,12 @@ export default async function AdminInscriptionsPage({
                 </div>
                 <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-foreground/90">
                   <Trophy className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-                  {displayedRegistrations.length} inscrit
-                  {displayedRegistrations.length > 1 ? "s" : ""}
+                  {groupedRegistrations.length} inscrit
+                  {groupedRegistrations.length > 1 ? "s" : ""}
                 </span>
               </div>
 
-              {displayedRegistrations.length === 0 ? (
+              {groupedRegistrations.length === 0 ? (
                 <p className="rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
                   Aucun inscrit sur ce tour pour le moment.
                 </p>
@@ -592,17 +583,14 @@ export default async function AdminInscriptionsPage({
                       </tr>
                     </thead>
                     <tbody>
-                      {displayedRegistrations.map((registration) => {
+                      {groupedRegistrations.map((registration) => {
                         const canValidate = registration.statut !== "VALIDE";
                         const canReset = registration.statut !== "EN_ATTENTE";
-                        const allEngagements =
-                          engagementsByLicence[registration.numeroLicence]?.filter(
-                            (engagement) => engagement.id !== registration.id,
-                          ) ?? [];
-
+                        const selectedCategoryIds = registration.categories.map((category) => category.id);
+                        const selectedCategoryIdsSet = new Set(selectedCategoryIds);
                         const eligibleCategories = tournament.categories.filter(
                           (category) =>
-                            category.id === registration.category.id ||
+                            selectedCategoryIdsSet.has(category.id) ||
                             isPointsCompatible({
                               points: registration.points,
                               minPoints: category.minPoints,
@@ -610,19 +598,18 @@ export default async function AdminInscriptionsPage({
                             }),
                         );
 
-                        const selectedCategoryIds = tournament.registrations
-                          .filter(
-                            (engagement) => engagement.numeroLicence === registration.numeroLicence,
-                          )
-                          .map((engagement) => engagement.categoryId);
-
                         return (
                           <tr
                             key={registration.id}
                             className="border-b border-border/60 last:border-0"
                           >
-                            <td className="px-3 py-3 font-medium text-foreground">
-                              {registration.prenom} {registration.nom}
+                            <td className="px-3 py-3 text-foreground">
+                              <p className="font-medium">
+                                {registration.prenom} {registration.nom}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Points: {registration.points ?? "non renseignés"}
+                              </p>
                             </td>
                             <td className="px-3 py-3 text-foreground/90">
                               {registration.numeroLicence}
@@ -630,9 +617,16 @@ export default async function AdminInscriptionsPage({
                             <td className="px-3 py-3 text-foreground/90">{registration.club}</td>
                             <td className="px-3 py-3 text-foreground/90">
                               <div className="flex flex-col gap-2">
-                                <span className="text-xs font-semibold text-foreground">
-                                  Engagement actuel : {registration.category.nom}
-                                </span>
+                                <div className="flex flex-wrap gap-1">
+                                  {registration.categories.map((category) => (
+                                    <span
+                                      key={category.id}
+                                      className="inline-flex rounded-full border border-border bg-muted px-2 py-0.5 text-xs text-foreground/90"
+                                    >
+                                      {category.nom}
+                                    </span>
+                                  ))}
+                                </div>
                                 <InlineActionForm
                                   action={updateRegistrationEngagements}
                                   registrationId={registration.id}
@@ -680,29 +674,6 @@ export default async function AdminInscriptionsPage({
                                     </details>
                                   </div>
                                 </InlineActionForm>
-                                <span className="text-xs text-muted-foreground">
-                                  Points: {registration.points ?? "non renseignés"}
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                  {allEngagements.length > 0 ? (
-                                    <>
-                                      Autres engagements :{" "}
-                                      {allEngagements
-                                        .map((engagement) => {
-                                          const formattedDate = new Intl.DateTimeFormat("fr-FR", {
-                                            day: "2-digit",
-                                            month: "2-digit",
-                                            year: "numeric",
-                                          }).format(engagement.tournamentDate);
-
-                                          return `${engagement.tournamentLabel} (${formattedDate}) · ${engagement.categoryName}`;
-                                        })
-                                        .join(" | ")}
-                                    </>
-                                  ) : (
-                                    "Autres engagements : aucun"
-                                  )}
-                                </span>
                               </div>
                             </td>
                             <td className="px-3 py-3">
