@@ -16,6 +16,7 @@ const routes = [
   '/admin',
   '/admin/classements',
   '/admin/tournois',
+  '/admin/inscriptions',
   '/admin/utilisateurs',
 ] as const;
 

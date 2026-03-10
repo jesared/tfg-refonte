@@ -17,6 +17,8 @@ const SEGMENT_LABELS: Record<string, string> = {
   agenda: "Agenda",
   classements: "Classements",
   contact: "Contact",
+  inscription: "Inscription",
+  inscriptions: "Inscriptions",
   profile: "Profil",
   recompenses: "Récompenses",
   salles: "Salles",
