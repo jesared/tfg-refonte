@@ -45,7 +45,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "Aucune catégorie source trouvée." }, { status: 404 });
   }
 
-  const existingForName = await prisma.category.count({ where: { nom } });
+  const existingForName = await prisma.category.count({
+    where: {
+      nom,
+      tournamentId: {
+        in: sourceCategories.map((category) => category.tournamentId),
+      },
+    },
+  });
 
   if (existingForName > 0) {
     return NextResponse.json(

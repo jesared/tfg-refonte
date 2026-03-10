@@ -72,10 +72,13 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     (heureFin.hours < heureDebut.hours ||
       (heureFin.hours === heureDebut.hours && heureFin.minutes <= heureDebut.minutes))
   ) {
-    return NextResponse.json({ error: "L'heure de fin doit être après l'heure de début" }, { status: 400 });
+    return NextResponse.json(
+      { error: "L'heure de fin doit être après l'heure de début" },
+      { status: 400 },
+    );
   }
 
-  const category = await prisma.category.findUnique({ where: { id }, select: { nom: true } });
+  const category = await prisma.category.findUnique({ where: { id }, select: { id: true, nom: true } });
 
   if (!category) {
     return NextResponse.json({ error: "Category not found" }, { status: 404 });
@@ -109,7 +112,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         where: { id: item.id },
         data: {
           nom,
-          heureDebut: withTournamentDate(item.tournament.date, heureDebut.hours, heureDebut.minutes),
+          heureDebut: withTournamentDate(
+            item.tournament.date,
+            heureDebut.hours,
+            heureDebut.minutes,
+          ),
           heureFin: heureFin
             ? withTournamentDate(item.tournament.date, heureFin.hours, heureFin.minutes)
             : null,
@@ -127,9 +134,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     });
   }
 
-  return NextResponse.json({ updated: updates.length, maxJoueursUpdatedForRound: hasMaxJoueursField });
+  return NextResponse.json({
+    updated: updates.length,
+    maxJoueursUpdatedForRound: hasMaxJoueursField,
+  });
 }
-
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions);
@@ -140,7 +149,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
 
   const { id } = await params;
 
-  const category = await prisma.category.findUnique({ where: { id }, select: { nom: true } });
+  const category = await prisma.category.findUnique({ where: { id }, select: { id: true } });
 
   if (!category) {
     return NextResponse.json({ error: "Category not found" }, { status: 404 });
@@ -148,9 +157,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
 
   const linkedRegistrations = await prisma.registration.count({
     where: {
-      category: {
-        nom: category.nom,
-      },
+      categoryId: category.id,
     },
   });
 
@@ -161,9 +168,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     );
   }
 
-  const deleted = await prisma.category.deleteMany({
-    where: { nom: category.nom },
-  });
+  await prisma.category.delete({ where: { id: category.id } });
 
-  return NextResponse.json({ deleted: deleted.count });
+  return NextResponse.json({ deleted: 1 });
 }
