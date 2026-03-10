@@ -11,6 +11,7 @@ import {
   Table2,
   Trophy,
   User,
+  UserRound,
   X,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -36,6 +37,11 @@ const navigationItems = [
   { href: "/recompenses", label: "Récompenses", icon: Gift },
   { href: "/inscription", label: "Inscription", icon: User },
   { href: "/contact", label: "Contact", icon: Mail },
+];
+
+const userSpaceItems = [
+  { href: "/profile", label: "Mon profil", icon: UserRound },
+  { href: "/mes-inscriptions", label: "À vos inscriptions", icon: Trophy },
 ];
 
 const adminItems = [
@@ -152,6 +158,30 @@ export function Sidebar() {
             </AccordionItem>
           </Accordion>
 
+          {session?.user && (
+            <Accordion type="single" collapsible defaultValue="espace" className="pt-4">
+              <AccordionItem value="espace" className="border-b-0">
+                <AccordionTrigger className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
+                  Mon espace
+                </AccordionTrigger>
+                <AccordionContent className="pt-2">
+                  <div className="space-y-2">
+                    {userSpaceItems.map((item) => (
+                      <SidebarItem
+                        key={item.href}
+                        href={item.href}
+                        label={item.label}
+                        icon={item.icon}
+                        active={isItemActive(safePathname, item.href)}
+                        onSelect={() => setIsOpen(false)}
+                      />
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          )}
+
           {isAdmin && (
             <Accordion
               type="single"
@@ -217,6 +247,29 @@ export function Sidebar() {
               </AccordionContent>
             </AccordionItem>
           </Accordion>
+
+          {session?.user && (
+            <Accordion type="single" collapsible defaultValue="espace" className="pt-4">
+              <AccordionItem value="espace" className="border-b-0">
+                <AccordionTrigger className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
+                  Mon espace
+                </AccordionTrigger>
+                <AccordionContent className="pt-2">
+                  <div className="space-y-2">
+                    {userSpaceItems.map((item) => (
+                      <SidebarItem
+                        key={item.href}
+                        href={item.href}
+                        label={item.label}
+                        icon={item.icon}
+                        active={isItemActive(safePathname, item.href)}
+                      />
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          )}
 
           {isAdmin && (
             <Accordion
