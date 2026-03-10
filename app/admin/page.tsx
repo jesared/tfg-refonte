@@ -1,5 +1,12 @@
-import { CalendarDays, Check, ShieldCheck, Trophy } from "lucide-react";
+import {
+  CalendarDays,
+  Check,
+  ShieldCheck,
+  Trophy,
+  User,
+} from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 
@@ -55,6 +62,27 @@ const improvementTracks = [
   },
 ];
 
+const quickAccess = [
+  {
+    title: "Tournois",
+    description: "Créer un nouveau tournoi, gérer les catégories et préparer les éditions.",
+    href: "/admin/tournois",
+    icon: Trophy,
+  },
+  {
+    title: "Inscriptions",
+    description: "Suivre les inscriptions validées et traiter les demandes en attente.",
+    href: "/admin/inscriptions",
+    icon: Check,
+  },
+  {
+    title: "Utilisateurs",
+    description: "Ajuster les rôles et vérifier les accès de l'équipe organisatrice.",
+    href: "/admin/utilisateurs",
+    icon: User,
+  },
+];
+
 export default async function AdminPage() {
   const session = await getServerSession(authOptions);
 
@@ -100,6 +128,36 @@ export default async function AdminPage() {
                   <li key={idea}>• {idea}</li>
                 ))}
               </ul>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-foreground">Accès rapides</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Raccourcis vers les sections les plus utilisées de l&apos;administration.
+        </p>
+        <div className="mt-5 grid gap-4 md:grid-cols-3">
+          {quickAccess.map((item) => (
+            <article
+              key={item.title}
+              className="rounded-xl border border-border/70 bg-muted/20 p-4 transition-colors hover:border-primary/40"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="rounded-lg bg-primary/10 p-2 text-primary">
+                  <item.icon className="h-4 w-4" aria-hidden="true" />
+                </div>
+                <Link
+                  href={item.href}
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                >
+                  Ouvrir
+                  <span aria-hidden="true">→</span>
+                </Link>
+              </div>
+              <h3 className="mt-4 text-sm font-semibold text-foreground">{item.title}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">{item.description}</p>
             </article>
           ))}
         </div>
