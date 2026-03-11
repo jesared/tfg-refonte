@@ -52,7 +52,7 @@ export default async function AdminCategoriesPage() {
           maxPoints: true,
           _count: {
             select: {
-              registrations: true,
+              engagements: true,
             },
           },
         },
@@ -185,8 +185,8 @@ export default async function AdminCategoriesPage() {
                                 {category.maxPoints ?? "+∞"} points
                               </p>
                               <p className="mt-1 text-xs text-muted-foreground">
-                                {category._count.registrations} inscrit
-                                {category._count.registrations > 1 ? "s" : ""}
+                                {category._count.engagements} engagement
+                                {category._count.engagements > 1 ? "s" : ""}
                               </p>
                             </div>
 

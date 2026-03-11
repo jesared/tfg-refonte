@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
@@ -24,8 +25,10 @@ export async function POST(req: Request) {
   const club = String(body?.club ?? "").trim();
   const genre = body?.genre === "M" || body?.genre === "F" ? body.genre : null;
   const tournamentId = String(body?.tournamentId ?? "").trim();
-  const categoryIds = Array.isArray(body?.categoryIds)
-    ? body.categoryIds.map((id: unknown) => String(id).trim()).filter(Boolean)
+  const categoryIds: string[] = Array.isArray(body?.categoryIds)
+    ? body.categoryIds
+        .map((id: unknown): string => String(id).trim())
+        .filter((id: string) => id.length > 0)
     : [];
 
   const points =
@@ -50,7 +53,7 @@ export async function POST(req: Request) {
 
   const tournament = await prisma.tournament.findFirst({
     where: { id: tournamentId, inscriptionOuverte: true },
-    select: { id: true, tour: true },
+    select: { id: true },
   });
 
   if (!tournament) {
@@ -60,48 +63,64 @@ export async function POST(req: Request) {
     );
   }
 
-  const existingRegistrationOnTour = await prisma.engagement.findFirst({
-    where: {
-      numeroLicence,
-      tournament: {
-        tour: tournament.tour,
-      },
-    },
-    select: { id: true },
+  const uniqueCategoryIds = Array.from(new Set(categoryIds));
+  const categories = await prisma.category.findMany({
+    where: { id: { in: uniqueCategoryIds }, tournamentId },
+    select: { id: true, minPoints: true, maxPoints: true },
   });
 
-  if (existingRegistrationOnTour) {
-    return NextResponse.json(
-      { error: "Cette licence est déjà inscrite sur ce tour." },
-      { status: 409 },
-    );
-  }
-
-  const categoriesCount = await prisma.category.count({
-    where: { id: { in: categoryIds }, tournamentId },
-  });
-
-  if (categoriesCount !== categoryIds.length) {
+  if (categories.length !== uniqueCategoryIds.length) {
     return NextResponse.json(
       { error: "Au moins un tableau sélectionné est invalide." },
       { status: 400 },
     );
   }
 
-  await prisma.engagement.create({
-    data: {
-      nom,
-      prenom,
-      numeroLicence,
-      club,
-      genre,
-      points,
-      tournamentId,
-      categoryIds: Array.from(new Set(categoryIds)),
-      userId: session.user.id,
-    },
+  const isEligible = categories.every((category) => {
+    if (points === null) return true;
+    return (category.minPoints === null || points >= category.minPoints) &&
+      (category.maxPoints === null || points <= category.maxPoints);
   });
 
-  return NextResponse.json({ ok: true }, { status: 201 });
+  if (!isEligible) {
+    return NextResponse.json(
+      { error: "Le classement du joueur ne correspond pas à au moins une catégorie sélectionnée." },
+      { status: 400 },
+    );
+  }
 
+  try {
+    await prisma.$transaction(async (tx) => {
+      const player = await tx.player.upsert({
+        where: { numeroLicence },
+        update: { nom, prenom, club, genre, points },
+        create: { numeroLicence, nom, prenom, club, genre, points },
+        select: { id: true },
+      });
+
+      const registration = await tx.registration.create({
+        data: {
+          playerId: player.id,
+          tournamentId,
+          userId: session.user.id,
+          engagements: {
+            create: uniqueCategoryIds.map((categoryId) => ({ categoryId })),
+          },
+        },
+        select: { id: true },
+      });
+
+      return registration;
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return NextResponse.json(
+        { error: "Cette licence est déjà inscrite sur ce tour." },
+        { status: 409 },
+      );
+    }
+    throw error;
+  }
+
+  return NextResponse.json({ ok: true }, { status: 201 });
 }

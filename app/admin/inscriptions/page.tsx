@@ -7,7 +7,6 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
-
 const INSCRIPTIONS_PATH = "/admin/inscriptions";
 
 async function requireAdminSession() {
@@ -15,8 +14,8 @@ async function requireAdminSession() {
   if (!session?.user || session.user.role !== "ADMIN") redirect("/");
 }
 
-function getEngagementId(formData: FormData) {
-  return String(formData.get("engagementId") ?? "").trim();
+function getRegistrationId(formData: FormData) {
+  return String(formData.get("registrationId") ?? "").trim();
 }
 
 export const metadata: Metadata = {
@@ -24,38 +23,38 @@ export const metadata: Metadata = {
   description: "Suivi des joueurs inscrits par tour et validation des inscriptions.",
 };
 
-async function validateEngagement(formData: FormData) {
+async function validateRegistration(formData: FormData) {
   "use server";
   await requireAdminSession();
-  const engagementId = getEngagementId(formData);
-  if (!engagementId) redirect(`${INSCRIPTIONS_PATH}?updated=0`);
-  await prisma.engagement.update({
-    where: { id: engagementId },
-    data: { statut: "VALIDE", licenceVerified: true },
+  const registrationId = getRegistrationId(formData);
+  if (!registrationId) redirect(`${INSCRIPTIONS_PATH}?updated=0`);
+  await prisma.registration.update({
+    where: { id: registrationId },
+    data: { status: "VALIDATED", licenceVerified: true },
   });
   revalidatePath(INSCRIPTIONS_PATH);
   redirect(`${INSCRIPTIONS_PATH}?updated=validated`);
 }
 
-async function resetEngagement(formData: FormData) {
+async function resetRegistration(formData: FormData) {
   "use server";
   await requireAdminSession();
-  const engagementId = getEngagementId(formData);
-  if (!engagementId) redirect(`${INSCRIPTIONS_PATH}?updated=0`);
-  await prisma.engagement.update({
-    where: { id: engagementId },
-    data: { statut: "EN_ATTENTE", licenceVerified: false },
+  const registrationId = getRegistrationId(formData);
+  if (!registrationId) redirect(`${INSCRIPTIONS_PATH}?updated=0`);
+  await prisma.registration.update({
+    where: { id: registrationId },
+    data: { status: "PENDING", licenceVerified: false },
   });
   revalidatePath(INSCRIPTIONS_PATH);
   redirect(`${INSCRIPTIONS_PATH}?updated=reset`);
 }
 
-async function deleteEngagement(formData: FormData) {
+async function deleteRegistration(formData: FormData) {
   "use server";
   await requireAdminSession();
-  const engagementId = getEngagementId(formData);
-  if (!engagementId) redirect(`${INSCRIPTIONS_PATH}?updated=0`);
-  await prisma.engagement.delete({ where: { id: engagementId } });
+  const registrationId = getRegistrationId(formData);
+  if (!registrationId) redirect(`${INSCRIPTIONS_PATH}?updated=0`);
+  await prisma.registration.delete({ where: { id: registrationId } });
   revalidatePath(INSCRIPTIONS_PATH);
   redirect(`${INSCRIPTIONS_PATH}?updated=deleted`);
 }
@@ -65,25 +64,41 @@ function isPointsCompatible(points: number | null, minPoints: number | null, max
   return (minPoints === null || points >= minPoints) && (maxPoints === null || points <= maxPoints);
 }
 
-async function updateEngagementCategories(formData: FormData) {
+async function updateRegistrationCategories(formData: FormData) {
   "use server";
   await requireAdminSession();
-  const engagementId = getEngagementId(formData);
-  const selectedCategoryIds = Array.from(new Set(Array.from(formData.getAll("categoryIds")).map((v) => String(v))));
-  const engagement = await prisma.engagement.findUnique({ where: { id: engagementId } });
-  if (!engagement) redirect(`${INSCRIPTIONS_PATH}?updated=0`);
+  const registrationId = getRegistrationId(formData);
+  const selectedCategoryIds = Array.from(
+    new Set(Array.from(formData.getAll("categoryIds")).map((v) => String(v))),
+  );
+
+  const registration = await prisma.registration.findUnique({
+    where: { id: registrationId },
+    select: { id: true, tournamentId: true, player: { select: { points: true } } },
+  });
+
+  if (!registration) redirect(`${INSCRIPTIONS_PATH}?updated=0`);
 
   const categories = await prisma.category.findMany({
-    where: { id: { in: selectedCategoryIds }, tournamentId: engagement.tournamentId },
+    where: { id: { in: selectedCategoryIds }, tournamentId: registration.tournamentId },
     select: { id: true, minPoints: true, maxPoints: true },
   });
 
   if (categories.length !== selectedCategoryIds.length) redirect(`${INSCRIPTIONS_PATH}?updated=0`);
-  if (categories.some((c) => !isPointsCompatible(engagement.points, c.minPoints, c.maxPoints))) {
+  if (categories.some((c) => !isPointsCompatible(registration.player.points, c.minPoints, c.maxPoints))) {
     redirect(`${INSCRIPTIONS_PATH}?updated=points_mismatch`);
   }
 
-  await prisma.engagement.update({ where: { id: engagement.id }, data: { categoryIds: selectedCategoryIds } });
+  await prisma.$transaction([
+    prisma.engagement.deleteMany({ where: { registrationId: registration.id } }),
+    prisma.engagement.createMany({
+      data: selectedCategoryIds.map((categoryId) => ({
+        registrationId: registration.id,
+        categoryId,
+      })),
+    }),
+  ]);
+
   revalidatePath(INSCRIPTIONS_PATH);
   redirect(`${INSCRIPTIONS_PATH}?updated=engagement_updated`);
 }
@@ -99,10 +114,20 @@ export default async function AdminInscriptionsPage() {
       tour: true,
       date: true,
       salleVille: true,
-      categories: { orderBy: { nom: "asc" }, select: { id: true, nom: true, minPoints: true, maxPoints: true } },
-      engagements: {
-        orderBy: [{ statut: "asc" }, { createdAt: "asc" }],
-        select: { id: true, nom: true, prenom: true, numeroLicence: true, club: true, points: true, statut: true, categoryIds: true },
+      categories: {
+        orderBy: { nom: "asc" },
+        select: { id: true, nom: true, minPoints: true, maxPoints: true },
+      },
+      registrations: {
+        orderBy: [{ status: "asc" }, { createdAt: "asc" }],
+        select: {
+          id: true,
+          status: true,
+          player: {
+            select: { nom: true, prenom: true, numeroLicence: true, club: true, points: true },
+          },
+          engagements: { select: { categoryId: true } },
+        },
       },
     },
   });
@@ -121,7 +146,7 @@ export default async function AdminInscriptionsPage() {
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-semibold text-foreground">Tour {tournament.tour} · {tournament.nom}</h2>
             <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-foreground/90">
-              <Trophy className="h-3.5 w-3.5 text-primary" aria-hidden="true" /> {tournament.engagements.length} inscrit{tournament.engagements.length > 1 ? "s" : ""}
+              <Trophy className="h-3.5 w-3.5 text-primary" aria-hidden="true" /> {tournament.registrations.length} inscrit{tournament.registrations.length > 1 ? "s" : ""}
             </span>
           </div>
 
@@ -129,21 +154,22 @@ export default async function AdminInscriptionsPage() {
             <table className="w-full min-w-[780px] text-left text-sm">
               <thead><tr className="border-b border-border text-muted-foreground"><th className="px-3 py-2">Joueur</th><th className="px-3 py-2">Licence</th><th className="px-3 py-2">Club</th><th className="px-3 py-2">Catégories</th><th className="px-3 py-2">Statut</th><th className="px-3 py-2">Actions</th></tr></thead>
               <tbody>
-                {tournament.engagements.map((engagement) => {
-                  const labels = tournament.categories.filter((c) => engagement.categoryIds.includes(c.id)).map((c) => c.nom);
-                  const eligibleCategories = tournament.categories.filter((c) => isPointsCompatible(engagement.points, c.minPoints, c.maxPoints));
+                {tournament.registrations.map((registration) => {
+                  const selectedCategoryIds = registration.engagements.map((engagement) => engagement.categoryId);
+                  const labels = tournament.categories.filter((c) => selectedCategoryIds.includes(c.id)).map((c) => c.nom);
+                  const eligibleCategories = tournament.categories.filter((c) => isPointsCompatible(registration.player.points, c.minPoints, c.maxPoints));
                   return (
-                    <tr key={engagement.id} className="border-b border-border/60 last:border-0">
-                      <td className="px-3 py-3">{engagement.prenom} {engagement.nom}</td>
-                      <td className="px-3 py-3">{engagement.numeroLicence}</td>
-                      <td className="px-3 py-3">{engagement.club}</td>
+                    <tr key={registration.id} className="border-b border-border/60 last:border-0">
+                      <td className="px-3 py-3">{registration.player.prenom} {registration.player.nom}</td>
+                      <td className="px-3 py-3">{registration.player.numeroLicence}</td>
+                      <td className="px-3 py-3">{registration.player.club}</td>
                       <td className="px-3 py-3">
-                        <form action={updateEngagementCategories} className="space-y-2">
-                          <input type="hidden" name="engagementId" value={engagement.id} />
+                        <form action={updateRegistrationCategories} className="space-y-2">
+                          <input type="hidden" name="registrationId" value={registration.id} />
                           <div className="flex flex-wrap gap-2">
                             {eligibleCategories.map((c) => (
                               <label key={c.id} className="inline-flex items-center gap-1 text-xs">
-                                <input type="checkbox" name="categoryIds" value={c.id} defaultChecked={engagement.categoryIds.includes(c.id)} /> {c.nom}
+                                <input type="checkbox" name="categoryIds" value={c.id} defaultChecked={selectedCategoryIds.includes(c.id)} /> {c.nom}
                               </label>
                             ))}
                           </div>
@@ -151,11 +177,11 @@ export default async function AdminInscriptionsPage() {
                         </form>
                         <p className="text-xs text-muted-foreground mt-1">Actuel: {labels.join(" · ") || "-"}</p>
                       </td>
-                      <td className="px-3 py-3">{engagement.statut}</td>
+                      <td className="px-3 py-3">{registration.status}</td>
                       <td className="px-3 py-3 space-y-2">
-                        <form action={validateEngagement}><input type="hidden" name="engagementId" value={engagement.id} /><button type="submit" className="rounded border px-2 py-1 text-xs">Valider</button></form>
-                        <form action={resetEngagement}><input type="hidden" name="engagementId" value={engagement.id} /><button type="submit" className="rounded border px-2 py-1 text-xs">Remettre</button></form>
-                        <form action={deleteEngagement}><input type="hidden" name="engagementId" value={engagement.id} /><button type="submit" className="rounded border px-2 py-1 text-xs">Supprimer</button></form>
+                        <form action={validateRegistration}><input type="hidden" name="registrationId" value={registration.id} /><button type="submit" className="rounded border px-2 py-1 text-xs">Valider</button></form>
+                        <form action={resetRegistration}><input type="hidden" name="registrationId" value={registration.id} /><button type="submit" className="rounded border px-2 py-1 text-xs">Remettre</button></form>
+                        <form action={deleteRegistration}><input type="hidden" name="registrationId" value={registration.id} /><button type="submit" className="rounded border px-2 py-1 text-xs">Supprimer</button></form>
                       </td>
                     </tr>
                   );

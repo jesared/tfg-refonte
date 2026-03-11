@@ -39,7 +39,7 @@ export default async function TournamentsPage() {
     }
 
     await prisma.$transaction([
-      prisma.engagement.deleteMany({ where: { tournamentId } }),
+      prisma.engagement.deleteMany({ where: { registration: { tournamentId } } }),
       prisma.registration.deleteMany({ where: { tournamentId } }),
       prisma.category.deleteMany({ where: { tournamentId } }),
       prisma.tournament.delete({ where: { id: tournamentId } }),
