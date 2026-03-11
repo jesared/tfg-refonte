@@ -294,7 +294,7 @@ export default async function AdminInscriptionsPage({
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
-          <p className="text-sm text-muted-foreground">Filtre du pointage à l'accueil.</p>
+          <p className="text-sm text-muted-foreground">Filtre du pointage à l&apos;accueil.</p>
           <div className="flex flex-wrap gap-2 text-xs font-semibold">
             {CHECKIN_OPTIONS.map((checkInStatus) => (
               <a
@@ -317,8 +317,7 @@ export default async function AdminInscriptionsPage({
         .map((tournament) => ({
           ...tournament,
           displayedRegistrations: tournament.registrations.filter((registration) => {
-            const matchesStatus =
-              statusFilter === "all" || registration.status === statusFilter;
+            const matchesStatus = statusFilter === "all" || registration.status === statusFilter;
             const matchesCheckIn =
               checkInFilter === "all" || registration.checkInStatus === checkInFilter;
             return matchesStatus && matchesCheckIn;
@@ -381,15 +380,23 @@ export default async function AdminInscriptionsPage({
                         </td>
                         <td className="px-3 py-3">{getStatusLabel(registration.status)}</td>
                         <td className="px-3 py-3">
-                          <span
-                            className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                              registration.checkInStatus === "CHECKED_IN"
-                                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200"
-                                : "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200"
-                            }`}
-                          >
-                            {getCheckInLabel(registration.checkInStatus)}
-                          </span>
+                          {registration.checkInStatus === "CHECKED_IN" ? (
+                            <span
+                              className="inline-flex rounded-full px-2 py-1 text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200"
+                              title="Pointé"
+                              aria-label="Pointé"
+                            >
+                              <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                            </span>
+                          ) : (
+                            <span
+                              className="inline-flex rounded-full px-2 py-1 text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200"
+                              title="Non pointé"
+                              aria-label="Non pointé"
+                            >
+                              <X className="h-3.5 w-3.5" aria-hidden="true" />
+                            </span>
+                          )}
                         </td>
                         <td className="px-3 py-3">
                           <details className="relative">
