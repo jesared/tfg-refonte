@@ -110,6 +110,7 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
   }
 
   await prisma.$transaction([
+    prisma.engagement.deleteMany({ where: { tournamentId: id } }),
     prisma.registration.deleteMany({ where: { tournamentId: id } }),
     prisma.category.deleteMany({ where: { tournamentId: id } }),
     prisma.tournament.delete({ where: { id } }),

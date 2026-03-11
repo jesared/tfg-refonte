@@ -155,9 +155,9 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: "Category not found" }, { status: 404 });
   }
 
-  const linkedRegistrations = await prisma.registration.count({
+  const linkedRegistrations = await prisma.engagement.count({
     where: {
-      categoryId: category.id,
+      categoryIds: { has: category.id },
     },
   });
 
