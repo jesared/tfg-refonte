@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,6 +8,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const SEGMENT_LABELS: Record<string, string> = {
   actualites: "Actualités",
@@ -53,7 +53,7 @@ export function AppBreadcrumb() {
   }
 
   return (
-    <Breadcrumb className="ml-1 sm:ml-2">
+    <Breadcrumb className="ml-4 sm:ml-6">
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
