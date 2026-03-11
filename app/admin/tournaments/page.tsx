@@ -5,14 +5,7 @@ import { getServerSession } from "next-auth";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { TournamentActionMenu } from "./_components/tournament-action-menu";
 
 export default async function TournamentsPage() {
   const session = await getServerSession(authOptions);
@@ -29,7 +22,6 @@ export default async function TournamentsPage() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const pastTournamentsCount = tournaments.filter((tournament) => new Date(tournament.date) < today).length;
-
 
   async function deleteTournament(formData: FormData) {
     "use server";
@@ -127,27 +119,27 @@ export default async function TournamentsPage() {
             </Link>
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nom</TableHead>
-                <TableHead>Tour</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead className="text-right">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-
-            <TableBody>
+          <div>
+            <table className="w-full table-fixed text-left text-sm">
+              <thead>
+                <tr className="border-b border-border text-muted-foreground">
+                  <th className="px-3 py-2">Nom</th>
+                  <th className="px-3 py-2">Tour</th>
+                  <th className="px-3 py-2">Date</th>
+                  <th className="px-3 py-2">Statut</th>
+                  <th className="px-3 py-2 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
               {tournaments.map((tournament) => {
                 const isPastTournament = new Date(tournament.date) < today;
 
                 return (
-                  <TableRow key={tournament.id}>
-                    <TableCell className="font-medium text-foreground">{tournament.nom}</TableCell>
-                    <TableCell>Tour {tournament.tour}</TableCell>
-                    <TableCell>{new Date(tournament.date).toLocaleDateString("fr-FR")}</TableCell>
-                    <TableCell>
+                  <tr key={tournament.id} className="border-b border-border/60 last:border-0">
+                    <td className="px-3 py-3 font-medium text-foreground">{tournament.nom}</td>
+                    <td className="px-3 py-3">Tour {tournament.tour}</td>
+                    <td className="px-3 py-3">{new Date(tournament.date).toLocaleDateString("fr-FR")}</td>
+                    <td className="px-3 py-3">
                       <div className="flex flex-wrap items-center gap-2">
                         {isPastTournament ? (
                           <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-700 dark:text-amber-300">
@@ -167,42 +159,22 @@ export default async function TournamentsPage() {
                             : "Inscriptions fermées"}
                         </span>
                       </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <details className="relative inline-block text-left">
-                        <summary className="inline-flex cursor-pointer list-none items-center rounded-md border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground transition hover:bg-muted [&::-webkit-details-marker]:hidden">
-                          Actions
-                        </summary>
-                        <div className="absolute right-0 z-20 mt-2 flex min-w-36 flex-col rounded-md border border-border bg-popover p-1.5 shadow-lg">
-                          <Link
-                            href={`/admin/tournaments/${tournament.id}`}
-                            className="rounded-sm px-2.5 py-2 text-left text-sm transition hover:bg-accent"
-                          >
-                            Gérer
-                          </Link>
-                          <Link
-                            href={`/admin/tournaments/${tournament.id}/edit`}
-                            className="rounded-sm px-2.5 py-2 text-left text-sm transition hover:bg-accent"
-                          >
-                            Modifier
-                          </Link>
-                          <form action={deleteTournament}>
-                            <input type="hidden" name="tournamentId" value={tournament.id} />
-                            <button
-                              type="submit"
-                              className="w-full cursor-pointer rounded-sm px-2.5 py-2 text-left text-sm text-destructive transition hover:bg-destructive/10"
-                            >
-                              Supprimer
-                            </button>
-                          </form>
-                        </div>
-                      </details>
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                    <td className="px-3 py-3">
+                      <div className="flex justify-end">
+                        <TournamentActionMenu
+                          tournamentId={tournament.id}
+                          tournamentName={tournament.nom}
+                          deleteTournament={deleteTournament}
+                        />
+                      </div>
+                    </td>
+                  </tr>
                 );
               })}
-            </TableBody>
-          </Table>
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
     </main>
