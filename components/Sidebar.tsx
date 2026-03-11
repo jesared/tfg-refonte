@@ -2,6 +2,7 @@
 
 import {
   CalendarDays,
+  ChevronRight,
   Gift,
   Home,
   Mail,
@@ -26,6 +27,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { cn } from "@/lib/utils";
 import LoginButton from "./LoginButton";
 
 const navigationItems = [
@@ -60,12 +62,12 @@ const isItemActive = (pathname: string, href: string) => {
 
 export function Sidebar() {
   const pathname = usePathname();
-  const safePathname = pathname ?? ""; // 🔒 sécurisation TS
+  const safePathname = pathname ?? "";
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === "ADMIN";
 
   const [isOpen, setIsOpen] = useState(false);
-
+  const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
@@ -74,9 +76,24 @@ export function Sidebar() {
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--sidebar-width",
+      isDesktopCollapsed ? "0rem" : "16rem",
+    );
+    document.documentElement.style.setProperty(
+      "--breadcrumb-offset",
+      isDesktopCollapsed ? "3rem" : "0rem",
+    );
+
+    return () => {
+      document.documentElement.style.setProperty("--sidebar-width", "16rem");
+      document.documentElement.style.setProperty("--breadcrumb-offset", "0rem");
+    };
+  }, [isDesktopCollapsed]);
+
   return (
     <>
-      {/* ===== MOBILE HEADER ===== */}
       <header className="border-b border-border bg-card md:hidden">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex flex-col">
@@ -101,7 +118,6 @@ export function Sidebar() {
         </div>
       </header>
 
-      {/* ===== MOBILE OVERLAY ===== */}
       <div
         className={`fixed inset-0 z-40 bg-black/50 transition-opacity md:hidden ${
           isOpen ? "opacity-100" : "pointer-events-none opacity-0"
@@ -110,7 +126,6 @@ export function Sidebar() {
         aria-hidden="true"
       />
 
-      {/* ===== MOBILE SIDEBAR ===== */}
       <div
         id="mobile-sidebar"
         className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col overflow-y-auto border-r border-border bg-card px-6 py-6 shadow-lg transition-transform md:hidden ${
@@ -132,11 +147,7 @@ export function Sidebar() {
         </div>
 
         <nav className="space-y-2 pb-4">
-          <Accordion
-            type="single"
-            collapsible
-            defaultValue="site"
-          >
+          <Accordion type="single" collapsible defaultValue="site">
             <AccordionItem value="site" className="border-b-0">
               <AccordionTrigger className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
                 Menu du site
@@ -183,12 +194,7 @@ export function Sidebar() {
           )}
 
           {isAdmin && (
-            <Accordion
-              type="single"
-              collapsible
-              defaultValue="admin"
-              className="pt-4"
-            >
+            <Accordion type="single" collapsible defaultValue="admin" className="pt-4">
               <AccordionItem value="admin" className="border-b-0">
                 <AccordionTrigger className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
                   Admin
@@ -218,93 +224,115 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* ===== DESKTOP SIDEBAR ===== */}
-      <aside className="hidden overflow-y-auto border-r border-border bg-card md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col md:px-6 md:py-8">
-        <div className="mb-6 text-sm font-semibold text-foreground">Trophée François Grieder</div>
+      {isDesktopCollapsed && (
+        <button
+          type="button"
+          onClick={() => setIsDesktopCollapsed(false)}
+          className="hidden rounded-md border border-border bg-card p-2 text-muted-foreground shadow-sm hover:bg-muted hover:text-foreground md:fixed md:left-4 md:top-4 md:z-50 md:inline-flex"
+          aria-label="Déplier la barre latérale"
+          title="Déplier"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      )}
 
-        <nav className="space-y-2">
-          <Accordion
-            type="single"
-            collapsible
-            defaultValue="site"
-          >
-            <AccordionItem value="site" className="border-b-0">
-              <AccordionTrigger className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
-                Menu du site
-              </AccordionTrigger>
-              <AccordionContent className="pt-2">
-                <div className="space-y-2">
-                  {navigationItems.map((item) => (
-                    <SidebarItem
-                      key={item.href}
-                      href={item.href}
-                      label={item.label}
-                      icon={item.icon}
-                      active={isItemActive(safePathname, item.href)}
-                    />
-                  ))}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+      <aside
+        className={cn(
+          "hidden overflow-y-auto border-r border-border bg-card md:fixed md:inset-y-0 md:flex md:flex-col md:py-8 md:transition-[width,padding,border-color] md:duration-200",
+          isDesktopCollapsed ? "md:w-0 md:border-r-transparent md:px-0 md:py-0" : "md:w-64 md:px-6",
+        )}
+      >
+        {!isDesktopCollapsed && (
+          <>
+            <div className="mb-6 flex items-center justify-between">
+              <div className="text-sm font-semibold text-foreground">Trophée François Grieder</div>
+              <button
+                type="button"
+                onClick={() => setIsDesktopCollapsed(true)}
+                className="rounded-md border border-border p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+                aria-label="Replier la barre latérale"
+                title="Replier"
+              >
+                <ChevronRight className="h-4 w-4 rotate-180" />
+              </button>
+            </div>
 
-          {session?.user && (
-            <Accordion type="single" collapsible defaultValue="espace" className="pt-4">
-              <AccordionItem value="espace" className="border-b-0">
-                <AccordionTrigger className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
-                  Mon espace
-                </AccordionTrigger>
-                <AccordionContent className="pt-2">
-                  <div className="space-y-2">
-                    {userSpaceItems.map((item) => (
-                      <SidebarItem
-                        key={item.href}
-                        href={item.href}
-                        label={item.label}
-                        icon={item.icon}
-                        active={isItemActive(safePathname, item.href)}
-                      />
-                    ))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          )}
+            <nav className="space-y-2">
+              <Accordion type="single" collapsible defaultValue="site">
+                <AccordionItem value="site" className="border-b-0">
+                  <AccordionTrigger className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
+                    Menu du site
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-2">
+                    <div className="space-y-2">
+                      {navigationItems.map((item) => (
+                        <SidebarItem
+                          key={item.href}
+                          href={item.href}
+                          label={item.label}
+                          icon={item.icon}
+                          active={isItemActive(safePathname, item.href)}
+                        />
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
 
-          {isAdmin && (
-            <Accordion
-              type="single"
-              collapsible
-              defaultValue="admin"
-              className="pt-4"
-            >
-              <AccordionItem value="admin" className="border-b-0">
-                <AccordionTrigger className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
-                  Admin
-                </AccordionTrigger>
-                <AccordionContent className="pt-2">
-                  <div className="space-y-2">
-                    {adminItems.map((item) => (
-                      <SidebarItem
-                        key={item.href}
-                        href={item.href}
-                        label={item.label}
-                        icon={item.icon}
-                        active={isItemActive(safePathname, item.href)}
-                      />
-                    ))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          )}
-        </nav>
+              {session?.user && (
+                <Accordion type="single" collapsible defaultValue="espace" className="pt-4">
+                  <AccordionItem value="espace" className="border-b-0">
+                    <AccordionTrigger className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
+                      Mon espace
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2">
+                      <div className="space-y-2">
+                        {userSpaceItems.map((item) => (
+                          <SidebarItem
+                            key={item.href}
+                            href={item.href}
+                            label={item.label}
+                            icon={item.icon}
+                            active={isItemActive(safePathname, item.href)}
+                          />
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              )}
 
-        <div className="mt-auto space-y-3 pt-8">
-          <ThemeToggle />
-          <LoginButton />
-          <div className="text-xs text-muted-foreground">© {new Date().getFullYear()} TFG</div>
-        </div>
+              {isAdmin && (
+                <Accordion type="single" collapsible defaultValue="admin" className="pt-4">
+                  <AccordionItem value="admin" className="border-b-0">
+                    <AccordionTrigger className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
+                      Admin
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2">
+                      <div className="space-y-2">
+                        {adminItems.map((item) => (
+                          <SidebarItem
+                            key={item.href}
+                            href={item.href}
+                            label={item.label}
+                            icon={item.icon}
+                            active={isItemActive(safePathname, item.href)}
+                          />
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              )}
+            </nav>
+
+            <div className="mt-auto space-y-3 pt-8">
+              <ThemeToggle />
+              <LoginButton />
+              <div className="text-xs text-muted-foreground">© {new Date().getFullYear()} TFG</div>
+            </div>
+          </>
+        )}
       </aside>
     </>
   );

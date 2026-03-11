@@ -31,7 +31,6 @@ export function SidebarItem({
           : "text-muted-foreground hover:bg-accent hover:text-primary-foreground",
       )}
     >
-      {/* Icon */}
       <Icon
         className={cn(
           "h-4 w-4 transition-colors duration-200",
@@ -41,7 +40,6 @@ export function SidebarItem({
         )}
       />
 
-      {/* Label */}
       <span className="truncate">{label}</span>
     </Link>
   );
