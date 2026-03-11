@@ -1,11 +1,4 @@
-import {
-  CalendarDays,
-  Home as HomeIcon,
-  Check,
-  Pencil,
-  Scale,
-  Trophy,
-} from "lucide-react";
+import { CalendarDays, Home as HomeIcon, Pencil, Trophy } from "lucide-react";
 
 export default function Home() {
   const facebookPageUrl = "https://www.facebook.com/tropheefrancoisgrieder";
@@ -29,18 +22,6 @@ export default function Home() {
       description: "S'inscrire en ligne en quelques clics.",
       icon: Pencil,
     },
-    {
-      href: "/classements",
-      label: "Classements",
-      description: "Voir le classement général des joueuses et joueurs.",
-      icon: Scale,
-    },
-    {
-      href: "/mes-inscriptions",
-      label: "Mes inscriptions",
-      description: "Retrouver et suivre l'état de vos inscriptions.",
-      icon: Check,
-    },
   ];
 
   return (
@@ -56,14 +37,14 @@ export default function Home() {
             Bienvenue sur le Trophée François Grieder
           </h1>
           <p className="max-w-3xl text-base leading-relaxed text-foreground/90 sm:text-lg">
-            Le trophée <span className="font-semibold text-primary">François Grieder</span> est
-            un challenge basé sur un classement général des joueuses et joueurs participant aux
+            Le trophée <span className="font-semibold text-primary">François Grieder</span> est un
+            challenge basé sur un classement général des joueuses et joueurs participant aux
             différents tournois régionaux homologués de la Marne, avec une ouverture récente aux
             Ardennes.
           </p>
           <p className="max-w-3xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Cette nouvelle version met l&apos;accent sur la lisibilité et une expérience cohérente en
-            mode clair comme en mode sombre, avec une palette Catppuccin harmonisée sur tout le
+            Cette nouvelle version met l&apos;accent sur la lisibilité et une expérience cohérente
+            en mode clair comme en mode sombre, avec une palette Catppuccin harmonisée sur tout le
             site.
           </p>
         </div>
@@ -102,7 +83,9 @@ export default function Home() {
                     <Icon className="h-4 w-4" aria-hidden="true" />
                   </span>
                   <div>
-                    <p className="font-semibold text-foreground group-hover:text-primary">{label}</p>
+                    <p className="font-semibold text-foreground group-hover:text-primary">
+                      {label}
+                    </p>
                     <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                       {description}
                     </p>
@@ -118,8 +101,8 @@ export default function Home() {
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-foreground sm:text-xl">Actualités Facebook</h2>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            Retrouvez les dernières publications et annonces via nos canaux officiels, avec un
-            accès direct aux actus du site et à la page Facebook.
+            Retrouvez les dernières publications et annonces via nos canaux officiels, avec un accès
+            direct aux actus du site et à la page Facebook.
           </p>
           <ul className="space-y-2 text-sm text-foreground/90">
             <li>• Accédez à la page Facebook officielle en un clic.</li>
@@ -144,7 +127,6 @@ export default function Home() {
             </a>
           </div>
         </div>
-
       </section>
     </main>
   );
