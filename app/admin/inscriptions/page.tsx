@@ -27,6 +27,8 @@ export const metadata: Metadata = {
 
 const STATUS_OPTIONS = ["all", "PENDING", "VALIDATED", "REJECTED", "CANCELED"] as const;
 type StatusFilter = (typeof STATUS_OPTIONS)[number];
+const CHECKIN_OPTIONS = ["all", "CHECKED_IN", "NOT_CHECKED_IN"] as const;
+type CheckInFilter = (typeof CHECKIN_OPTIONS)[number];
 
 function getStatusLabel(status: StatusFilter | (string & {})) {
   switch (status) {
@@ -40,6 +42,17 @@ function getStatusLabel(status: StatusFilter | (string & {})) {
       return "Annulée";
     default:
       return "Tous statuts";
+  }
+}
+
+function getCheckInLabel(status: CheckInFilter | (string & {})) {
+  switch (status) {
+    case "CHECKED_IN":
+      return "Pointé";
+    case "NOT_CHECKED_IN":
+      return "Non pointé";
+    default:
+      return "Tous pointages";
   }
 }
 
@@ -77,6 +90,32 @@ async function deleteRegistration(formData: FormData) {
   await prisma.registration.delete({ where: { id: registrationId } });
   revalidatePath(INSCRIPTIONS_PATH);
   redirect(`${INSCRIPTIONS_PATH}?updated=deleted`);
+}
+
+async function checkInRegistration(formData: FormData) {
+  "use server";
+  await requireAdminSession();
+  const registrationId = getRegistrationId(formData);
+  if (!registrationId) redirect(`${INSCRIPTIONS_PATH}?updated=0`);
+  await prisma.registration.update({
+    where: { id: registrationId },
+    data: { checkInStatus: "CHECKED_IN" },
+  });
+  revalidatePath(INSCRIPTIONS_PATH);
+  redirect(`${INSCRIPTIONS_PATH}?updated=checked_in`);
+}
+
+async function resetCheckInRegistration(formData: FormData) {
+  "use server";
+  await requireAdminSession();
+  const registrationId = getRegistrationId(formData);
+  if (!registrationId) redirect(`${INSCRIPTIONS_PATH}?updated=0`);
+  await prisma.registration.update({
+    where: { id: registrationId },
+    data: { checkInStatus: "NOT_CHECKED_IN" },
+  });
+  revalidatePath(INSCRIPTIONS_PATH);
+  redirect(`${INSCRIPTIONS_PATH}?updated=checkin_reset`);
 }
 
 function isPointsCompatible(
@@ -134,7 +173,7 @@ async function updateRegistrationCategories(formData: FormData) {
 export default async function AdminInscriptionsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ updated?: string; scope?: string; status?: string }>;
+  searchParams?: Promise<{ updated?: string; scope?: string; status?: string; checkIn?: string }>;
 }) {
   await requireAdminSession();
 
@@ -144,6 +183,11 @@ export default async function AdminInscriptionsPage({
     (params?.status as StatusFilter) ?? "all",
   )
     ? ((params?.status as StatusFilter) ?? "all")
+    : "all";
+  const checkInFilter: CheckInFilter = CHECKIN_OPTIONS.includes(
+    (params?.checkIn as CheckInFilter) ?? "all",
+  )
+    ? ((params?.checkIn as CheckInFilter) ?? "all")
     : "all";
 
   const now = new Date();
@@ -171,6 +215,7 @@ export default async function AdminInscriptionsPage({
         select: {
           id: true,
           status: true,
+          checkInStatus: true,
           player: {
             select: { nom: true, prenom: true, numeroLicence: true, club: true, points: true },
           },
@@ -197,7 +242,7 @@ export default async function AdminInscriptionsPage({
           </p>
           <div className="flex flex-wrap gap-2 text-xs font-semibold">
             <a
-              href={`/admin/inscriptions?scope=active&status=${statusFilter}`}
+              href={`/admin/inscriptions?scope=active&status=${statusFilter}&checkIn=${checkInFilter}`}
               className={`rounded-full border px-3 py-1.5 transition ${
                 scope === "active"
                   ? "border-primary bg-primary text-primary-foreground"
@@ -207,7 +252,7 @@ export default async function AdminInscriptionsPage({
               À venir / en cours
             </a>
             <a
-              href={`/admin/inscriptions?scope=all&status=${statusFilter}`}
+              href={`/admin/inscriptions?scope=all&status=${statusFilter}&checkIn=${checkInFilter}`}
               className={`rounded-full border px-3 py-1.5 transition ${
                 scope === "all"
                   ? "border-primary bg-primary text-primary-foreground"
@@ -217,7 +262,7 @@ export default async function AdminInscriptionsPage({
               Tous
             </a>
             <a
-              href={`/admin/inscriptions?scope=past&status=${statusFilter}`}
+              href={`/admin/inscriptions?scope=past&status=${statusFilter}&checkIn=${checkInFilter}`}
               className={`rounded-full border px-3 py-1.5 transition ${
                 scope === "past"
                   ? "border-primary bg-primary text-primary-foreground"
@@ -235,7 +280,7 @@ export default async function AdminInscriptionsPage({
             {STATUS_OPTIONS.map((status) => (
               <a
                 key={status}
-                href={`/admin/inscriptions?scope=${scope}&status=${status}`}
+                href={`/admin/inscriptions?scope=${scope}&status=${status}&checkIn=${checkInFilter}`}
                 className={`rounded-full border px-3 py-1.5 transition ${
                   statusFilter === status
                     ? "border-primary bg-primary text-primary-foreground"
@@ -247,17 +292,37 @@ export default async function AdminInscriptionsPage({
             ))}
           </div>
         </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
+          <p className="text-sm text-muted-foreground">Filtre du pointage à l'accueil.</p>
+          <div className="flex flex-wrap gap-2 text-xs font-semibold">
+            {CHECKIN_OPTIONS.map((checkInStatus) => (
+              <a
+                key={checkInStatus}
+                href={`/admin/inscriptions?scope=${scope}&status=${statusFilter}&checkIn=${checkInStatus}`}
+                className={`rounded-full border px-3 py-1.5 transition ${
+                  checkInFilter === checkInStatus
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-background text-foreground hover:bg-muted"
+                }`}
+              >
+                {getCheckInLabel(checkInStatus)}
+              </a>
+            ))}
+          </div>
+        </div>
       </section>
 
       {tournaments
         .map((tournament) => ({
           ...tournament,
-          displayedRegistrations:
-            statusFilter === "all"
-              ? tournament.registrations
-              : tournament.registrations.filter(
-                  (registration) => registration.status === statusFilter,
-                ),
+          displayedRegistrations: tournament.registrations.filter((registration) => {
+            const matchesStatus =
+              statusFilter === "all" || registration.status === statusFilter;
+            const matchesCheckIn =
+              checkInFilter === "all" || registration.checkInStatus === checkInFilter;
+            return matchesStatus && matchesCheckIn;
+          }),
         }))
         .filter((tournament) => tournament.displayedRegistrations.length > 0)
         .map((tournament) => (
@@ -285,6 +350,7 @@ export default async function AdminInscriptionsPage({
                     <th className="px-3 py-2">Club</th>
                     <th className="px-3 py-2">Catégories</th>
                     <th className="px-3 py-2">Statut</th>
+                    <th className="px-3 py-2">Pointage</th>
                     <th className="px-3 py-2">Actions</th>
                   </tr>
                 </thead>
@@ -314,6 +380,17 @@ export default async function AdminInscriptionsPage({
                           </p>
                         </td>
                         <td className="px-3 py-3">{getStatusLabel(registration.status)}</td>
+                        <td className="px-3 py-3">
+                          <span
+                            className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                              registration.checkInStatus === "CHECKED_IN"
+                                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200"
+                                : "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200"
+                            }`}
+                          >
+                            {getCheckInLabel(registration.checkInStatus)}
+                          </span>
+                        </td>
                         <td className="px-3 py-3">
                           <details className="relative">
                             <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted">
@@ -347,6 +424,35 @@ export default async function AdminInscriptionsPage({
                                     className="inline-flex w-full items-center gap-1 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
                                   >
                                     Remettre
+                                  </button>
+                                </form>
+                              )}
+                              {registration.checkInStatus !== "CHECKED_IN" ? (
+                                <form action={checkInRegistration}>
+                                  <input
+                                    type="hidden"
+                                    name="registrationId"
+                                    value={registration.id}
+                                  />
+                                  <button
+                                    type="submit"
+                                    className="inline-flex w-full items-center gap-1 rounded-md border border-emerald-300 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-200 dark:hover:bg-emerald-500/20"
+                                  >
+                                    Pointer présent
+                                  </button>
+                                </form>
+                              ) : (
+                                <form action={resetCheckInRegistration}>
+                                  <input
+                                    type="hidden"
+                                    name="registrationId"
+                                    value={registration.id}
+                                  />
+                                  <button
+                                    type="submit"
+                                    className="inline-flex w-full items-center gap-1 rounded-md border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-700 transition hover:bg-amber-100 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200 dark:hover:bg-amber-500/20"
+                                  >
+                                    Annuler le pointage
                                   </button>
                                 </form>
                               )}
