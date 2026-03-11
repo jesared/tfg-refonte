@@ -307,7 +307,6 @@ export default async function AdminInscriptionsPage({
                         <td className="px-3 py-3">{registration.player.numeroLicence}</td>
                         <td className="px-3 py-3">{registration.player.club}</td>
                         <td className="px-3 py-3">
-                          <p className="text-xs text-muted-foreground">Actuel</p>
                           <p className="font-semibold text-foreground">
                             {labels.join(" · ") || "-"}
                           </p>
