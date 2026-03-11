@@ -265,7 +265,7 @@ export default async function AdminInscriptionsPage({
           >
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-foreground">
-                Tour {tournament.tour} · {tournament.nom}
+                Tour {tournament.tour} · {tournament.salleVille}
               </h2>
               <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-foreground/90">
                 <Trophy className="h-3.5 w-3.5 text-primary" aria-hidden="true" />{" "}
