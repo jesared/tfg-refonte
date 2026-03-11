@@ -8,16 +8,32 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String         @id @default(cuid())
   name          String?
-  email         String?   @unique
+  email         String?        @unique
   emailVerified DateTime?
   image         String?
-  role          Role      @default(USER)
+  role          Role           @default(USER)
   accounts      Account[]
   sessions      Session[]
   registrations Registration[]
-  engagements   Engagement[]
+}
+
+model Player {
+  id            String  @id @default(cuid())
+  numeroLicence String  @unique
+  nom           String
+  prenom        String
+  genre         Gender?
+  club          String
+  points        Int?
+
+  registrations Registration[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([nom, prenom])
 }
 
 model Account {
@@ -79,66 +95,63 @@ enum Role {
 model Registration {
   id String @id @default(cuid())
 
-  nom           String
-  prenom        String
-  numeroLicence String
-  genre         Gender?
-  club          String
-  points        Int?
-
-  statut          RegistrationStatus @default(EN_ATTENTE)
+  status          RegistrationStatus @default(PENDING)
   licenceVerified Boolean            @default(false)
-  present         Boolean            @default(false)
+  paymentStatus   PaymentStatus      @default(UNPAID)
+  checkInStatus   CheckInStatus      @default(NOT_CHECKED_IN)
 
-  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  player   Player @relation(fields: [playerId], references: [id], onDelete: Restrict)
+  playerId String
+
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Restrict)
   tournamentId String
 
-  category   Category @relation(fields: [categoryId], references: [id])
-  categoryId String
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId String?
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
+  engagements Engagement[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-   @@unique([numeroLicence, tournamentId, categoryId])
+  @@unique([playerId, tournamentId])
+  @@index([tournamentId, status])
+  @@index([playerId, status])
 }
-
 
 model Engagement {
   id String @id @default(cuid())
 
-  nom           String
-  prenom        String
-  numeroLicence String
-  genre         Gender?
-  club          String
-  points        Int?
+  registration   Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  registrationId String
 
-  categoryIds String[]
-
-  statut          RegistrationStatus @default(EN_ATTENTE)
-  licenceVerified Boolean            @default(false)
-  present         Boolean            @default(false)
-
-  tournament   Tournament @relation(fields: [tournamentId], references: [id])
-  tournamentId String
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  categoryId String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([numeroLicence, tournamentId])
+  @@unique([registrationId, categoryId])
+  @@index([categoryId])
+  @@index([registrationId])
 }
 
 enum RegistrationStatus {
-  EN_ATTENTE
-  VALIDE
-  REFUSE
-  ANNULE
+  PENDING
+  VALIDATED
+  REJECTED
+  CANCELED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  REFUNDED
+}
+
+enum CheckInStatus {
+  NOT_CHECKED_IN
+  CHECKED_IN
 }
 
 enum Gender {
@@ -168,14 +181,15 @@ model Tournament {
 
   categories    Category[]
   registrations Registration[]
-  engagements   Engagement[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([date])
 }
 
 model Category {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   nom        String
   heureDebut DateTime
   heureFin   DateTime?
@@ -186,8 +200,11 @@ model Category {
   tournament   Tournament @relation(fields: [tournamentId], references: [id])
   tournamentId String
 
-  registrations Registration[]
+  engagements Engagement[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([tournamentId])
+  @@index([minPoints, maxPoints])
 }
