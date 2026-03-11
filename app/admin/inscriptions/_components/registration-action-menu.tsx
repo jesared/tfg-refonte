@@ -62,6 +62,18 @@ export function RegistrationActionMenu({
 
   const closeMenu = () => setIsOpen(false);
 
+  const closeMenuAfterSubmit = () => {
+    setTimeout(() => setIsOpen(false), 0);
+  };
+
+  const openEditPopover = () => {
+    const popover = document.getElementById(editPopoverTarget);
+    if (popover && "showPopover" in popover) {
+      (popover as HTMLElement & { showPopover: () => void }).showPopover();
+    }
+    closeMenu();
+  };
+
   return (
     <div ref={menuRef} className="relative inline-flex">
       <button
@@ -81,7 +93,7 @@ export function RegistrationActionMenu({
           className="absolute right-0 top-full z-10 mt-2 flex w-44 flex-col rounded-xl border border-border bg-popover p-1.5 shadow-lg"
         >
           {canValidate && (
-            <form action={validateRegistration}>
+            <form action={validateRegistration} onSubmit={closeMenuAfterSubmit}>
               <input type="hidden" name="registrationId" value={registrationId} />
               <button type="submit" className={actionClassName}>
                 <Check className="h-3.5 w-3.5" aria-hidden="true" /> Valider
@@ -89,7 +101,7 @@ export function RegistrationActionMenu({
             </form>
           )}
           {canReset && (
-            <form action={resetRegistration}>
+            <form action={resetRegistration} onSubmit={closeMenuAfterSubmit}>
               <input type="hidden" name="registrationId" value={registrationId} />
               <button type="submit" className={actionClassName}>
                 <Check className="h-3.5 w-3.5" aria-hidden="true" /> Remettre
@@ -97,14 +109,14 @@ export function RegistrationActionMenu({
             </form>
           )}
           {!isCheckedIn ? (
-            <form action={checkInRegistration}>
+            <form action={checkInRegistration} onSubmit={closeMenuAfterSubmit}>
               <input type="hidden" name="registrationId" value={registrationId} />
               <button type="submit" className={actionClassName}>
                 <Check className="h-3.5 w-3.5" aria-hidden="true" /> Présent
               </button>
             </form>
           ) : (
-            <form action={resetCheckInRegistration}>
+            <form action={resetCheckInRegistration} onSubmit={closeMenuAfterSubmit}>
               <input type="hidden" name="registrationId" value={registrationId} />
               <button type="submit" className={actionClassName}>
                 <X className="h-3.5 w-3.5" aria-hidden="true" /> Absent
@@ -116,7 +128,7 @@ export function RegistrationActionMenu({
             type="button"
             popoverTarget={editPopoverTarget}
             className={actionClassName}
-            onClick={closeMenu}
+            onClick={openEditPopover}
           >
             <Pencil className="h-3.5 w-3.5" aria-hidden="true" /> Modifier
           </button>
@@ -131,6 +143,7 @@ export function RegistrationActionMenu({
             <button
               type="submit"
               className={`${actionClassName} text-destructive hover:bg-destructive/10 hover:text-destructive`}
+              onClick={closeMenuAfterSubmit}
             >
               <X className="h-3.5 w-3.5" aria-hidden="true" /> Supprimer
             </button>
