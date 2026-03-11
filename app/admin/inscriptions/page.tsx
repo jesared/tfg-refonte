@@ -1,4 +1,4 @@
-import { Check, ShieldCheck, Trophy, X } from "lucide-react";
+import { Check, Pencil, ShieldCheck, Trophy, X } from "lucide-react";
 import type { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
@@ -353,7 +353,7 @@ export default async function AdminInscriptionsPage({
                                 popoverTarget={`edit-categories-${registration.id}`}
                                 className="inline-flex w-full items-center gap-1 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
                               >
-                                Modifier les catégories
+                                <Pencil className="h-3.5 w-3.5" aria-hidden="true" /> Modifier
                               </button>
                               <form action={deleteRegistration}>
                                 <input
@@ -373,7 +373,7 @@ export default async function AdminInscriptionsPage({
                           <div
                             id={`edit-categories-${registration.id}`}
                             popover="auto"
-                            className="w-[min(92vw,32rem)] rounded-xl border border-border bg-popover p-4 text-sm shadow-xl"
+                            className="fixed left-1/2 top-1/2 z-20 w-[min(92vw,32rem)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-popover p-4 text-sm shadow-xl"
                           >
                             <h3 className="text-sm font-semibold text-foreground">
                               Modifier les catégories
@@ -399,7 +399,15 @@ export default async function AdminInscriptionsPage({
                                   </label>
                                 ))}
                               </div>
-                              <div className="flex justify-end">
+                              <div className="flex justify-end gap-2">
+                                <button
+                                  type="button"
+                                  popoverTarget={`edit-categories-${registration.id}`}
+                                  popoverTargetAction="hide"
+                                  className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
+                                >
+                                  Annuler
+                                </button>
                                 <button
                                   type="submit"
                                   className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
