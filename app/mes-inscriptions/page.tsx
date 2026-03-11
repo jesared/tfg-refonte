@@ -53,6 +53,13 @@ export default async function MesInscriptionsPage({
     select: {
       id: true,
       status: true,
+      player: {
+        select: {
+          nom: true,
+          prenom: true,
+          numeroLicence: true,
+        },
+      },
       engagements: {
         select: { category: { select: { id: true, nom: true } } },
       },
@@ -96,6 +103,8 @@ export default async function MesInscriptionsPage({
             <thead className="bg-muted/40 text-muted-foreground">
               <tr>
                 <th className="px-4 py-3 font-medium">Tournoi</th>
+                <th className="px-4 py-3 font-medium">Joueur</th>
+                <th className="px-4 py-3 font-medium">N° licence</th>
                 <th className="px-4 py-3 font-medium">Date & lieu</th>
                 <th className="px-4 py-3 font-medium">Tableaux</th>
                 <th className="px-4 py-3 font-medium">Statut</th>
@@ -111,6 +120,12 @@ export default async function MesInscriptionsPage({
                   <tr key={registration.id} className="border-t border-border/70">
                     <td className="px-4 py-3 font-medium text-foreground">
                       Tour {registration.tournament.tour}
+                    </td>
+                    <td className="px-4 py-3 text-foreground/90">
+                      {registration.player.prenom} {registration.player.nom}
+                    </td>
+                    <td className="px-4 py-3 text-foreground/90">
+                      {registration.player.numeroLicence}
                     </td>
                     <td className="px-4 py-3 text-foreground/90">
                       <span className="inline-flex items-center gap-1.5">
