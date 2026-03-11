@@ -82,7 +82,7 @@ export function RegistrationActionMenu({
         aria-expanded={isOpen}
         aria-label="Ouvrir le menu des actions"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+        className="cursor-pointer inline-flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
       >
         <span className="text-base leading-none" aria-hidden="true">
           ⋮
@@ -92,7 +92,7 @@ export function RegistrationActionMenu({
       {isOpen && (
         <div
           role="menu"
-          className="absolute right-0 top-full z-10 mt-2 flex w-44 flex-col rounded-xl border border-border bg-popover p-1.5 shadow-lg"
+          className="absolute right-0 top-full z-10 mt-2 flex w-44 flex-col rounded-md border border-border bg-popover p-1.5 shadow-lg"
         >
           {canValidate && (
             <form action={validateRegistration} onSubmit={closeMenuAfterSubmit}>
