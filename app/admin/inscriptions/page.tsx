@@ -402,7 +402,7 @@ export default async function AdminInscriptionsPage({
                         </td>
                         <td className="px-3 py-3">
                           <details className="relative">
-                            <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted/80">
+                            <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded-lg border border-input bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-accent hover:text-accent-foreground">
                               Actions
                             </summary>
                             <div className="absolute right-0 top-full z-10 mt-2 flex w-52 flex-col gap-1 rounded-xl border border-border bg-popover p-2 shadow-lg">
@@ -415,7 +415,7 @@ export default async function AdminInscriptionsPage({
                                   />
                                   <button
                                     type="submit"
-                                    className="inline-flex w-full items-center gap-2 rounded-md bg-primary px-2.5 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
+                                    className="inline-flex w-full items-center gap-2 rounded-md bg-primary px-2.5 py-1.5 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
                                   >
                                     <Check className="h-3.5 w-3.5" aria-hidden="true" /> Valider
                                   </button>
@@ -430,7 +430,7 @@ export default async function AdminInscriptionsPage({
                                   />
                                   <button
                                     type="submit"
-                                    className="inline-flex w-full items-center gap-2 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
+                                    className="inline-flex w-full items-center gap-2 rounded-md border border-input bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                                   >
                                     <Check className="h-3.5 w-3.5" aria-hidden="true" /> Remettre
                                   </button>
@@ -445,7 +445,7 @@ export default async function AdminInscriptionsPage({
                                   />
                                   <button
                                     type="submit"
-                                    className="inline-flex w-full items-center gap-2 rounded-md border border-emerald-300 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-200 dark:hover:bg-emerald-500/20"
+                                    className="inline-flex w-full items-center gap-2 rounded-md border border-input bg-secondary px-2.5 py-1.5 text-xs font-semibold text-secondary-foreground transition-colors hover:bg-secondary/80"
                                   >
                                     <Check className="h-3.5 w-3.5" aria-hidden="true" /> Présent
                                   </button>
@@ -459,7 +459,7 @@ export default async function AdminInscriptionsPage({
                                   />
                                   <button
                                     type="submit"
-                                    className="inline-flex w-full items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-700 transition hover:bg-amber-100 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200 dark:hover:bg-amber-500/20"
+                                    className="inline-flex w-full items-center gap-2 rounded-md border border-input bg-secondary px-2.5 py-1.5 text-xs font-semibold text-secondary-foreground transition-colors hover:bg-secondary/80"
                                   >
                                     <X className="h-3.5 w-3.5" aria-hidden="true" /> Absent
                                   </button>
@@ -468,7 +468,7 @@ export default async function AdminInscriptionsPage({
                               <button
                                 type="button"
                                 popoverTarget={`edit-categories-${registration.id}`}
-                                className="inline-flex w-full items-center gap-1 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
+                                className="inline-flex w-full items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                               >
                                 <Pencil className="h-3.5 w-3.5" aria-hidden="true" /> Modifier
                               </button>
@@ -479,7 +479,7 @@ export default async function AdminInscriptionsPage({
                               >
                                 <button
                                   type="submit"
-                                  className="inline-flex w-full items-center gap-2 rounded-md border border-rose-300/70 bg-rose-50 px-2.5 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/20"
+                                  className="inline-flex w-full items-center gap-2 rounded-md bg-destructive px-2.5 py-1.5 text-xs font-semibold text-destructive-foreground transition-colors hover:bg-destructive/90"
                                 >
                                   <X className="h-3.5 w-3.5" aria-hidden="true" /> Supprimer
                                 </button>
