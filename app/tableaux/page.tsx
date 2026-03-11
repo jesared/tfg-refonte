@@ -72,12 +72,6 @@ export default async function TableauxPage() {
                     </dt>
                     <dd className="mt-1 font-medium text-foreground">{points}</dd>
                   </div>
-                  <div>
-                    <dt className="text-xs uppercase tracking-wide text-muted-foreground">
-                      Heure de début
-                    </dt>
-                    <dd className="mt-1 font-medium text-foreground">{start}</dd>
-                  </div>
                 </dl>
               </article>
             );
