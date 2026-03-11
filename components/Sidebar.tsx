@@ -142,7 +142,7 @@ export function Sidebar() {
         </div>
 
         <nav className="space-y-2 pb-4">
-          <Accordion type="single" collapsible defaultValue="site">
+          <Accordion type="single" collapsible>
             <AccordionItem value="site" className="border-b-0">
               <AccordionTrigger className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
                 Menu du site
@@ -165,7 +165,12 @@ export function Sidebar() {
           </Accordion>
 
           {session?.user && (
-            <Accordion type="single" collapsible defaultValue="espace" className="pt-4">
+            <Accordion
+              type="single"
+              collapsible
+              defaultValue={isAdmin ? undefined : "espace"}
+              className="pt-4"
+            >
               <AccordionItem value="espace" className="border-b-0">
                 <AccordionTrigger className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
                   Mon espace
@@ -253,7 +258,7 @@ export function Sidebar() {
             </div>
 
             <nav className="space-y-2">
-              <Accordion type="single" collapsible defaultValue="site">
+              <Accordion type="single" collapsible>
                 <AccordionItem value="site" className="border-b-0">
                   <AccordionTrigger className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
                     Menu du site
@@ -275,7 +280,12 @@ export function Sidebar() {
               </Accordion>
 
               {session?.user && (
-                <Accordion type="single" collapsible defaultValue="espace" className="pt-4">
+                <Accordion
+                  type="single"
+                  collapsible
+                  defaultValue={isAdmin ? undefined : "espace"}
+                  className="pt-4"
+                >
                   <AccordionItem value="espace" className="border-b-0">
                     <AccordionTrigger className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:no-underline">
                       Mon espace
