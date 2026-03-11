@@ -83,7 +83,7 @@ export function RegistrationActionMenu({
           {canValidate && (
             <form action={validateRegistration}>
               <input type="hidden" name="registrationId" value={registrationId} />
-              <button type="submit" className={actionClassName} onClick={closeMenu}>
+              <button type="submit" className={actionClassName}>
                 <Check className="h-3.5 w-3.5" aria-hidden="true" /> Valider
               </button>
             </form>
@@ -91,7 +91,7 @@ export function RegistrationActionMenu({
           {canReset && (
             <form action={resetRegistration}>
               <input type="hidden" name="registrationId" value={registrationId} />
-              <button type="submit" className={actionClassName} onClick={closeMenu}>
+              <button type="submit" className={actionClassName}>
                 <Check className="h-3.5 w-3.5" aria-hidden="true" /> Remettre
               </button>
             </form>
@@ -99,14 +99,14 @@ export function RegistrationActionMenu({
           {!isCheckedIn ? (
             <form action={checkInRegistration}>
               <input type="hidden" name="registrationId" value={registrationId} />
-              <button type="submit" className={actionClassName} onClick={closeMenu}>
+              <button type="submit" className={actionClassName}>
                 <Check className="h-3.5 w-3.5" aria-hidden="true" /> Présent
               </button>
             </form>
           ) : (
             <form action={resetCheckInRegistration}>
               <input type="hidden" name="registrationId" value={registrationId} />
-              <button type="submit" className={actionClassName} onClick={closeMenu}>
+              <button type="submit" className={actionClassName}>
                 <X className="h-3.5 w-3.5" aria-hidden="true" /> Absent
               </button>
             </form>
@@ -131,7 +131,6 @@ export function RegistrationActionMenu({
             <button
               type="submit"
               className={`${actionClassName} text-destructive hover:bg-destructive/10 hover:text-destructive`}
-              onClick={closeMenu}
             >
               <X className="h-3.5 w-3.5" aria-hidden="true" /> Supprimer
             </button>
