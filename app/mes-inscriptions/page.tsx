@@ -47,23 +47,20 @@ export default async function MesInscriptionsPage({
   const params = await searchParams;
   const showCreatedMessage = params?.created === "1";
 
-  const registrations = await prisma.registration.findMany({
+  const engagements = await prisma.engagement.findMany({
     where: { userId: session.user.id },
     orderBy: [{ tournament: { date: "asc" } }, { createdAt: "asc" }],
     select: {
       id: true,
       statut: true,
+      categoryIds: true,
       tournament: {
         select: {
           nom: true,
           tour: true,
           date: true,
           salleVille: true,
-        },
-      },
-      category: {
-        select: {
-          nom: true,
+          categories: { select: { id: true, nom: true } },
         },
       },
     },
@@ -78,7 +75,7 @@ export default async function MesInscriptionsPage({
         </p>
         <h1 className="mt-2 text-2xl font-semibold text-foreground">À vos inscriptions</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Retrouvez toutes vos inscriptions enregistrées sur les tours du TFG.
+          Retrouvez tous vos engagements enregistrés sur les tours du TFG.
         </p>
       </div>
 
@@ -88,7 +85,7 @@ export default async function MesInscriptionsPage({
         </p>
       )}
 
-      {registrations.length === 0 ? (
+      {engagements.length === 0 ? (
         <p className="rounded-lg border border-dashed border-border px-4 py-4 text-sm text-muted-foreground">
           Vous n&apos;avez encore aucune inscription.
         </p>
@@ -99,31 +96,38 @@ export default async function MesInscriptionsPage({
               <tr>
                 <th className="px-4 py-3 font-medium">Tournoi</th>
                 <th className="px-4 py-3 font-medium">Date & lieu</th>
-                <th className="px-4 py-3 font-medium">Tableau</th>
+                <th className="px-4 py-3 font-medium">Tableaux</th>
                 <th className="px-4 py-3 font-medium">Statut</th>
               </tr>
             </thead>
             <tbody>
-              {registrations.map((registration) => (
-                <tr key={registration.id} className="border-t border-border/70">
-                  <td className="px-4 py-3 font-medium text-foreground">
-                    Tour {registration.tournament.tour} · {registration.tournament.nom}
-                  </td>
-                  <td className="px-4 py-3 text-foreground/90">
-                    <span className="inline-flex items-center gap-1.5">
-                      <CalendarDays className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-                      {formatDate(registration.tournament.date)} · {registration.tournament.salleVille}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-foreground/90">{registration.category.nom}</td>
-                  <td className="px-4 py-3">
-                    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-foreground/90">
-                      <Check className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-                      {statusLabels[registration.statut]}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              {engagements.map((engagement) => {
+                const categoryNames = engagement.tournament.categories
+                  .filter((category) => engagement.categoryIds.includes(category.id))
+                  .map((category) => category.nom)
+                  .join(" · ");
+
+                return (
+                  <tr key={engagement.id} className="border-t border-border/70">
+                    <td className="px-4 py-3 font-medium text-foreground">
+                      Tour {engagement.tournament.tour} · {engagement.tournament.nom}
+                    </td>
+                    <td className="px-4 py-3 text-foreground/90">
+                      <span className="inline-flex items-center gap-1.5">
+                        <CalendarDays className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                        {formatDate(engagement.tournament.date)} · {engagement.tournament.salleVille}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-foreground/90">{categoryNames || "-"}</td>
+                    <td className="px-4 py-3">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-foreground/90">
+                        <Check className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                        {statusLabels[engagement.statut]}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

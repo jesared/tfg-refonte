@@ -17,6 +17,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   registrations Registration[]
+  engagements   Engagement[]
 }
 
 model Account {
@@ -104,6 +105,35 @@ model Registration {
    @@unique([numeroLicence, tournamentId, categoryId])
 }
 
+
+model Engagement {
+  id String @id @default(cuid())
+
+  nom           String
+  prenom        String
+  numeroLicence String
+  genre         Gender?
+  club          String
+  points        Int?
+
+  categoryIds String[]
+
+  statut          RegistrationStatus @default(EN_ATTENTE)
+  licenceVerified Boolean            @default(false)
+  present         Boolean            @default(false)
+
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  tournamentId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([numeroLicence, tournamentId])
+}
+
 enum RegistrationStatus {
   EN_ATTENTE
   VALIDE
@@ -138,6 +168,7 @@ model Tournament {
 
   categories    Category[]
   registrations Registration[]
+  engagements   Engagement[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

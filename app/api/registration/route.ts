@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
@@ -61,7 +60,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const existingRegistrationOnTour = await prisma.registration.findFirst({
+  const existingRegistrationOnTour = await prisma.engagement.findFirst({
     where: {
       numeroLicence,
       tournament: {
@@ -89,30 +88,20 @@ export async function POST(req: Request) {
     );
   }
 
-  try {
-    await prisma.registration.createMany({
-      data: categoryIds.map((categoryId: string) => ({
-        nom,
-        prenom,
-        numeroLicence,
-        club,
-        genre,
-        points,
-        tournamentId,
-        categoryId,
-        userId: session.user.id,
-      })),
-    });
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      return NextResponse.json(
-        { error: "Cette licence est déjà inscrite sur au moins un des tableaux sélectionnés." },
-        { status: 409 },
-      );
-    }
-
-    throw error;
-  }
+  await prisma.engagement.create({
+    data: {
+      nom,
+      prenom,
+      numeroLicence,
+      club,
+      genre,
+      points,
+      tournamentId,
+      categoryIds: Array.from(new Set(categoryIds)),
+      userId: session.user.id,
+    },
+  });
 
   return NextResponse.json({ ok: true }, { status: 201 });
+
 }
