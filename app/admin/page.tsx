@@ -1,14 +1,8 @@
-import {
-  CalendarDays,
-  Check,
-  ShieldCheck,
-  Trophy,
-  User,
-} from "lucide-react";
+import { CalendarDays, Check, ShieldCheck, Trophy, User } from "lucide-react";
 import type { Metadata } from "next";
+import { getServerSession } from "next-auth";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
@@ -35,30 +29,6 @@ const stats = [
     value: "6",
     detail: "Qualité + sécurité",
     icon: ShieldCheck,
-  },
-];
-
-const improvementTracks = [
-  {
-    title: "Agenda & salles",
-    ideas: [
-      "Ajouter un mode brouillon/publication pour préparer les changements sans impacter le site.",
-      "Détecter automatiquement les doublons de salle, de date ou de club au moment de l'enregistrement.",
-    ],
-  },
-  {
-    title: "Tableaux",
-    ideas: [
-      "Proposer un aperçu avant publication pour contrôler le rendu exact de la page publique.",
-      "Ajouter une validation des points (format + cohérence) avec messages d'erreur ligne par ligne.",
-    ],
-  },
-  {
-    title: "Utilisateurs",
-    ideas: [
-      "Créer un journal d'audit consultable depuis l'admin pour chaque changement de rôle.",
-      "Mettre en place des rôles intermédiaires (éditeur/validateur) pour limiter les droits admin complets.",
-    ],
   },
 ];
 
@@ -109,7 +79,10 @@ export default async function AdminPage() {
 
       <section className="grid gap-4 md:grid-cols-3">
         {stats.map((item) => (
-          <article key={item.label} className="rounded-xl border border-border bg-card p-5 shadow-sm">
+          <article
+            key={item.label}
+            className="rounded-xl border border-border bg-card p-5 shadow-sm"
+          >
             <div className="mb-4 inline-flex rounded-lg bg-primary/10 p-2 text-primary">
               <item.icon className="h-5 w-5" aria-hidden="true" />
             </div>
@@ -119,26 +92,6 @@ export default async function AdminPage() {
           </article>
         ))}
       </section>
-
-      <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <Check className="h-4 w-4 text-primary" aria-hidden="true" />
-          Propositions d&apos;amélioration prioritaires
-        </div>
-        <div className="mt-4 grid gap-4 lg:grid-cols-3">
-          {improvementTracks.map((track) => (
-            <article key={track.title} className="rounded-xl border border-border/70 bg-muted/20 p-4">
-              <h2 className="text-sm font-semibold text-foreground">{track.title}</h2>
-              <ul className="mt-3 space-y-2 text-sm text-foreground/90">
-                {track.ideas.map((idea) => (
-                  <li key={idea}>• {idea}</li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </div>
-      </section>
-
       <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-foreground">Accès rapides</h2>
         <p className="mt-2 text-sm text-muted-foreground">
