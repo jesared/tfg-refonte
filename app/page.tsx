@@ -1,8 +1,48 @@
-import { Home as HomeIcon } from "lucide-react";
+import {
+  CalendarDays,
+  Home as HomeIcon,
+  Check,
+  Pencil,
+  Scale,
+  Trophy,
+} from "lucide-react";
 
 export default function Home() {
   const facebookPageUrl = "https://www.facebook.com/tropheefrancoisgrieder";
   const shareUrl = "https://trophee-francois-grieder.fr";
+  const quickLinks = [
+    {
+      href: "/agenda",
+      label: "Agenda",
+      description: "Consulter les dates et horaires des prochains événements.",
+      icon: CalendarDays,
+    },
+    {
+      href: "/tableaux",
+      label: "Tableaux",
+      description: "Accéder rapidement aux tournois et catégories en cours.",
+      icon: Trophy,
+    },
+    {
+      href: "/inscription",
+      label: "Inscriptions",
+      description: "S'inscrire en ligne en quelques clics.",
+      icon: Pencil,
+    },
+    {
+      href: "/classements",
+      label: "Classements",
+      description: "Voir le classement général des joueuses et joueurs.",
+      icon: Scale,
+    },
+    {
+      href: "/mes-inscriptions",
+      label: "Mes inscriptions",
+      description: "Retrouver et suivre l'état de vos inscriptions.",
+      icon: Check,
+    },
+  ];
+
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 sm:gap-10">
       <section className="rounded-3xl border border-border bg-card px-5 py-7 shadow-sm sm:px-8 sm:py-10">
@@ -41,6 +81,36 @@ export default function Home() {
           >
             Classements
           </a>
+        </div>
+      </section>
+
+      <section className="rounded-3xl border border-border bg-card px-5 py-7 shadow-sm sm:px-8 sm:py-10">
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-foreground sm:text-xl">Accès rapides</h2>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Retrouvez les pages les plus utiles du site pour naviguer plus facilement.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {quickLinks.map(({ href, label, description, icon: Icon }) => (
+              <a
+                key={href}
+                href={href}
+                className="group rounded-2xl border border-border bg-background/60 p-4 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm"
+              >
+                <div className="flex items-start gap-3">
+                  <span className="rounded-xl border border-border bg-card p-2 text-primary">
+                    <Icon className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  <div>
+                    <p className="font-semibold text-foreground group-hover:text-primary">{label}</p>
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                      {description}
+                    </p>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
         </div>
       </section>
 
