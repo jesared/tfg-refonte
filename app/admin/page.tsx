@@ -64,6 +64,12 @@ const improvementTracks = [
 
 const quickAccess = [
   {
+    title: "Debrief fonctionnalités",
+    description: "Consulter la synthèse des nouveautés admin et la roadmap d'amélioration.",
+    href: "/admin/debrief",
+    icon: Check,
+  },
+  {
     title: "Tournois",
     description: "Créer un nouveau tournoi, gérer les catégories et préparer les éditions.",
     href: "/admin/tournois",
