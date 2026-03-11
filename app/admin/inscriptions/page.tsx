@@ -382,28 +382,30 @@ export default async function AdminInscriptionsPage({
                         <td className="px-3 py-3">
                           {registration.checkInStatus === "CHECKED_IN" ? (
                             <span
-                              className="inline-flex rounded-full px-2 py-1 text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200"
-                              title="Pointé"
-                              aria-label="Pointé"
+                              className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200"
+                              title="Présent"
+                              aria-label="Présent"
                             >
                               <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                              Présent
                             </span>
                           ) : (
                             <span
-                              className="inline-flex rounded-full px-2 py-1 text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200"
-                              title="Non pointé"
-                              aria-label="Non pointé"
+                              className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200"
+                              title="Absent"
+                              aria-label="Absent"
                             >
                               <X className="h-3.5 w-3.5" aria-hidden="true" />
+                              Absent
                             </span>
                           )}
                         </td>
                         <td className="px-3 py-3">
                           <details className="relative">
-                            <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted">
+                            <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted/80">
                               Actions
                             </summary>
-                            <div className="absolute right-0 top-full z-10 mt-2 flex w-48 flex-col gap-1 rounded-lg border border-border bg-popover p-2 shadow-lg">
+                            <div className="absolute right-0 top-full z-10 mt-2 flex w-52 flex-col gap-1 rounded-xl border border-border bg-popover p-2 shadow-lg">
                               {canValidate && (
                                 <form action={validateRegistration}>
                                   <input
@@ -413,7 +415,7 @@ export default async function AdminInscriptionsPage({
                                   />
                                   <button
                                     type="submit"
-                                    className="inline-flex w-full items-center gap-1 rounded-md bg-primary px-2.5 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
+                                    className="inline-flex w-full items-center gap-2 rounded-md bg-primary px-2.5 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
                                   >
                                     <Check className="h-3.5 w-3.5" aria-hidden="true" /> Valider
                                   </button>
@@ -428,9 +430,9 @@ export default async function AdminInscriptionsPage({
                                   />
                                   <button
                                     type="submit"
-                                    className="inline-flex w-full items-center gap-1 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
+                                    className="inline-flex w-full items-center gap-2 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
                                   >
-                                    Remettre
+                                    <Check className="h-3.5 w-3.5" aria-hidden="true" /> Remettre
                                   </button>
                                 </form>
                               )}
@@ -443,9 +445,9 @@ export default async function AdminInscriptionsPage({
                                   />
                                   <button
                                     type="submit"
-                                    className="inline-flex w-full items-center gap-1 rounded-md border border-emerald-300 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-200 dark:hover:bg-emerald-500/20"
+                                    className="inline-flex w-full items-center gap-2 rounded-md border border-emerald-300 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-200 dark:hover:bg-emerald-500/20"
                                   >
-                                    Pointer présent
+                                    <Check className="h-3.5 w-3.5" aria-hidden="true" /> Présent
                                   </button>
                                 </form>
                               ) : (
@@ -457,9 +459,9 @@ export default async function AdminInscriptionsPage({
                                   />
                                   <button
                                     type="submit"
-                                    className="inline-flex w-full items-center gap-1 rounded-md border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-700 transition hover:bg-amber-100 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200 dark:hover:bg-amber-500/20"
+                                    className="inline-flex w-full items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-700 transition hover:bg-amber-100 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200 dark:hover:bg-amber-500/20"
                                   >
-                                    Annuler le pointage
+                                    <X className="h-3.5 w-3.5" aria-hidden="true" /> Absent
                                   </button>
                                 </form>
                               )}
@@ -477,7 +479,7 @@ export default async function AdminInscriptionsPage({
                               >
                                 <button
                                   type="submit"
-                                  className="inline-flex w-full items-center gap-1 rounded-md border border-rose-300/70 bg-rose-50 px-2.5 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/20"
+                                  className="inline-flex w-full items-center gap-2 rounded-md border border-rose-300/70 bg-rose-50 px-2.5 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/20"
                                 >
                                   <X className="h-3.5 w-3.5" aria-hidden="true" /> Supprimer
                                 </button>
