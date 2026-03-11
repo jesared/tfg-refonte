@@ -453,7 +453,7 @@ export default async function AdminInscriptionsPage({
                                 </button>
                                 <button
                                   type="submit"
-                                  className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
+                                  className="cursor-pointer rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
                                 >
                                   Enregistrer
                                 </button>

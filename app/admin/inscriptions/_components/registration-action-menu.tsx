@@ -20,7 +20,7 @@ type RegistrationActionMenuProps = {
 };
 
 const actionClassName =
-  "inline-flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground";
+  "cursor-pointer inline-flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground";
 
 export function RegistrationActionMenu({
   registrationId,
@@ -84,7 +84,9 @@ export function RegistrationActionMenu({
         onClick={() => setIsOpen((prev) => !prev)}
         className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
       >
-        <span className="text-base leading-none" aria-hidden="true">⋮</span>
+        <span className="text-base leading-none" aria-hidden="true">
+          ⋮
+        </span>
       </button>
 
       {isOpen && (
