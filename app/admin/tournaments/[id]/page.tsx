@@ -23,6 +23,9 @@ export default async function TournamentDetailPage({ params }: { params: Promise
       registrations: {
         orderBy: { createdAt: "desc" },
         take: 20,
+        include: {
+          player: true,
+        },
       },
       _count: {
         select: { registrations: true, categories: true },
@@ -127,7 +130,7 @@ export default async function TournamentDetailPage({ params }: { params: Promise
           <ul className="space-y-2">
             {tournament.registrations.map((registration) => (
               <li key={registration.id} className="rounded-lg border border-border bg-background px-3 py-2 text-sm">
-                {registration.prenom} {registration.nom} · {registration.numeroLicence} · {registration.statut}
+                {registration.player.prenom} {registration.player.nom} · {registration.player.numeroLicence} · {registration.status}
               </li>
             ))}
           </ul>

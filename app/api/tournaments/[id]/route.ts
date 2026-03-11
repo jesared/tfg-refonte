@@ -21,7 +21,17 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
     where: { id },
     include: {
       categories: { orderBy: { nom: "asc" } },
-      registrations: { orderBy: { createdAt: "desc" } },
+      registrations: {
+        orderBy: { createdAt: "desc" },
+        include: {
+          player: true,
+          engagements: {
+            include: {
+              category: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -110,7 +120,7 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
   }
 
   await prisma.$transaction([
-    prisma.engagement.deleteMany({ where: { tournamentId: id } }),
+    prisma.engagement.deleteMany({ where: { registration: { tournamentId: id } } }),
     prisma.registration.deleteMany({ where: { tournamentId: id } }),
     prisma.category.deleteMany({ where: { tournamentId: id } }),
     prisma.tournament.delete({ where: { id } }),

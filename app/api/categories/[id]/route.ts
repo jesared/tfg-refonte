@@ -157,7 +157,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
 
   const linkedRegistrations = await prisma.engagement.count({
     where: {
-      categoryIds: { has: category.id },
+      categoryId: category.id,
     },
   });
 

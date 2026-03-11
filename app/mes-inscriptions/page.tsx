@@ -14,10 +14,10 @@ function formatDate(date: Date) {
 }
 
 const statusLabels = {
-  EN_ATTENTE: "En attente",
-  VALIDE: "Validée",
-  REFUSE: "Refusée",
-  ANNULE: "Annulée",
+  PENDING: "En attente",
+  VALIDATED: "Validée",
+  REJECTED: "Refusée",
+  CANCELED: "Annulée",
 } as const;
 
 export default async function MesInscriptionsPage({
@@ -47,20 +47,21 @@ export default async function MesInscriptionsPage({
   const params = await searchParams;
   const showCreatedMessage = params?.created === "1";
 
-  const engagements = await prisma.engagement.findMany({
+  const registrations = await prisma.registration.findMany({
     where: { userId: session.user.id },
     orderBy: [{ tournament: { date: "asc" } }, { createdAt: "asc" }],
     select: {
       id: true,
-      statut: true,
-      categoryIds: true,
+      status: true,
+      engagements: {
+        select: { category: { select: { id: true, nom: true } } },
+      },
       tournament: {
         select: {
           nom: true,
           tour: true,
           date: true,
           salleVille: true,
-          categories: { select: { id: true, nom: true } },
         },
       },
     },
@@ -85,7 +86,7 @@ export default async function MesInscriptionsPage({
         </p>
       )}
 
-      {engagements.length === 0 ? (
+      {registrations.length === 0 ? (
         <p className="rounded-lg border border-dashed border-border px-4 py-4 text-sm text-muted-foreground">
           Vous n&apos;avez encore aucune inscription.
         </p>
@@ -101,28 +102,27 @@ export default async function MesInscriptionsPage({
               </tr>
             </thead>
             <tbody>
-              {engagements.map((engagement) => {
-                const categoryNames = engagement.tournament.categories
-                  .filter((category) => engagement.categoryIds.includes(category.id))
-                  .map((category) => category.nom)
+              {registrations.map((registration) => {
+                const categoryNames = registration.engagements
+                  .map((engagement) => engagement.category.nom)
                   .join(" · ");
 
                 return (
-                  <tr key={engagement.id} className="border-t border-border/70">
+                  <tr key={registration.id} className="border-t border-border/70">
                     <td className="px-4 py-3 font-medium text-foreground">
-                      Tour {engagement.tournament.tour} · {engagement.tournament.nom}
+                      Tour {registration.tournament.tour} · {registration.tournament.nom}
                     </td>
                     <td className="px-4 py-3 text-foreground/90">
                       <span className="inline-flex items-center gap-1.5">
                         <CalendarDays className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-                        {formatDate(engagement.tournament.date)} · {engagement.tournament.salleVille}
+                        {formatDate(registration.tournament.date)} · {registration.tournament.salleVille}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-foreground/90">{categoryNames || "-"}</td>
                     <td className="px-4 py-3">
                       <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-foreground/90">
                         <Check className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-                        {statusLabels[engagement.statut]}
+                        {statusLabels[registration.status]}
                       </span>
                     </td>
                   </tr>
