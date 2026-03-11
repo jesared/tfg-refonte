@@ -1,4 +1,4 @@
-import { Check, Pencil, ShieldCheck, Trophy, X } from "lucide-react";
+import { Check, ShieldCheck, Trophy, X } from "lucide-react";
 import type { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
-import { InlineActionForm } from "./_components/inline-action-form";
+import { RegistrationActionMenu } from "./_components/registration-action-menu";
 
 const INSCRIPTIONS_PATH = "/admin/inscriptions";
 
@@ -29,9 +29,6 @@ const STATUS_OPTIONS = ["all", "PENDING", "VALIDATED", "REJECTED", "CANCELED"] a
 type StatusFilter = (typeof STATUS_OPTIONS)[number];
 const CHECKIN_OPTIONS = ["all", "CHECKED_IN", "NOT_CHECKED_IN"] as const;
 type CheckInFilter = (typeof CHECKIN_OPTIONS)[number];
-const ACTION_ITEM_CLASSNAME =
-  "inline-flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs font-semibold text-foreground transition-colors hover:bg-accent hover:text-accent-foreground";
-
 function getStatusLabel(status: StatusFilter | (string & {})) {
   switch (status) {
     case "PENDING":
@@ -403,91 +400,19 @@ export default async function AdminInscriptionsPage({
                           )}
                         </td>
                         <td className="px-3 py-3">
-                          <details className="relative">
-                            <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded-lg border border-input bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-accent hover:text-accent-foreground">
-                              Actions
-                            </summary>
-                            <div className="absolute right-0 top-full z-10 mt-2 flex w-52 flex-col rounded-xl border border-border bg-popover p-1.5 shadow-lg">
-                              {canValidate && (
-                                <form action={validateRegistration}>
-                                  <input
-                                    type="hidden"
-                                    name="registrationId"
-                                    value={registration.id}
-                                  />
-                                  <button
-                                    type="submit"
-                                    className={ACTION_ITEM_CLASSNAME}
-                                  >
-                                    <Check className="h-3.5 w-3.5" aria-hidden="true" /> Valider
-                                  </button>
-                                </form>
-                              )}
-                              {canReset && (
-                                <form action={resetRegistration}>
-                                  <input
-                                    type="hidden"
-                                    name="registrationId"
-                                    value={registration.id}
-                                  />
-                                  <button
-                                    type="submit"
-                                    className={ACTION_ITEM_CLASSNAME}
-                                  >
-                                    <Check className="h-3.5 w-3.5" aria-hidden="true" /> Remettre
-                                  </button>
-                                </form>
-                              )}
-                              {registration.checkInStatus !== "CHECKED_IN" ? (
-                                <form action={checkInRegistration}>
-                                  <input
-                                    type="hidden"
-                                    name="registrationId"
-                                    value={registration.id}
-                                  />
-                                  <button
-                                    type="submit"
-                                    className={ACTION_ITEM_CLASSNAME}
-                                  >
-                                    <Check className="h-3.5 w-3.5" aria-hidden="true" /> Présent
-                                  </button>
-                                </form>
-                              ) : (
-                                <form action={resetCheckInRegistration}>
-                                  <input
-                                    type="hidden"
-                                    name="registrationId"
-                                    value={registration.id}
-                                  />
-                                  <button
-                                    type="submit"
-                                    className={ACTION_ITEM_CLASSNAME}
-                                  >
-                                    <X className="h-3.5 w-3.5" aria-hidden="true" /> Absent
-                                  </button>
-                                </form>
-                              )}
-                              <button
-                                type="button"
-                                popoverTarget={`edit-categories-${registration.id}`}
-                                className={ACTION_ITEM_CLASSNAME}
-                              >
-                                <Pencil className="h-3.5 w-3.5" aria-hidden="true" /> Modifier
-                              </button>
-                              <InlineActionForm
-                                action={deleteRegistration}
-                                registrationId={registration.id}
-                                confirmMessage={`Confirmer la suppression de ${registration.player.prenom} ${registration.player.nom} ?`}
-                              >
-                                <button
-                                  type="submit"
-                                  className={`${ACTION_ITEM_CLASSNAME} text-destructive hover:bg-destructive/10 hover:text-destructive`}
-                                >
-                                  <X className="h-3.5 w-3.5" aria-hidden="true" /> Supprimer
-                                </button>
-                              </InlineActionForm>
-                            </div>
-                          </details>
+                          <RegistrationActionMenu
+                            registrationId={registration.id}
+                            playerName={`${registration.player.prenom} ${registration.player.nom}`}
+                            canValidate={canValidate}
+                            canReset={canReset}
+                            isCheckedIn={registration.checkInStatus === "CHECKED_IN"}
+                            validateRegistration={validateRegistration}
+                            resetRegistration={resetRegistration}
+                            checkInRegistration={checkInRegistration}
+                            resetCheckInRegistration={resetCheckInRegistration}
+                            deleteRegistration={deleteRegistration}
+                            editPopoverTarget={`edit-categories-${registration.id}`}
+                          />
                           <div
                             id={`edit-categories-${registration.id}`}
                             popover="auto"
