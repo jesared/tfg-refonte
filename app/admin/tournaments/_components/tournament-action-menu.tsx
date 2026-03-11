@@ -62,7 +62,7 @@ export function TournamentActionMenu({
           className="absolute right-0 top-full z-10 mt-2 flex min-w-40 flex-col rounded-md border border-border bg-popover p-1.5 shadow-lg"
         >
           <Link
-            href={`/admin/tournaments/${tournamentId}`}
+            href="/admin/inscriptions"
             className={actionClassName}
             onClick={() => setIsOpen(false)}
           >
