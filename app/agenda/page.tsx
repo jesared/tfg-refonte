@@ -72,8 +72,8 @@ export default async function AgendaPage() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-8">
-      <section className="flex flex-col gap-4 rounded-3xl border border-border bg-card px-5 py-6 shadow-sm sm:px-6 sm:py-8">
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 sm:gap-8">
+      <section className="flex flex-col gap-4 rounded-3xl border border-border bg-muted/40 px-5 py-6 shadow-sm sm:px-7 sm:py-8">
         <div className="flex items-center gap-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           <span className="text-lg">🗓️</span>
           <span>Agenda & salles</span>
@@ -87,7 +87,7 @@ export default async function AgendaPage() {
         </div>
       </section>
 
-      <section className="rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-6">
+      <section className="rounded-3xl border border-border bg-card/80 p-4 shadow-sm sm:p-6">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-left text-sm">
             <thead>
@@ -104,7 +104,10 @@ export default async function AgendaPage() {
                     <div className="flex items-center gap-2">
                       <span>Tour {tour.tour}</span>
                       {isPastTournament(tour.date) ? (
-                        <Badge variant="secondary" className="uppercase tracking-wide">
+                        <Badge
+                          variant="secondary"
+                          className="h-5 rounded-md px-2 text-[10px] font-medium uppercase tracking-[0.12em]"
+                        >
                           Tournoi passé
                         </Badge>
                       ) : null}
@@ -121,13 +124,19 @@ export default async function AgendaPage() {
 
       <section className="grid gap-4 sm:grid-cols-2">
         {tours.map((tour) => (
-          <article key={tour.id} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <article
+            key={tour.id}
+            className="rounded-2xl border border-border bg-card/90 p-5 shadow-sm transition-colors hover:bg-card"
+          >
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">
                   <p className="text-xs uppercase tracking-wide text-muted-foreground">Tour {tour.tour}</p>
                   {isPastTournament(tour.date) ? (
-                    <Badge variant="secondary" className="uppercase tracking-wide">
+                    <Badge
+                      variant="secondary"
+                      className="h-5 rounded-md px-2 text-[10px] font-medium uppercase tracking-[0.12em]"
+                    >
                       Tournoi passé
                     </Badge>
                   ) : null}
@@ -135,7 +144,7 @@ export default async function AgendaPage() {
                 <h2 className="mt-1 text-xl font-semibold text-foreground">{tour.salleVille}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{tour.clubOrganisateur}</p>
               </div>
-              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+              <span className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-medium text-foreground/80">
                 {formatAgendaDate(tour.date)}
               </span>
             </div>
