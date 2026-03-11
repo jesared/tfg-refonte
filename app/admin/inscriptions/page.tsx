@@ -77,7 +77,11 @@ async function deleteRegistration(formData: FormData) {
   redirect(`${INSCRIPTIONS_PATH}?updated=deleted`);
 }
 
-function isPointsCompatible(points: number | null, minPoints: number | null, maxPoints: number | null) {
+function isPointsCompatible(
+  points: number | null,
+  minPoints: number | null,
+  maxPoints: number | null,
+) {
   if (points === null) return true;
   return (minPoints === null || points >= minPoints) && (maxPoints === null || points <= maxPoints);
 }
@@ -103,7 +107,11 @@ async function updateRegistrationCategories(formData: FormData) {
   });
 
   if (categories.length !== selectedCategoryIds.length) redirect(`${INSCRIPTIONS_PATH}?updated=0`);
-  if (categories.some((c) => !isPointsCompatible(registration.player.points, c.minPoints, c.maxPoints))) {
+  if (
+    categories.some(
+      (c) => !isPointsCompatible(registration.player.points, c.minPoints, c.maxPoints),
+    )
+  ) {
     redirect(`${INSCRIPTIONS_PATH}?updated=points_mismatch`);
   }
 
@@ -130,7 +138,9 @@ export default async function AdminInscriptionsPage({
 
   const params = await searchParams;
   const scope = params?.scope === "all" || params?.scope === "past" ? params.scope : "active";
-  const statusFilter: StatusFilter = STATUS_OPTIONS.includes((params?.status as StatusFilter) ?? "all")
+  const statusFilter: StatusFilter = STATUS_OPTIONS.includes(
+    (params?.status as StatusFilter) ?? "all",
+  )
     ? ((params?.status as StatusFilter) ?? "all")
     : "all";
 
@@ -243,87 +253,172 @@ export default async function AdminInscriptionsPage({
           displayedRegistrations:
             statusFilter === "all"
               ? tournament.registrations
-              : tournament.registrations.filter((registration) => registration.status === statusFilter),
+              : tournament.registrations.filter(
+                  (registration) => registration.status === statusFilter,
+                ),
         }))
         .filter((tournament) => tournament.displayedRegistrations.length > 0)
         .map((tournament) => (
-        <article key={tournament.id} className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-foreground">Tour {tournament.tour} · {tournament.nom}</h2>
-            <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-foreground/90">
-              <Trophy className="h-3.5 w-3.5 text-primary" aria-hidden="true" /> {tournament.displayedRegistrations.length} inscrit{tournament.displayedRegistrations.length > 1 ? "s" : ""}
-            </span>
-          </div>
+          <article
+            key={tournament.id}
+            className="rounded-2xl border border-border bg-card p-6 shadow-sm"
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-foreground">
+                Tour {tournament.tour} · {tournament.nom}
+              </h2>
+              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-foreground/90">
+                <Trophy className="h-3.5 w-3.5 text-primary" aria-hidden="true" />{" "}
+                {tournament.displayedRegistrations.length} inscrit
+                {tournament.displayedRegistrations.length > 1 ? "s" : ""}
+              </span>
+            </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[780px] text-left text-sm">
-              <thead><tr className="border-b border-border text-muted-foreground"><th className="px-3 py-2">Joueur</th><th className="px-3 py-2">Licence</th><th className="px-3 py-2">Club</th><th className="px-3 py-2">Catégories</th><th className="px-3 py-2">Statut</th><th className="px-3 py-2">Actions</th></tr></thead>
-              <tbody>
-                {tournament.displayedRegistrations.map((registration) => {
-                  const selectedCategoryIds = registration.engagements.map((engagement) => engagement.categoryId);
-                  const labels = tournament.categories.filter((c) => selectedCategoryIds.includes(c.id)).map((c) => c.nom);
-                  const eligibleCategories = tournament.categories.filter((c) => isPointsCompatible(registration.player.points, c.minPoints, c.maxPoints));
-                  const canValidate = registration.status !== "VALIDATED";
-                  const canReset = registration.status !== "PENDING";
-                  return (
-                    <tr key={registration.id} className="border-b border-border/60 last:border-0">
-                      <td className="px-3 py-3">{registration.player.prenom} {registration.player.nom}</td>
-                      <td className="px-3 py-3">{registration.player.numeroLicence}</td>
-                      <td className="px-3 py-3">{registration.player.club}</td>
-                      <td className="px-3 py-3">
-                        <form action={updateRegistrationCategories} className="space-y-2">
-                          <input type="hidden" name="registrationId" value={registration.id} />
-                          <div className="flex flex-wrap gap-2">
-                            {eligibleCategories.map((c) => (
-                              <label key={c.id} className="inline-flex items-center gap-1 text-xs">
-                                <input type="checkbox" name="categoryIds" value={c.id} defaultChecked={selectedCategoryIds.includes(c.id)} /> {c.nom}
-                              </label>
-                            ))}
-                          </div>
-                          <button type="submit" className="rounded border px-2 py-1 text-xs">Mettre à jour</button>
-                        </form>
-                        <p className="text-xs text-muted-foreground mt-1">Actuel: {labels.join(" · ") || "-"}</p>
-                      </td>
-                      <td className="px-3 py-3">{getStatusLabel(registration.status)}</td>
-                      <td className="px-3 py-3">
-                        <details className="relative">
-                          <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted">
-                            Actions
-                          </summary>
-                          <div className="absolute right-0 top-full z-10 mt-2 flex w-48 flex-col gap-1 rounded-lg border border-border bg-popover p-2 shadow-lg">
-                            {canValidate && (
-                              <form action={validateRegistration}>
-                                <input type="hidden" name="registrationId" value={registration.id} />
-                                <button type="submit" className="inline-flex w-full items-center gap-1 rounded-md bg-primary px-2.5 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90">
-                                  <Check className="h-3.5 w-3.5" aria-hidden="true" /> Valider
-                                </button>
-                              </form>
-                            )}
-                            {canReset && (
-                              <form action={resetRegistration}>
-                                <input type="hidden" name="registrationId" value={registration.id} />
-                                <button type="submit" className="inline-flex w-full items-center gap-1 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted">
-                                  Remettre
-                                </button>
-                              </form>
-                            )}
-                            <form action={deleteRegistration}>
-                              <input type="hidden" name="registrationId" value={registration.id} />
-                              <button type="submit" className="inline-flex w-full items-center gap-1 rounded-md border border-rose-300/70 bg-rose-50 px-2.5 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/20">
-                                <X className="h-3.5 w-3.5" aria-hidden="true" /> Supprimer
+            <div>
+              <table className="w-full table-fixed text-left text-sm">
+                <thead>
+                  <tr className="border-b border-border text-muted-foreground">
+                    <th className="px-3 py-2">Joueur</th>
+                    <th className="px-3 py-2">Licence</th>
+                    <th className="px-3 py-2">Club</th>
+                    <th className="px-3 py-2">Catégories</th>
+                    <th className="px-3 py-2">Statut</th>
+                    <th className="px-3 py-2">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tournament.displayedRegistrations.map((registration) => {
+                    const selectedCategoryIds = registration.engagements.map(
+                      (engagement) => engagement.categoryId,
+                    );
+                    const labels = tournament.categories
+                      .filter((c) => selectedCategoryIds.includes(c.id))
+                      .map((c) => c.nom);
+                    const eligibleCategories = tournament.categories.filter((c) =>
+                      isPointsCompatible(registration.player.points, c.minPoints, c.maxPoints),
+                    );
+                    const canValidate = registration.status !== "VALIDATED";
+                    const canReset = registration.status !== "PENDING";
+                    return (
+                      <tr key={registration.id} className="border-b border-border/60 last:border-0">
+                        <td className="px-3 py-3">
+                          {registration.player.prenom} {registration.player.nom}
+                        </td>
+                        <td className="px-3 py-3">{registration.player.numeroLicence}</td>
+                        <td className="px-3 py-3">{registration.player.club}</td>
+                        <td className="px-3 py-3">
+                          <p className="text-xs text-muted-foreground">Actuel</p>
+                          <p className="font-semibold text-foreground">
+                            {labels.join(" · ") || "-"}
+                          </p>
+                        </td>
+                        <td className="px-3 py-3">{getStatusLabel(registration.status)}</td>
+                        <td className="px-3 py-3">
+                          <details className="relative">
+                            <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted">
+                              Actions
+                            </summary>
+                            <div className="absolute right-0 top-full z-10 mt-2 flex w-48 flex-col gap-1 rounded-lg border border-border bg-popover p-2 shadow-lg">
+                              {canValidate && (
+                                <form action={validateRegistration}>
+                                  <input
+                                    type="hidden"
+                                    name="registrationId"
+                                    value={registration.id}
+                                  />
+                                  <button
+                                    type="submit"
+                                    className="inline-flex w-full items-center gap-1 rounded-md bg-primary px-2.5 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
+                                  >
+                                    <Check className="h-3.5 w-3.5" aria-hidden="true" /> Valider
+                                  </button>
+                                </form>
+                              )}
+                              {canReset && (
+                                <form action={resetRegistration}>
+                                  <input
+                                    type="hidden"
+                                    name="registrationId"
+                                    value={registration.id}
+                                  />
+                                  <button
+                                    type="submit"
+                                    className="inline-flex w-full items-center gap-1 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
+                                  >
+                                    Remettre
+                                  </button>
+                                </form>
+                              )}
+                              <button
+                                type="button"
+                                popoverTarget={`edit-categories-${registration.id}`}
+                                className="inline-flex w-full items-center gap-1 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
+                              >
+                                Modifier les catégories
                               </button>
+                              <form action={deleteRegistration}>
+                                <input
+                                  type="hidden"
+                                  name="registrationId"
+                                  value={registration.id}
+                                />
+                                <button
+                                  type="submit"
+                                  className="inline-flex w-full items-center gap-1 rounded-md border border-rose-300/70 bg-rose-50 px-2.5 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/20"
+                                >
+                                  <X className="h-3.5 w-3.5" aria-hidden="true" /> Supprimer
+                                </button>
+                              </form>
+                            </div>
+                          </details>
+                          <div
+                            id={`edit-categories-${registration.id}`}
+                            popover="auto"
+                            className="w-[min(92vw,32rem)] rounded-xl border border-border bg-popover p-4 text-sm shadow-xl"
+                          >
+                            <h3 className="text-sm font-semibold text-foreground">
+                              Modifier les catégories
+                            </h3>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {registration.player.prenom} {registration.player.nom}
+                            </p>
+                            <form action={updateRegistrationCategories} className="mt-3 space-y-3">
+                              <input type="hidden" name="registrationId" value={registration.id} />
+                              <div className="flex flex-wrap gap-2">
+                                {eligibleCategories.map((c) => (
+                                  <label
+                                    key={c.id}
+                                    className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      name="categoryIds"
+                                      value={c.id}
+                                      defaultChecked={selectedCategoryIds.includes(c.id)}
+                                    />{" "}
+                                    {c.nom}
+                                  </label>
+                                ))}
+                              </div>
+                              <div className="flex justify-end">
+                                <button
+                                  type="submit"
+                                  className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
+                                >
+                                  Enregistrer
+                                </button>
+                              </div>
                             </form>
                           </div>
-                        </details>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </article>
-      ))}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </article>
+        ))}
     </main>
   );
 }
