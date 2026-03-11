@@ -1,6 +1,6 @@
 import { CalendarDays, Check, Trophy } from "lucide-react";
-import Link from "next/link";
 import { getServerSession } from "next-auth";
+import Link from "next/link";
 
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -110,12 +110,13 @@ export default async function MesInscriptionsPage({
                 return (
                   <tr key={registration.id} className="border-t border-border/70">
                     <td className="px-4 py-3 font-medium text-foreground">
-                      Tour {registration.tournament.tour} · {registration.tournament.nom}
+                      Tour {registration.tournament.tour}
                     </td>
                     <td className="px-4 py-3 text-foreground/90">
                       <span className="inline-flex items-center gap-1.5">
                         <CalendarDays className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-                        {formatDate(registration.tournament.date)} · {registration.tournament.salleVille}
+                        {formatDate(registration.tournament.date)} ·{" "}
+                        {registration.tournament.salleVille}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-foreground/90">{categoryNames || "-"}</td>
