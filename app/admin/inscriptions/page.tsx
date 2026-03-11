@@ -149,7 +149,7 @@ async function updateRegistrationEngagements(formData: FormData) {
     .map((value) => String(value).trim())
     .filter(Boolean);
 
-  if (!registrationId || selectedCategoryIds.length === 0) {
+  if (!registrationId) {
     redirect(`${INSCRIPTIONS_PATH}?updated=0`);
   }
 
@@ -206,70 +206,17 @@ async function updateRegistrationEngagements(formData: FormData) {
     redirect(`${INSCRIPTIONS_PATH}?updated=points_mismatch`);
   }
 
-  const existingEngagements = await prisma.registration.findMany({
-    where: {
-      numeroLicence: registration.numeroLicence,
-      tournamentId: registration.tournamentId,
-    },
-    select: {
-      id: true,
-      categoryId: true,
-      createdAt: true,
-    },
-    orderBy: {
-      createdAt: "asc",
-    },
-  });
-
-  const selectedSet = new Set(uniqueCategoryIds);
-
-  const engagementsByCategory = existingEngagements.reduce<
-    Map<string, Array<{ id: string; categoryId: string }>>
-  >((acc, engagement) => {
-    const current = acc.get(engagement.categoryId) ?? [];
-    current.push({ id: engagement.id, categoryId: engagement.categoryId });
-    acc.set(engagement.categoryId, current);
-
-    return acc;
-  }, new Map());
-
-  const idsToDelete = Array.from(engagementsByCategory.entries()).flatMap(
-    ([categoryId, categoryEngagements]) => {
-      if (!selectedSet.has(categoryId)) {
-        return categoryEngagements.map((engagement) => engagement.id);
-      }
-
-      if (categoryEngagements.length <= 1) {
-        return [];
-      }
-
-      const preferredEngagement =
-        categoryEngagements.find((engagement) => engagement.id === registration.id) ??
-        categoryEngagements[0];
-
-      return categoryEngagements
-        .filter((engagement) => engagement.id !== preferredEngagement.id)
-        .map((engagement) => engagement.id);
-    },
-  );
-
   await prisma.$transaction(async (tx) => {
-    if (idsToDelete.length > 0) {
-      await tx.registration.deleteMany({
-        where: {
-          id: { in: idsToDelete },
-        },
-      });
-    }
-
-    const categoriesToCreate = uniqueCategoryIds.filter((categoryId) => {
-      const current = engagementsByCategory.get(categoryId) ?? [];
-      return current.length === 0;
+    await tx.registration.deleteMany({
+      where: {
+        numeroLicence: registration.numeroLicence,
+        tournamentId: registration.tournamentId,
+      },
     });
 
-    if (categoriesToCreate.length > 0) {
+    if (uniqueCategoryIds.length > 0) {
       await tx.registration.createMany({
-        data: categoriesToCreate.map((categoryId) => ({
+        data: uniqueCategoryIds.map((categoryId) => ({
           nom: registration.nom,
           prenom: registration.prenom,
           numeroLicence: registration.numeroLicence,
