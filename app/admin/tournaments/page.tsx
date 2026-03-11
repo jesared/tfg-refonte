@@ -5,6 +5,14 @@ import { getServerSession } from "next-auth";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default async function TournamentsPage() {
   const session = await getServerSession(authOptions);
@@ -119,65 +127,82 @@ export default async function TournamentsPage() {
             </Link>
           </div>
         ) : (
-          <div className="space-y-3">
-            {tournaments.map((tournament) => {
-              const isPastTournament = new Date(tournament.date) < today;
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nom</TableHead>
+                <TableHead>Tour</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead className="text-right">Action</TableHead>
+              </TableRow>
+            </TableHeader>
 
-              return (
-                <article
-                  key={tournament.id}
-                  className="flex flex-col gap-3 rounded-xl border border-border/80 bg-muted/20 p-4 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div>
-                    <p className="font-semibold text-foreground">{tournament.nom}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Tour {tournament.tour} · {new Date(tournament.date).toLocaleDateString("fr-FR")}
-                    </p>
-                  </div>
+            <TableBody>
+              {tournaments.map((tournament) => {
+                const isPastTournament = new Date(tournament.date) < today;
 
-                  <div className="flex flex-wrap items-center gap-2">
-                    {isPastTournament ? (
-                      <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-700 dark:text-amber-300">
-                        Tournoi passé
-                      </span>
-                    ) : null}
+                return (
+                  <TableRow key={tournament.id}>
+                    <TableCell className="font-medium text-foreground">{tournament.nom}</TableCell>
+                    <TableCell>Tour {tournament.tour}</TableCell>
+                    <TableCell>{new Date(tournament.date).toLocaleDateString("fr-FR")}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {isPastTournament ? (
+                          <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-700 dark:text-amber-300">
+                            Tournoi passé
+                          </span>
+                        ) : null}
 
-                    <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
-                        tournament.inscriptionOuverte
-                          ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                          : "bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      {tournament.inscriptionOuverte ? "Inscriptions ouvertes" : "Inscriptions fermées"}
-                    </span>
-
-                    <Link
-                      href={`/admin/tournaments/${tournament.id}/edit`}
-                      className="rounded-md border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground transition hover:bg-muted"
-                    >
-                      Modifier
-                    </Link>
-                    <form action={deleteTournament}>
-                      <input type="hidden" name="tournamentId" value={tournament.id} />
-                      <button
-                        type="submit"
-                        className="cursor-pointer rounded-md border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-sm font-medium text-destructive transition hover:bg-destructive/20"
-                      >
-                        Supprimer
-                      </button>
-                    </form>
-                    <Link
-                      href={`/admin/tournaments/${tournament.id}`}
-                      className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition hover:opacity-90"
-                    >
-                      Gérer
-                    </Link>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
+                            tournament.inscriptionOuverte
+                              ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                              : "bg-muted text-muted-foreground"
+                          }`}
+                        >
+                          {tournament.inscriptionOuverte
+                            ? "Inscriptions ouvertes"
+                            : "Inscriptions fermées"}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <details className="relative inline-block text-left">
+                        <summary className="inline-flex cursor-pointer list-none items-center rounded-md border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground transition hover:bg-muted [&::-webkit-details-marker]:hidden">
+                          Actions
+                        </summary>
+                        <div className="absolute right-0 z-20 mt-2 flex min-w-36 flex-col rounded-md border border-border bg-popover p-1.5 shadow-lg">
+                          <Link
+                            href={`/admin/tournaments/${tournament.id}`}
+                            className="rounded-sm px-2.5 py-2 text-left text-sm transition hover:bg-accent"
+                          >
+                            Gérer
+                          </Link>
+                          <Link
+                            href={`/admin/tournaments/${tournament.id}/edit`}
+                            className="rounded-sm px-2.5 py-2 text-left text-sm transition hover:bg-accent"
+                          >
+                            Modifier
+                          </Link>
+                          <form action={deleteTournament}>
+                            <input type="hidden" name="tournamentId" value={tournament.id} />
+                            <button
+                              type="submit"
+                              className="w-full cursor-pointer rounded-sm px-2.5 py-2 text-left text-sm text-destructive transition hover:bg-destructive/10"
+                            >
+                              Supprimer
+                            </button>
+                          </form>
+                        </div>
+                      </details>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
         )}
       </section>
     </main>
