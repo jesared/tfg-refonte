@@ -53,7 +53,7 @@ export function AppBreadcrumb() {
   }
 
   return (
-    <Breadcrumb>
+    <Breadcrumb className="ml-1 sm:ml-2">
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
