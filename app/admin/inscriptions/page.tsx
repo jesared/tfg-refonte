@@ -29,6 +29,8 @@ const STATUS_OPTIONS = ["all", "PENDING", "VALIDATED", "REJECTED", "CANCELED"] a
 type StatusFilter = (typeof STATUS_OPTIONS)[number];
 const CHECKIN_OPTIONS = ["all", "CHECKED_IN", "NOT_CHECKED_IN"] as const;
 type CheckInFilter = (typeof CHECKIN_OPTIONS)[number];
+const ACTION_ITEM_CLASSNAME =
+  "inline-flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs font-semibold text-foreground transition-colors hover:bg-accent hover:text-accent-foreground";
 
 function getStatusLabel(status: StatusFilter | (string & {})) {
   switch (status) {
@@ -405,7 +407,7 @@ export default async function AdminInscriptionsPage({
                             <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded-lg border border-input bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-accent hover:text-accent-foreground">
                               Actions
                             </summary>
-                            <div className="absolute right-0 top-full z-10 mt-2 flex w-52 flex-col gap-1 rounded-xl border border-border bg-popover p-2 shadow-lg">
+                            <div className="absolute right-0 top-full z-10 mt-2 flex w-52 flex-col rounded-xl border border-border bg-popover p-1.5 shadow-lg">
                               {canValidate && (
                                 <form action={validateRegistration}>
                                   <input
@@ -415,7 +417,7 @@ export default async function AdminInscriptionsPage({
                                   />
                                   <button
                                     type="submit"
-                                    className="inline-flex w-full items-center gap-2 rounded-md bg-primary px-2.5 py-1.5 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                                    className={ACTION_ITEM_CLASSNAME}
                                   >
                                     <Check className="h-3.5 w-3.5" aria-hidden="true" /> Valider
                                   </button>
@@ -430,7 +432,7 @@ export default async function AdminInscriptionsPage({
                                   />
                                   <button
                                     type="submit"
-                                    className="inline-flex w-full items-center gap-2 rounded-md border border-input bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                                    className={ACTION_ITEM_CLASSNAME}
                                   >
                                     <Check className="h-3.5 w-3.5" aria-hidden="true" /> Remettre
                                   </button>
@@ -445,7 +447,7 @@ export default async function AdminInscriptionsPage({
                                   />
                                   <button
                                     type="submit"
-                                    className="inline-flex w-full items-center gap-2 rounded-md border border-input bg-secondary px-2.5 py-1.5 text-xs font-semibold text-secondary-foreground transition-colors hover:bg-secondary/80"
+                                    className={ACTION_ITEM_CLASSNAME}
                                   >
                                     <Check className="h-3.5 w-3.5" aria-hidden="true" /> Présent
                                   </button>
@@ -459,7 +461,7 @@ export default async function AdminInscriptionsPage({
                                   />
                                   <button
                                     type="submit"
-                                    className="inline-flex w-full items-center gap-2 rounded-md border border-input bg-secondary px-2.5 py-1.5 text-xs font-semibold text-secondary-foreground transition-colors hover:bg-secondary/80"
+                                    className={ACTION_ITEM_CLASSNAME}
                                   >
                                     <X className="h-3.5 w-3.5" aria-hidden="true" /> Absent
                                   </button>
@@ -468,7 +470,7 @@ export default async function AdminInscriptionsPage({
                               <button
                                 type="button"
                                 popoverTarget={`edit-categories-${registration.id}`}
-                                className="inline-flex w-full items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                                className={ACTION_ITEM_CLASSNAME}
                               >
                                 <Pencil className="h-3.5 w-3.5" aria-hidden="true" /> Modifier
                               </button>
@@ -479,7 +481,7 @@ export default async function AdminInscriptionsPage({
                               >
                                 <button
                                   type="submit"
-                                  className="inline-flex w-full items-center gap-2 rounded-md bg-destructive px-2.5 py-1.5 text-xs font-semibold text-destructive-foreground transition-colors hover:bg-destructive/90"
+                                  className={`${ACTION_ITEM_CLASSNAME} text-destructive hover:bg-destructive/10 hover:text-destructive`}
                                 >
                                   <X className="h-3.5 w-3.5" aria-hidden="true" /> Supprimer
                                 </button>
