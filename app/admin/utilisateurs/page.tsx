@@ -7,6 +7,8 @@ import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
+import { RoleSelectForm } from "./_components/role-select-form";
+
 export const metadata: Metadata = {
   title: "Admin - Utilisateurs",
   description: "Gestion des rôles et accès de l'administration.",
@@ -156,23 +158,7 @@ export default async function AdminUsersPage({
                       </span>
                     </td>
                     <td className="px-3 py-3">
-                      <form action={updateUserRole} className="flex items-center gap-2">
-                        <input type="hidden" name="userId" value={user.id} />
-                        <select
-                          name="role"
-                          defaultValue={user.role}
-                          className="rounded-lg border border-border bg-background px-2 py-1.5 text-sm text-foreground"
-                        >
-                          <option value="USER">USER</option>
-                          <option value="ADMIN">ADMIN</option>
-                        </select>
-                        <button
-                          type="submit"
-                          className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
-                        >
-                          Enregistrer
-                        </button>
-                      </form>
+                      <RoleSelectForm userId={user.id} role={user.role} updateUserRole={updateUserRole} />
                     </td>
                   </tr>
                 );
