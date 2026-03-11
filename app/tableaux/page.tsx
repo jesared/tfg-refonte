@@ -32,8 +32,8 @@ export default async function TableauxPage() {
             Catégories de compétition
           </h1>
           <p className="text-base text-muted-foreground sm:text-lg">
-            Retrouvez les catégories, leurs plages de points et les horaires de début.
-            L&apos;affichage est pensé pour être lisible sur mobile avant tout.
+            Retrouvez les catégories, leurs plages de points et les horaires. L&apos;affichage est
+            pensé pour être lisible sur mobile avant tout.
           </p>
         </div>
       </section>
