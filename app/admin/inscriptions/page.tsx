@@ -7,6 +7,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
+import { InlineActionForm } from "./_components/inline-action-form";
+
 const INSCRIPTIONS_PATH = "/admin/inscriptions";
 
 async function requireAdminSession() {
@@ -355,19 +357,18 @@ export default async function AdminInscriptionsPage({
                               >
                                 <Pencil className="h-3.5 w-3.5" aria-hidden="true" /> Modifier
                               </button>
-                              <form action={deleteRegistration}>
-                                <input
-                                  type="hidden"
-                                  name="registrationId"
-                                  value={registration.id}
-                                />
+                              <InlineActionForm
+                                action={deleteRegistration}
+                                registrationId={registration.id}
+                                confirmMessage={`Confirmer la suppression de ${registration.player.prenom} ${registration.player.nom} ?`}
+                              >
                                 <button
                                   type="submit"
                                   className="inline-flex w-full items-center gap-1 rounded-md border border-rose-300/70 bg-rose-50 px-2.5 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/20"
                                 >
                                   <X className="h-3.5 w-3.5" aria-hidden="true" /> Supprimer
                                 </button>
-                              </form>
+                              </InlineActionForm>
                             </div>
                           </details>
                           <div
