@@ -349,7 +349,7 @@ export default async function AdminInscriptionsPage({
                     <th className="px-3 py-2">Catégories</th>
                     <th className="px-3 py-2">Statut</th>
                     <th className="px-3 py-2">Pointage</th>
-                    <th className="px-3 py-2">Actions</th>
+                    <th className="px-3 py-2 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -400,19 +400,21 @@ export default async function AdminInscriptionsPage({
                           )}
                         </td>
                         <td className="px-3 py-3">
-                          <RegistrationActionMenu
-                            registrationId={registration.id}
-                            playerName={`${registration.player.prenom} ${registration.player.nom}`}
-                            canValidate={canValidate}
-                            canReset={canReset}
-                            isCheckedIn={registration.checkInStatus === "CHECKED_IN"}
-                            validateRegistration={validateRegistration}
-                            resetRegistration={resetRegistration}
-                            checkInRegistration={checkInRegistration}
-                            resetCheckInRegistration={resetCheckInRegistration}
-                            deleteRegistration={deleteRegistration}
-                            editPopoverTarget={`edit-categories-${registration.id}`}
-                          />
+                          <div className="flex justify-end">
+                            <RegistrationActionMenu
+                              registrationId={registration.id}
+                              playerName={`${registration.player.prenom} ${registration.player.nom}`}
+                              canValidate={canValidate}
+                              canReset={canReset}
+                              isCheckedIn={registration.checkInStatus === "CHECKED_IN"}
+                              validateRegistration={validateRegistration}
+                              resetRegistration={resetRegistration}
+                              checkInRegistration={checkInRegistration}
+                              resetCheckInRegistration={resetCheckInRegistration}
+                              deleteRegistration={deleteRegistration}
+                              editPopoverTarget={`edit-categories-${registration.id}`}
+                            />
+                          </div>
                           <div
                             id={`edit-categories-${registration.id}`}
                             popover="auto"
