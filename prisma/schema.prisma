@@ -17,6 +17,12 @@ model User {
   accounts      Account[]
   sessions      Session[]
   registrations Registration[]
+
+  communityProfile   CommunityProfile?
+  communityPosts     CommunityPost[]
+  communityComments  CommunityComment[]
+  communityReactions CommunityReaction[]
+  communityReports   CommunityReport[]
 }
 
 model Player {
@@ -136,6 +142,156 @@ model Engagement {
   @@index([registrationId])
 }
 
+model CommunityProfile {
+  id String @id @default(cuid())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique
+
+  displayName     String
+  roleLabel       String?
+  club            String?
+  bio             String?
+  classementLabel String?
+  zone            CommunityZone?
+
+  isVisible Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([club])
+  @@index([zone])
+}
+
+model CommunityPost {
+  id String @id @default(cuid())
+
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId String
+
+  tournament   Tournament? @relation(fields: [tournamentId], references: [id], onDelete: SetNull)
+  tournamentId String?
+
+  title    String?
+  content  String
+  imageUrl String?
+
+  scope  CommunityPostScope  @default(TOURNAMENT)
+  status CommunityPostStatus @default(PUBLISHED)
+  zone   CommunityZone?
+
+  comments  CommunityComment[]
+  reactions CommunityReaction[]
+  reports   CommunityReport[]
+
+  publishedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([authorId, createdAt])
+  @@index([tournamentId, createdAt])
+  @@index([zone, createdAt])
+  @@index([status, createdAt])
+}
+
+model CommunityComment {
+  id String @id @default(cuid())
+
+  post   CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId String
+
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId String
+
+  content String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([postId, createdAt])
+  @@index([authorId, createdAt])
+}
+
+model CommunityReaction {
+  id String @id @default(cuid())
+
+  post   CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId String
+
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId String
+
+  type CommunityReactionType @default(LIKE)
+
+  createdAt DateTime @default(now())
+
+  @@unique([postId, authorId, type])
+  @@index([postId])
+  @@index([authorId])
+}
+
+model CommunityReport {
+  id String @id @default(cuid())
+
+  post   CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId String
+
+  reporter   User   @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  reporterId String
+
+  reason     CommunityReportReason
+  details    String?
+  status     CommunityReportStatus @default(OPEN)
+  reviewedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([postId, status])
+  @@index([reporterId, createdAt])
+}
+
+enum CommunityZone {
+  MARNE
+  ARDENNES
+  BOTH
+}
+
+enum CommunityPostScope {
+  TOURNAMENT
+  CLUB
+  GENERAL
+}
+
+enum CommunityPostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+  HIDDEN
+}
+
+enum CommunityReactionType {
+  LIKE
+  BRAVO
+  FIRE
+}
+
+enum CommunityReportReason {
+  SPAM
+  HARASSMENT
+  INSULT
+  OFF_TOPIC
+  OTHER
+}
+
+enum CommunityReportStatus {
+  OPEN
+  IN_REVIEW
+  RESOLVED
+  REJECTED
+}
+
 enum RegistrationStatus {
   PENDING
   VALIDATED
@@ -181,6 +337,8 @@ model Tournament {
 
   categories    Category[]
   registrations Registration[]
+
+  communityPosts CommunityPost[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
