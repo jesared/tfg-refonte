@@ -109,7 +109,7 @@ export default async function Home() {
               {spotlightPosts.map((post) => (
                 <a
                   key={post.id}
-                  href="/actualites"
+                  href="/communaute"
                   className="rounded-2xl border border-border bg-background/60 p-4 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm"
                 >
                   <p className="text-xs text-muted-foreground">
@@ -131,7 +131,7 @@ export default async function Home() {
           )}
 
           <a
-            href="/actualites"
+            href="/communaute"
             className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary px-4 py-2 text-xs font-semibold text-secondary-foreground shadow-sm transition hover:bg-muted"
           >
             <MessageSquare className="h-4 w-4" aria-hidden="true" />

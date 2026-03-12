@@ -118,7 +118,7 @@ export default async function AgendaPage() {
                   <td className="px-3 py-3 text-foreground/90">{tour.clubOrganisateur}</td>
                   <td className="px-3 py-3">
                     <a
-                      href={`/actualites?tour=${tour.tour}`}
+                      href={`/communaute?tour=${tour.tour}`}
                       className="text-primary hover:underline"
                     >
                       Voir les publications
@@ -174,7 +174,7 @@ export default async function AgendaPage() {
                   <MapPin className="h-4 w-4" />
                   Ouvrir dans Google Maps
                 </a>
-                <a href={`/actualites?tour=${tour.tour}`} className="font-medium text-primary hover:underline">
+                <a href={`/communaute?tour=${tour.tour}`} className="font-medium text-primary hover:underline">
                   Voir les publications de ce tour
                 </a>
               </div>
