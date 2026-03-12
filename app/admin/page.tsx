@@ -1,4 +1,4 @@
-import { CalendarDays, Check, ShieldCheck, Trophy, User } from "lucide-react";
+import { CalendarDays, Check, Image, ShieldCheck, Trophy, User } from "lucide-react";
 import type { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import Link from "next/link";
@@ -56,6 +56,12 @@ const quickAccess = [
     description: "Ajuster les rôles et vérifier les accès de l'équipe organisatrice.",
     href: "/admin/utilisateurs",
     icon: User,
+  },
+  {
+    title: "Uploads d'images",
+    description: "Ajouter des visuels administrateur et récupérer une URL prête à publier.",
+    href: "/admin/uploads",
+    icon: Image,
   },
 ];
 
