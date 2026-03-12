@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { AdminImageUploadForm } from "@/components/admin/AdminImageUploadForm";
+import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
 export const metadata: Metadata = {
@@ -18,6 +19,39 @@ export default async function AdminUploadsPage() {
     redirect("/");
   }
 
+  let media: Array<{
+    id: string;
+    originalUrl: string;
+    thumbnailUrl: string;
+    sizeBytes: number;
+    width: number | null;
+    height: number | null;
+    createdAt: Date;
+    altText: string | null;
+    sourceRef: string | null;
+  }> = [];
+  let dbError: string | null = null;
+
+  try {
+    media = await prisma.media.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 20,
+      select: {
+        id: true,
+        originalUrl: true,
+        thumbnailUrl: true,
+        sizeBytes: true,
+        width: true,
+        height: true,
+        createdAt: true,
+        altText: true,
+        sourceRef: true,
+      },
+    });
+  } catch (error) {
+    dbError = error instanceof Error ? error.message : "Erreur BDD inconnue.";
+  }
+
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-6">
       <header className="rounded-2xl border border-border bg-card px-6 py-7 shadow-sm">
@@ -26,9 +60,13 @@ export default async function AdminUploadsPage() {
         </p>
         <h1 className="mt-3 text-3xl font-semibold text-foreground">Upload d&apos;images</h1>
         <p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">
-          Point d&apos;entrée rapide pour alimenter le site avec des visuels gérés par
-          l&apos;équipe admin.
+          V2 activée : compression automatique, thumbnail et enregistrement des médias en base.
         </p>
+        {dbError ? (
+          <p className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+            La BDD n&apos;est pas prête: {dbError}. Vérifie `DATABASE_URL` puis applique les migrations Prisma.
+          </p>
+        ) : null}
         <div className="mt-4">
           <Link href="/admin" className="text-sm font-semibold text-primary hover:underline">
             ← Retour au dashboard admin
@@ -36,7 +74,12 @@ export default async function AdminUploadsPage() {
         </div>
       </header>
 
-      <AdminImageUploadForm />
+      <AdminImageUploadForm
+        initialMedia={media.map((item) => ({
+          ...item,
+          createdAt: item.createdAt.toISOString(),
+        }))}
+      />
     </main>
   );
 }
