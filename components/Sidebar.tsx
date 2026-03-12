@@ -53,6 +53,7 @@ const adminItems = [
   { href: "/admin/tournaments", label: "Tournois", icon: Trophy },
   { href: "/admin/categories", label: "Catégories", icon: Swords },
   { href: "/admin/inscriptions", label: "Inscriptions", icon: User },
+  { href: "/admin/communaute", label: "Modération communauté", icon: MessageSquare },
   { href: "/admin/utilisateurs", label: "Utilisateurs", icon: User },
 ];
 
