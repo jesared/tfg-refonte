@@ -1,4 +1,4 @@
-import { CalendarDays, Check, Image, MessageSquareWarning, ShieldCheck, Trophy, User } from "lucide-react";
+import { CalendarDays, Check, Image, MessageSquare, ShieldCheck, Trophy, User } from "lucide-react";
 import type { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import Link from "next/link";
@@ -55,7 +55,7 @@ const quickAccess = [
     title: "Modération communauté",
     description: "Traiter les signalements de publications et garder un fil sportif de qualité.",
     href: "/admin/communaute",
-    icon: MessageSquareWarning,
+    icon: MessageSquare,
   },
   {
     title: "Utilisateurs",
