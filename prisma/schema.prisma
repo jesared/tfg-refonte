@@ -28,6 +28,7 @@ model User {
 
 enum StorageProvider {
   S3
+  SUPABASE
 }
 
 model Media {
@@ -36,7 +37,7 @@ model Media {
   uploader   User   @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
   uploaderId String
 
-  provider StorageProvider @default(S3)
+  provider StorageProvider @default(SUPABASE)
   bucket   String
   objectKey String @unique
 
