@@ -45,6 +45,7 @@ export async function POST(req: Request) {
 
     const payload = await req.json();
     const dto = parseCreatePostDto(payload);
+    const isAdmin = session.user.role === "ADMIN";
 
     if (dto.tournamentId) {
       const tournament = await prisma.tournament.findUnique({
@@ -65,7 +66,7 @@ export async function POST(req: Request) {
         content: dto.content,
         imageUrl: dto.imageUrl,
         scope: dto.scope,
-        status: dto.status,
+        status: isAdmin ? dto.status : "DRAFT",
         zone: dto.zone,
       },
       include: {
