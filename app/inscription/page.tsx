@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { CalendarDays, Trophy } from "lucide-react";
+import Link from "next/link";
 import { getServerSession } from "next-auth";
 
 import { InscriptionForm } from "./InscriptionForm";
@@ -28,6 +29,13 @@ export default async function InscriptionPage() {
     salleVille: string;
     categories: { id: string; nom: string; minPoints: number | null; maxPoints: number | null }[];
   } | null = null;
+
+  let communityInfoPosts: {
+    id: string;
+    title: string | null;
+    content: string;
+    createdAt: Date;
+  }[] = [];
 
   try {
     tournament = await prisma.tournament.findFirst({
@@ -60,6 +68,24 @@ export default async function InscriptionPage() {
     });
   } catch {
     tournament = null;
+  }
+
+  try {
+    communityInfoPosts = await prisma.communityPost.findMany({
+      where: tournament ? { tournamentId: tournament.id } : undefined,
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 3,
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        createdAt: true,
+      },
+    });
+  } catch {
+    communityInfoPosts = [];
   }
 
   return (
@@ -104,6 +130,30 @@ export default async function InscriptionPage() {
             Aucun tournoi à venir avec inscriptions ouvertes pour le moment.
           </p>
         )}
+
+        <div className="mt-8 rounded-xl border border-border/70 bg-muted/20 p-4 md:p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            Infos de la communauté
+          </p>
+          {communityInfoPosts.length > 0 ? (
+            <ul className="mt-3 space-y-3">
+              {communityInfoPosts.map((post) => (
+                <li key={post.id} className="rounded-lg border border-border/70 bg-card px-3 py-2">
+                  <p className="text-sm font-medium text-foreground">{post.title ?? "Publication communauté"}</p>
+                  <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{post.content}</p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-3 text-sm text-muted-foreground">
+              Aucun message communautaire pour l&apos;instant sur le prochain tour.
+            </p>
+          )}
+
+          <Link href="/communaute" className="mt-4 inline-flex text-sm font-medium text-primary hover:underline">
+            Ouvrir le fil communauté
+          </Link>
+        </div>
       </div>
     </section>
   );
