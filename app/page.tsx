@@ -1,6 +1,30 @@
-import { CalendarDays, Home as HomeIcon, Pencil, Trophy } from "lucide-react";
+import { CalendarDays, Home as HomeIcon, MessageSquare, Pencil, Trophy } from "lucide-react";
+import type { Prisma } from "@prisma/client";
 
-export default function Home() {
+import { prisma } from "@/lib/prisma";
+
+type CommunitySpotlightItem = Prisma.CommunityPostGetPayload<{
+  select: {
+    id: true;
+    title: true;
+    content: true;
+    publishedAt: true;
+    tournament: {
+      select: {
+        tour: true;
+      };
+    };
+  };
+}>;
+
+const formatDate = (date: Date) =>
+  new Date(date).toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+
+export default async function Home() {
   const facebookPageUrl = "https://www.facebook.com/tropheefrancoisgrieder";
   const shareUrl = "https://trophee-francois-grieder.fr";
   const quickLinks = [
@@ -23,6 +47,29 @@ export default function Home() {
       icon: Pencil,
     },
   ];
+
+  let spotlightPosts: CommunitySpotlightItem[] = [];
+
+  try {
+    spotlightPosts = await prisma.communityPost.findMany({
+      where: { status: "PUBLISHED" },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        publishedAt: true,
+        tournament: {
+          select: {
+            tour: true,
+          },
+        },
+      },
+      orderBy: [{ publishedAt: "desc" }],
+      take: 3,
+    });
+  } catch (error) {
+    console.error("[home] Unable to load community spotlight", error);
+  }
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 sm:gap-10">
@@ -52,6 +99,49 @@ export default function Home() {
 
       <section className="rounded-3xl border border-border bg-card px-5 py-7 shadow-sm sm:px-8 sm:py-10">
         <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-foreground sm:text-xl">À la une communauté</h2>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Les dernières infos utiles publiées par les clubs et organisateurs du circuit.
+          </p>
+
+          {spotlightPosts.length > 0 ? (
+            <div className="grid gap-3 md:grid-cols-3">
+              {spotlightPosts.map((post) => (
+                <a
+                  key={post.id}
+                  href="/actualites"
+                  className="rounded-2xl border border-border bg-background/60 p-4 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm"
+                >
+                  <p className="text-xs text-muted-foreground">
+                    {formatDate(post.publishedAt)}
+                    {post.tournament ? ` · Tour ${post.tournament.tour}` : ""}
+                  </p>
+                  <p className="mt-2 line-clamp-2 font-semibold text-foreground">
+                    {post.title ?? "Publication communauté"}
+                  </p>
+                  <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">{post.content}</p>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+              Les publications communautaires apparaîtront ici dès qu&apos;un nouveau contenu sera
+              partagé.
+            </div>
+          )}
+
+          <a
+            href="/actualites"
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary px-4 py-2 text-xs font-semibold text-secondary-foreground shadow-sm transition hover:bg-muted"
+          >
+            <MessageSquare className="h-4 w-4" aria-hidden="true" />
+            Voir toute la communauté
+          </a>
+        </div>
+      </section>
+
+      <section className="rounded-3xl border border-border bg-card px-5 py-7 shadow-sm sm:px-8 sm:py-10">
+        <div className="space-y-4">
           <h2 className="text-lg font-semibold text-foreground sm:text-xl">Accès rapides</h2>
           <p className="text-sm leading-relaxed text-muted-foreground">
             Retrouvez les pages les plus utiles du site pour naviguer plus facilement.
@@ -68,9 +158,7 @@ export default function Home() {
                     <Icon className="h-4 w-4" aria-hidden="true" />
                   </span>
                   <div>
-                    <p className="font-semibold text-foreground group-hover:text-primary">
-                      {label}
-                    </p>
+                    <p className="font-semibold text-foreground group-hover:text-primary">{label}</p>
                     <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                       {description}
                     </p>

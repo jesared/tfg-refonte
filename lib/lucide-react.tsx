@@ -95,6 +95,32 @@ export const Mail = createIcon(
   </>,
 );
 
+
+export const MessageSquare = createIcon(
+  "MessageSquare",
+  <>
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10Z" />
+  </>,
+);
+
+export const ShieldAlert = createIcon(
+  "ShieldAlert",
+  <>
+    <path d="M12 3l7 3v6c0 5-3.5 8.5-7 9-3.5-.5-7-4-7-9V6l7-3Z" />
+    <line x1="12" y1="8" x2="12" y2="13" />
+    <circle cx="12" cy="16" r="1" />
+  </>,
+);
+
+export const Sparkles = createIcon(
+  "Sparkles",
+  <>
+    <path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8L12 3Z" />
+    <path d="M5 14l.9 2.1L8 17l-2.1.9L5 20l-.9-2.1L2 17l2.1-.9L5 14Z" />
+    <path d="M19 14l.9 2.1L22 17l-2.1.9L19 20l-.9-2.1L16 17l2.1-.9L19 14Z" />
+  </>,
+);
+
 export const Scale = createIcon(
   "Scale",
   <>

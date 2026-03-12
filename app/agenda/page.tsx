@@ -95,6 +95,7 @@ export default async function AgendaPage() {
                 <th className="px-3 py-2 font-medium">Tour</th>
                 <th className="px-3 py-2 font-medium">Date</th>
                 <th className="px-3 py-2 font-medium">Club organisateur</th>
+                <th className="px-3 py-2 font-medium">Communauté</th>
               </tr>
             </thead>
             <tbody>
@@ -115,6 +116,14 @@ export default async function AgendaPage() {
                   </td>
                   <td className="px-3 py-3 text-foreground/90">{formatAgendaDate(tour.date)}</td>
                   <td className="px-3 py-3 text-foreground/90">{tour.clubOrganisateur}</td>
+                  <td className="px-3 py-3">
+                    <a
+                      href={`/actualites?tour=${tour.tour}`}
+                      className="text-primary hover:underline"
+                    >
+                      Voir les publications
+                    </a>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -155,15 +164,20 @@ export default async function AgendaPage() {
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>{tour.salleAdresse}</span>
               </div>
-              <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tour.salleAdresse)}`}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 font-medium text-primary hover:underline"
-              >
-                <MapPin className="h-4 w-4" />
-                Ouvrir dans Google Maps
-              </a>
+              <div className="flex flex-wrap items-center gap-4">
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tour.salleAdresse)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 font-medium text-primary hover:underline"
+                >
+                  <MapPin className="h-4 w-4" />
+                  Ouvrir dans Google Maps
+                </a>
+                <a href={`/actualites?tour=${tour.tour}`} className="font-medium text-primary hover:underline">
+                  Voir les publications de ce tour
+                </a>
+              </div>
             </div>
           </article>
         ))}
