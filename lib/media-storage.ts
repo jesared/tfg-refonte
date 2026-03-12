@@ -96,10 +96,12 @@ async function signedRequest(method: HttpMethod, key: string, body?: Buffer, con
     headers.set("Content-Type", contentType);
   }
 
+  const requestBody: BodyInit | undefined = body ? new Blob([Uint8Array.from(body)]) : undefined;
+
   const response = await fetch(url, {
     method,
     headers,
-    body: body ? new Uint8Array(body) : undefined,
+    body: requestBody,
   });
 
   if (!response.ok) {
