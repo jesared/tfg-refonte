@@ -1,6 +1,21 @@
 import { CalendarDays, Home as HomeIcon, MessageSquare, Pencil, Trophy } from "lucide-react";
+import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+
+type CommunitySpotlightItem = Prisma.CommunityPostGetPayload<{
+  select: {
+    id: true;
+    title: true;
+    content: true;
+    publishedAt: true;
+    tournament: {
+      select: {
+        tour: true;
+      };
+    };
+  };
+}>;
 
 const formatDate = (date: Date) =>
   new Date(date).toLocaleDateString("fr-FR", {
@@ -33,7 +48,7 @@ export default async function Home() {
     },
   ];
 
-  let spotlightPosts: Awaited<ReturnType<typeof prisma.communityPost.findMany>> = [];
+  let spotlightPosts: CommunitySpotlightItem[] = [];
 
   try {
     spotlightPosts = await prisma.communityPost.findMany({

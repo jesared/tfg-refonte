@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { Prisma } from "@prisma/client";
 import { MessageSquare, ShieldAlert, Sparkles, Trophy } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
@@ -14,6 +15,36 @@ const zoneLabel = {
   ARDENNES: "Ardennes",
   BOTH: "Marne + Ardennes",
 } as const;
+
+type CommunityPostFeedItem = Prisma.CommunityPostGetPayload<{
+  include: {
+    author: {
+      select: {
+        name: true;
+        communityProfile: {
+          select: {
+            displayName: true;
+            club: true;
+          };
+        };
+      };
+    };
+    tournament: {
+      select: {
+        nom: true;
+        tour: true;
+        date: true;
+      };
+    };
+    _count: {
+      select: {
+        comments: true;
+        reactions: true;
+        reports: true;
+      };
+    };
+  };
+}>;
 
 const formatDate = (date: Date) =>
   new Date(date).toLocaleDateString("fr-FR", {
@@ -31,7 +62,7 @@ export default async function ActualitesPage({
   const tourFilter = Number(params.tour);
   const hasTourFilter = Number.isFinite(tourFilter);
 
-  let posts: Awaited<ReturnType<typeof prisma.communityPost.findMany>> = [];
+  let posts: CommunityPostFeedItem[] = [];
 
   try {
     posts = await prisma.communityPost.findMany({
