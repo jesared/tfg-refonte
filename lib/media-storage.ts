@@ -99,7 +99,7 @@ async function signedRequest(method: HttpMethod, key: string, body?: Buffer, con
   const response = await fetch(url, {
     method,
     headers,
-    body,
+    body: body ? new Uint8Array(body) : undefined,
   });
 
   if (!response.ok) {
