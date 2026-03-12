@@ -1,4 +1,4 @@
-import { CalendarDays, Check, Image, ShieldCheck, Trophy, User } from "lucide-react";
+import { CalendarDays, Check, Image, MessageSquareWarning, ShieldCheck, Trophy, User } from "lucide-react";
 import type { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import Link from "next/link";
@@ -50,6 +50,12 @@ const quickAccess = [
     description: "Suivre les inscriptions validées et traiter les demandes en attente.",
     href: "/admin/inscriptions",
     icon: Check,
+  },
+  {
+    title: "Modération communauté",
+    description: "Traiter les signalements de publications et garder un fil sportif de qualité.",
+    href: "/admin/communaute",
+    icon: MessageSquareWarning,
   },
   {
     title: "Utilisateurs",
