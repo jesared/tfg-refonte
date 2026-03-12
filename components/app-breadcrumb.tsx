@@ -12,7 +12,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const SEGMENT_LABELS: Record<string, string> = {
-  actualites: "Communauté",
+  communaute: "Communauté",
   admin: "Administration",
   agenda: "Agenda",
   classements: "Classements",

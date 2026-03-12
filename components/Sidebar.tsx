@@ -37,7 +37,7 @@ const navigationItems = [
   { href: "/agenda", label: "Agenda & salles", icon: CalendarDays },
   { href: "/tableaux", label: "Tableaux & Règlement", icon: Table2 },
   { href: "/classements", label: "Classements", icon: Scale },
-  { href: "/actualites", label: "Communauté", icon: MessageSquare },
+  { href: "/communaute", label: "Communauté", icon: MessageSquare },
   { href: "/recompenses", label: "Récompenses", icon: Gift },
   { href: "/inscription", label: "Inscription", icon: User },
   { href: "/contact", label: "Contact", icon: Mail },
