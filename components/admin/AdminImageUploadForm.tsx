@@ -24,13 +24,15 @@ export function AdminImageUploadForm({ initialMedia }: { initialMedia: MediaItem
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mediaItems, setMediaItems] = useState<MediaItem[]>(initialMedia);
+  const [copiedMediaId, setCopiedMediaId] = useState<string | null>(null);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsLoading(true);
     setError(null);
 
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const file = formData.get("file");
 
     if (!(file instanceof File) || file.size === 0) {
@@ -63,7 +65,7 @@ export function AdminImageUploadForm({ initialMedia }: { initialMedia: MediaItem
 
       const uploadedMedia = payload.media;
       setMediaItems((prev) => [uploadedMedia, ...prev]);
-      event.currentTarget.reset();
+      form.reset();
     } catch {
       setError("Upload impossible. Vérifie la connexion et la configuration serveur.");
     } finally {
@@ -86,6 +88,16 @@ export function AdminImageUploadForm({ initialMedia }: { initialMedia: MediaItem
     } catch {
       setMediaItems(previousItems);
       setError("Suppression impossible. Vérifie la connexion et réessaie.");
+    }
+  }
+
+  async function copyToClipboard(mediaId: string, value: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedMediaId(mediaId);
+      window.setTimeout(() => setCopiedMediaId((current) => (current === mediaId ? null : current)), 2000);
+    } catch {
+      setError("Impossible de copier automatiquement. Copie l'URL manuellement.");
     }
   }
 
@@ -146,7 +158,13 @@ export function AdminImageUploadForm({ initialMedia }: { initialMedia: MediaItem
       {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
 
       <div className="mt-6 space-y-3">
-        <h3 className="text-sm font-semibold text-foreground">Derniers médias uploadés</h3>
+        <div>
+          <h3 className="text-sm font-semibold text-foreground">Bibliothèque média</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Pour réutiliser une image dans un contenu, copie son URL avec le bouton « Copier URL » puis colle-la où tu veux.
+          </p>
+        </div>
+
         {mediaItems.length === 0 ? (
           <p className="text-sm text-muted-foreground">Aucun média pour le moment.</p>
         ) : (
@@ -180,13 +198,22 @@ export function AdminImageUploadForm({ initialMedia }: { initialMedia: MediaItem
                     ) : null}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  className="self-start rounded-md border border-red-300 px-3 py-1 text-xs font-semibold text-red-700 hover:bg-red-50"
-                  onClick={() => handleDelete(item.id)}
-                >
-                  Supprimer
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    className="rounded-md border border-border px-3 py-1 text-xs font-semibold text-foreground hover:bg-muted"
+                    onClick={() => copyToClipboard(item.id, item.originalUrl)}
+                  >
+                    {copiedMediaId === item.id ? "URL copiée" : "Copier URL"}
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-md border border-red-300 px-3 py-1 text-xs font-semibold text-red-700 hover:bg-red-50"
+                    onClick={() => handleDelete(item.id)}
+                  >
+                    Supprimer
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
