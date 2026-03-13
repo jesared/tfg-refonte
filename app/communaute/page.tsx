@@ -5,7 +5,7 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 import type { Prisma } from "@prisma/client";
-import { ImageIcon, MessageSquare, ShieldAlert, Sparkles, Trophy } from "lucide-react";
+import { Image as ImageIcon, MessageSquare, ShieldAlert, Sparkles, Trophy } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
