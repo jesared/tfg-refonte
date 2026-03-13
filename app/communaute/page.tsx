@@ -1,9 +1,11 @@
 import { CommunityPostScope, CommunityZone } from "@prisma/client";
 import type { Metadata } from "next";
+import NextImage from "next/image";
+import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 import type { Prisma } from "@prisma/client";
-import { MessageSquare, ShieldAlert, Sparkles, Trophy } from "lucide-react";
+import { ImageIcon, MessageSquare, ShieldAlert, Sparkles, Trophy } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -99,6 +101,7 @@ export default async function CommunautePage({
     const tournamentId = String(formData.get("tournamentId") ?? "").trim() || null;
     const zoneValue = String(formData.get("zone") ?? "").trim();
     const scopeValue = String(formData.get("scope") ?? "").trim();
+    const rawImageUrl = String(formData.get("imageUrl") ?? "").trim();
 
     if (content.length < 12) {
       return;
@@ -112,11 +115,24 @@ export default async function CommunautePage({
       ? (scopeValue as CommunityPostScope)
       : CommunityPostScope.TOURNAMENT;
 
+    let imageUrl: string | null = null;
+    if (rawImageUrl.length > 0) {
+      try {
+        const parsedUrl = new URL(rawImageUrl);
+        if (["http:", "https:"].includes(parsedUrl.protocol)) {
+          imageUrl = parsedUrl.toString();
+        }
+      } catch {
+        return;
+      }
+    }
+
     await prisma.communityPost.create({
       data: {
         authorId: session.user.id,
         title: title.length > 0 ? title : null,
         content,
+        imageUrl,
         tournamentId,
         zone,
         scope,
@@ -200,6 +216,11 @@ export default async function CommunautePage({
               publication.
             </p>
 
+            <div className="mt-3 rounded-lg bg-background/80 p-3 text-xs text-muted-foreground">
+              💡 Astuce: ajoutez une image via une URL directe (<code>.jpg</code>, <code>.png</code>,
+              etc.) pour illustrer vos résultats ou annonces.
+            </div>
+
             <form action={submitPostProposal} className="mt-4 grid gap-3 sm:grid-cols-2">
               <label className="flex flex-col gap-1 sm:col-span-2">
                 <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -258,6 +279,19 @@ export default async function CommunautePage({
                   <option value={CommunityZone.ARDENNES}>Ardennes</option>
                   <option value={CommunityZone.BOTH}>Marne + Ardennes</option>
                 </select>
+              </label>
+
+              <label className="flex flex-col gap-1 sm:col-span-2">
+                <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  URL de l&apos;image (optionnel)
+                </span>
+                <input
+                  type="url"
+                  name="imageUrl"
+                  maxLength={1000}
+                  placeholder="https://exemple.com/photo-tournoi.jpg"
+                  className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                />
               </label>
 
               <label className="flex flex-col gap-1 sm:col-span-2">
@@ -393,6 +427,23 @@ export default async function CommunautePage({
                 {post.content}
               </p>
 
+              {post.imageUrl ? (
+                <Link
+                  href={post.imageUrl}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="mt-4 block overflow-hidden rounded-xl border border-border bg-muted/20"
+                >
+                  <NextImage
+                    src={post.imageUrl}
+                    alt={`Image de la publication ${post.title ?? "communauté"}`}
+                    width={1200}
+                    height={675}
+                    className="aspect-video w-full object-cover"
+                  />
+                </Link>
+              ) : null}
+
               {post.tournament ? (
                 <div className="mt-4 rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
                   <p className="font-semibold text-foreground">Tour {post.tournament.tour}</p>
@@ -411,6 +462,12 @@ export default async function CommunautePage({
                   <MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />
                   {post._count.comments} commentaires
                 </span>
+                {post.imageUrl ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-emerald-700">
+                    <ImageIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                    Image jointe
+                  </span>
+                ) : null}
                 <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-muted-foreground">
                   <ShieldAlert className="h-3.5 w-3.5" aria-hidden="true" />
                   {post._count.reports} signalements
