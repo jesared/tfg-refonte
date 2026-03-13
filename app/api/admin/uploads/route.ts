@@ -45,65 +45,76 @@ export async function POST(req: Request) {
     return badRequest("Fichier trop volumineux (maximum 8 Mo).");
   }
 
-  const sourceBuffer = Buffer.from(await file.arrayBuffer());
+  try {
+    const sourceBuffer = Buffer.from(await file.arrayBuffer());
 
-  const originalSharp = sharp(sourceBuffer, { failOn: "none" }).rotate();
-  const metadata = await originalSharp.metadata();
+    const originalSharp = sharp(sourceBuffer, { failOn: "none" }).rotate();
+    const metadata = await originalSharp.metadata();
 
-  const optimizedOriginal = await originalSharp
-    .resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true })
-    .webp({ quality: 82 })
-    .toBuffer();
+    const optimizedOriginal = await originalSharp
+      .resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true })
+      .webp({ quality: 82 })
+      .toBuffer();
 
-  const thumbnailBuffer = await sharp(sourceBuffer, { failOn: "none" })
-    .rotate()
-    .resize({ width: 420, height: 420, fit: "cover", position: "attention" })
-    .webp({ quality: 78 })
-    .toBuffer();
+    const thumbnailBuffer = await sharp(sourceBuffer, { failOn: "none" })
+      .rotate()
+      .resize({ width: 420, height: 420, fit: "cover", position: "attention" })
+      .webp({ quality: 78 })
+      .toBuffer();
 
-  const basename = `${Date.now()}-${randomUUID()}`;
-  const keys = buildMediaKeys(basename);
+    const basename = `${Date.now()}-${randomUUID()}`;
+    const keys = buildMediaKeys(basename);
 
-  const [originalUpload, thumbnailUpload] = await Promise.all([
-    uploadObject({
-      key: keys.originalKey,
-      body: optimizedOriginal,
-      contentType: "image/webp",
-    }),
-    uploadObject({
-      key: keys.thumbnailKey,
-      body: thumbnailBuffer,
-      contentType: "image/webp",
-    }),
-  ]);
+    const [originalUpload, thumbnailUpload] = await Promise.all([
+      uploadObject({
+        key: keys.originalKey,
+        body: optimizedOriginal,
+        contentType: "image/webp",
+      }),
+      uploadObject({
+        key: keys.thumbnailKey,
+        body: thumbnailBuffer,
+        contentType: "image/webp",
+      }),
+    ]);
 
-  const media = await prisma.media.create({
-    data: {
-      uploaderId: session.user.id,
-      bucket: originalUpload.bucket,
-      objectKey: keys.originalKey,
-      thumbnailObjectKey: keys.thumbnailKey,
-      originalUrl: originalUpload.publicUrl,
-      thumbnailUrl: thumbnailUpload.publicUrl,
-      mimeType: "image/webp",
-      sizeBytes: optimizedOriginal.byteLength,
-      width: metadata.width ?? null,
-      height: metadata.height ?? null,
-      altText,
-      sourceRef,
-    },
-    select: {
-      id: true,
-      originalUrl: true,
-      thumbnailUrl: true,
-      sizeBytes: true,
-      width: true,
-      height: true,
-      createdAt: true,
-      altText: true,
-      sourceRef: true,
-    },
-  });
+    const media = await prisma.media.create({
+      data: {
+        uploaderId: session.user.id,
+        bucket: originalUpload.bucket,
+        objectKey: keys.originalKey,
+        thumbnailObjectKey: keys.thumbnailKey,
+        originalUrl: originalUpload.publicUrl,
+        thumbnailUrl: thumbnailUpload.publicUrl,
+        mimeType: "image/webp",
+        sizeBytes: optimizedOriginal.byteLength,
+        width: metadata.width ?? null,
+        height: metadata.height ?? null,
+        altText,
+        sourceRef,
+      },
+      select: {
+        id: true,
+        originalUrl: true,
+        thumbnailUrl: true,
+        sizeBytes: true,
+        width: true,
+        height: true,
+        createdAt: true,
+        altText: true,
+        sourceRef: true,
+      },
+    });
 
-  return NextResponse.json({ media }, { status: 201 });
+    return NextResponse.json({ media }, { status: 201 });
+  } catch (error) {
+    console.error("[admin/uploads] Upload failed", error);
+    return NextResponse.json(
+      {
+        error:
+          "Upload impossible côté serveur (stockage ou configuration). Vérifie SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY et SUPABASE_STORAGE_BUCKET.",
+      },
+      { status: 500 },
+    );
+  }
 }

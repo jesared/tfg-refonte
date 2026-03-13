@@ -60,12 +60,19 @@ const formatDate = (date: Date) =>
 export default async function CommunautePage({
   searchParams,
 }: {
-  searchParams?: Promise<{ tour?: string }>;
+  searchParams?: Promise<{ tour?: string; scope?: string; zone?: string }>;
 }) {
   const session = await getServerSession(authOptions);
   const params = (await searchParams) ?? {};
   const tourFilter = Number(params.tour);
   const hasTourFilter = Number.isFinite(tourFilter);
+  const scopeFilter = String(params.scope ?? "").trim();
+  const zoneFilter = String(params.zone ?? "").trim();
+
+  const hasScopeFilter = Object.values(CommunityPostScope).includes(
+    scopeFilter as CommunityPostScope,
+  );
+  const hasZoneFilter = Object.values(CommunityZone).includes(zoneFilter as CommunityZone);
 
   let posts: CommunityPostFeedItem[] = [];
   const tournaments = await prisma.tournament.findMany({
@@ -126,6 +133,8 @@ export default async function CommunautePage({
       where: {
         status: "PUBLISHED",
         ...(hasTourFilter ? { tournament: { tour: tourFilter } } : {}),
+        ...(hasScopeFilter ? { scope: scopeFilter as CommunityPostScope } : {}),
+        ...(hasZoneFilter ? { zone: zoneFilter as CommunityZone } : {}),
       },
       include: {
         author: {
@@ -176,6 +185,8 @@ export default async function CommunautePage({
             Retrouvez les annonces des clubs, les résultats marquants et la vie des tours autour du
             Trophée François Grieder.
             {hasTourFilter ? ` Filtré sur le tour ${tourFilter}.` : ""}
+            {hasScopeFilter ? ` Type: ${scopeFilter.toLowerCase()}.` : ""}
+            {hasZoneFilter ? ` Zone: ${zoneLabel[zoneFilter as CommunityZone]}.` : ""}
           </p>
         </div>
 
@@ -299,7 +310,51 @@ export default async function CommunautePage({
         </article>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <section className="rounded-2xl border border-border bg-card p-4 sm:p-5">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Filtres rapides du fil
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2 text-xs">
+          <a
+            href="/communaute"
+            className="rounded-full border border-border px-3 py-1 hover:bg-muted"
+          >
+            Tous
+          </a>
+          <a
+            href="/communaute?scope=TOURNAMENT"
+            className="rounded-full border border-border px-3 py-1 hover:bg-muted"
+          >
+            Tournois
+          </a>
+          <a
+            href="/communaute?scope=CLUB"
+            className="rounded-full border border-border px-3 py-1 hover:bg-muted"
+          >
+            Clubs
+          </a>
+          <a
+            href="/communaute?scope=GENERAL"
+            className="rounded-full border border-border px-3 py-1 hover:bg-muted"
+          >
+            Général
+          </a>
+          <a
+            href="/communaute?zone=MARNE"
+            className="rounded-full border border-border px-3 py-1 hover:bg-muted"
+          >
+            Marne
+          </a>
+          <a
+            href="/communaute?zone=ARDENNES"
+            className="rounded-full border border-border px-3 py-1 hover:bg-muted"
+          >
+            Ardennes
+          </a>
+        </div>
+      </section>
+
+      <section className="space-y-4">
         {posts.map((post) => {
           const authorName =
             post.author.communityProfile?.displayName ||
@@ -311,6 +366,9 @@ export default async function CommunautePage({
               key={post.id}
               className="rounded-2xl border border-border bg-card p-5 shadow-sm"
             >
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Fil communauté
+              </p>
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 <span>{formatDate(post.publishedAt)}</span>
                 {post.zone ? (
