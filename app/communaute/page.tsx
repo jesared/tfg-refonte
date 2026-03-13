@@ -1,6 +1,5 @@
 import { CommunityPostScope, CommunityZone } from "@prisma/client";
 import type { Metadata } from "next";
-import NextImage from "next/image";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
@@ -434,12 +433,12 @@ export default async function CommunautePage({
                   rel="noreferrer noopener"
                   className="mt-4 block overflow-hidden rounded-xl border border-border bg-muted/20"
                 >
-                  <NextImage
+                  <img
                     src={post.imageUrl}
                     alt={`Image de la publication ${post.title ?? "communauté"}`}
-                    width={1200}
-                    height={675}
                     className="aspect-video w-full object-cover"
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
                   />
                 </Link>
               ) : null}
