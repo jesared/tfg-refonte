@@ -45,36 +45,47 @@ export function AdminImageUploadForm({ initialMedia }: { initialMedia: MediaItem
       return;
     }
 
-    const response = await fetch("/api/admin/uploads", {
-      method: "POST",
-      body: formData,
-    });
+    try {
+      const response = await fetch("/api/admin/uploads", {
+        method: "POST",
+        body: formData,
+      });
 
-    const payload = (await response.json().catch(() => null)) as
-      | { media?: MediaItem; error?: string }
-      | null;
+      const payload = (await response.json().catch(() => null)) as {
+        media?: MediaItem;
+        error?: string;
+      } | null;
 
-    if (!response.ok || !payload?.media) {
-      setError(payload?.error ?? "Upload impossible.");
+      if (!response.ok || !payload?.media) {
+        setError(payload?.error ?? "Upload impossible.");
+        return;
+      }
+
+      const uploadedMedia = payload.media;
+      setMediaItems((prev) => [uploadedMedia, ...prev]);
+      event.currentTarget.reset();
+    } catch {
+      setError("Upload impossible. Vérifie la connexion et la configuration serveur.");
+    } finally {
       setIsLoading(false);
-      return;
     }
-
-    setMediaItems((prev) => [payload.media!, ...prev]);
-    event.currentTarget.reset();
-    setIsLoading(false);
   }
 
   async function handleDelete(mediaId: string) {
     const previousItems = mediaItems;
     setMediaItems((prev) => prev.filter((item) => item.id !== mediaId));
 
-    const response = await fetch(`/api/admin/uploads/${mediaId}`, { method: "DELETE" });
+    try {
+      const response = await fetch(`/api/admin/uploads/${mediaId}`, { method: "DELETE" });
 
-    if (!response.ok) {
+      if (!response.ok) {
+        setMediaItems(previousItems);
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        setError(payload?.error ?? "Suppression impossible.");
+      }
+    } catch {
       setMediaItems(previousItems);
-      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-      setError(payload?.error ?? "Suppression impossible.");
+      setError("Suppression impossible. Vérifie la connexion et réessaie.");
     }
   }
 
@@ -141,7 +152,10 @@ export function AdminImageUploadForm({ initialMedia }: { initialMedia: MediaItem
         ) : (
           <ul className="space-y-3">
             {mediaItems.map((item) => (
-              <li key={item.id} className="flex flex-col gap-3 rounded-xl border border-border/70 bg-muted/20 p-3 md:flex-row md:items-center md:justify-between">
+              <li
+                key={item.id}
+                className="flex flex-col gap-3 rounded-xl border border-border/70 bg-muted/20 p-3 md:flex-row md:items-center md:justify-between"
+              >
                 <div className="flex items-center gap-3">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -150,13 +164,20 @@ export function AdminImageUploadForm({ initialMedia }: { initialMedia: MediaItem
                     className="h-16 w-16 rounded-md border border-border object-cover"
                   />
                   <div className="text-sm">
-                    <a href={item.originalUrl} target="_blank" rel="noreferrer" className="font-semibold text-primary hover:underline">
+                    <a
+                      href={item.originalUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-semibold text-primary hover:underline"
+                    >
                       Voir l&apos;original
                     </a>
                     <p className="text-muted-foreground">
                       {formatSize(item.sizeBytes)} • {item.width ?? "?"}x{item.height ?? "?"}
                     </p>
-                    {item.sourceRef ? <p className="text-xs text-muted-foreground">Source: {item.sourceRef}</p> : null}
+                    {item.sourceRef ? (
+                      <p className="text-xs text-muted-foreground">Source: {item.sourceRef}</p>
+                    ) : null}
                   </div>
                 </div>
                 <button
