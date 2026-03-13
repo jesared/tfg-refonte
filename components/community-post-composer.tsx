@@ -1,7 +1,7 @@
 "use client";
 
 import { CommunityPostScope } from "@prisma/client";
-import { TableTennis } from "lucide-react";
+import { Table2 } from "lucide-react";
 import { useState } from "react";
 
 type TournamentOption = {
@@ -23,7 +23,7 @@ export function CommunityPostComposer({ action, tournaments }: CommunityPostComp
       <div className="rounded-2xl border border-border bg-background/80 p-3 sm:p-4">
         <div className="flex items-center gap-3">
           <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 text-primary">
-            <TableTennis className="h-5 w-5" aria-hidden="true" />
+            <Table2 className="h-5 w-5" aria-hidden="true" />
           </div>
           <button
             type="button"
