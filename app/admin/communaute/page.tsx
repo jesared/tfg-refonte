@@ -1,5 +1,5 @@
 import { CommunityPostStatus, CommunityReportStatus } from "@prisma/client";
-import { Check, MessageSquare, ShieldAlert } from "lucide-react";
+import { Check, MessageSquare, ShieldAlert, Trash2 } from "lucide-react";
 import type { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
@@ -101,6 +101,25 @@ export default async function AdminCommunautePage() {
         publishedAt: status === CommunityPostStatus.PUBLISHED ? new Date() : undefined,
       },
     });
+
+    revalidatePath("/admin/communaute");
+    revalidatePath("/communaute");
+  }
+
+  async function deletePost(formData: FormData) {
+    "use server";
+
+    const session = await getServerSession(authOptions);
+    if (!session?.user || session.user.role !== "ADMIN") {
+      return;
+    }
+
+    const postId = String(formData.get("postId") ?? "").trim();
+    if (!postId) {
+      return;
+    }
+
+    await prisma.communityPost.delete({ where: { id: postId } });
 
     revalidatePath("/admin/communaute");
     revalidatePath("/communaute");
@@ -244,12 +263,22 @@ export default async function AdminCommunautePage() {
                     ) : null}
                   </td>
                   <td className="px-4 py-4 align-top">
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-2">
                       <PostStatusForm
                         postId={post.id}
                         status={post.status}
                         updatePostStatus={updatePostStatus}
                       />
+                      <form action={deletePost}>
+                        <input type="hidden" name="postId" value={post.id} />
+                        <button
+                          type="submit"
+                          className="inline-flex h-9 items-center gap-1.5 rounded-md border border-destructive/50 px-3 text-xs font-medium text-destructive transition hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                          Supprimer
+                        </button>
+                      </form>
                       <span className="text-xs text-muted-foreground">
                         Statut actuel : {postStatusLabel[post.status]}
                       </span>

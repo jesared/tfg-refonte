@@ -152,6 +152,18 @@ export const Table2 = createIcon(
   </>,
 );
 
+
+
+export const Trash2 = createIcon(
+  "Trash2",
+  <>
+    <path d="M3 6h18" />
+    <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+    <rect x="6" y="6" width="12" height="15" rx="1" />
+    <line x1="10" y1="10" x2="10" y2="18" />
+    <line x1="14" y1="10" x2="14" y2="18" />
+  </>,
+);
 export const Trophy = createIcon(
   "Trophy",
   <>
