@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import type { Prisma } from "@prisma/client";
 import { Image as ImageIcon, MessageSquare, ShieldAlert, Sparkles, Trophy } from "lucide-react";
 
+import { CommunityPostComposer } from "@/components/community-post-composer";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
@@ -75,19 +76,17 @@ const getAvatarColor = (seed: string) => {
 export default async function CommunautePage({
   searchParams,
 }: {
-  searchParams?: Promise<{ tour?: string; scope?: string; zone?: string }>;
+  searchParams?: Promise<{ tour?: string; scope?: string }>;
 }) {
   const session = await getServerSession(authOptions);
   const params = (await searchParams) ?? {};
   const tourFilter = Number(params.tour);
   const hasTourFilter = Number.isFinite(tourFilter);
   const scopeFilter = String(params.scope ?? "").trim();
-  const zoneFilter = String(params.zone ?? "").trim();
 
   const hasScopeFilter = Object.values(CommunityPostScope).includes(
     scopeFilter as CommunityPostScope,
   );
-  const hasZoneFilter = Object.values(CommunityZone).includes(zoneFilter as CommunityZone);
 
   let posts: CommunityPostFeedItem[] = [];
   const tournaments = await prisma.tournament.findMany({
@@ -163,7 +162,6 @@ export default async function CommunautePage({
         status: "PUBLISHED",
         ...(hasTourFilter ? { tournament: { tour: tourFilter } } : {}),
         ...(hasScopeFilter ? { scope: scopeFilter as CommunityPostScope } : {}),
-        ...(hasZoneFilter ? { zone: zoneFilter as CommunityZone } : {}),
       },
       include: {
         author: {
@@ -215,125 +213,12 @@ export default async function CommunautePage({
             Trophée François Grieder.
             {hasTourFilter ? ` Filtré sur le tour ${tourFilter}.` : ""}
             {hasScopeFilter ? ` Type: ${scopeFilter.toLowerCase()}.` : ""}
-            {hasZoneFilter ? ` Zone: ${zoneLabel[zoneFilter as CommunityZone]}.` : ""}
           </p>
         </div>
 
         {session?.user ? (
           <div className="mt-6 rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-4 sm:p-5">
-            <h2 className="text-base font-semibold text-foreground sm:text-lg">
-              Proposer une publication
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Votre message est enregistré en brouillon puis validé par un administrateur avant
-              publication.
-            </p>
-
-            <div className="mt-3 rounded-lg bg-background/80 p-3 text-xs text-muted-foreground">
-              💡 Astuce: ajoutez une image via une URL directe (<code>.jpg</code>, <code>.png</code>,
-              etc.) pour illustrer vos résultats ou annonces.
-            </div>
-
-            <form action={submitPostProposal} className="mt-4 grid gap-3 sm:grid-cols-2">
-              <label className="flex flex-col gap-1 sm:col-span-2">
-                <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Titre (optionnel)
-                </span>
-                <input
-                  type="text"
-                  name="title"
-                  maxLength={140}
-                  placeholder="Ex: Résultats du tour 2 à Reims"
-                  className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                />
-              </label>
-
-              <label className="flex flex-col gap-1 sm:col-span-2">
-                <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Contenu
-                </span>
-                <textarea
-                  name="content"
-                  required
-                  minLength={12}
-                  maxLength={2000}
-                  rows={5}
-                  placeholder="Partagez une annonce, un résultat ou une info utile à la communauté."
-                  className="rounded-md border border-input bg-background px-3 py-2 text-sm"
-                />
-              </label>
-
-              <label className="flex flex-col gap-1">
-                <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Type
-                </span>
-                <select
-                  name="scope"
-                  defaultValue={CommunityPostScope.TOURNAMENT}
-                  className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                >
-                  <option value={CommunityPostScope.TOURNAMENT}>Tournoi</option>
-                  <option value={CommunityPostScope.CLUB}>Club</option>
-                  <option value={CommunityPostScope.GENERAL}>Général</option>
-                </select>
-              </label>
-
-              <label className="flex flex-col gap-1">
-                <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Zone
-                </span>
-                <select
-                  name="zone"
-                  defaultValue=""
-                  className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                >
-                  <option value="">Non précisée</option>
-                  <option value={CommunityZone.MARNE}>Marne</option>
-                  <option value={CommunityZone.ARDENNES}>Ardennes</option>
-                  <option value={CommunityZone.BOTH}>Marne + Ardennes</option>
-                </select>
-              </label>
-
-              <label className="flex flex-col gap-1 sm:col-span-2">
-                <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  URL de l&apos;image (optionnel)
-                </span>
-                <input
-                  type="url"
-                  name="imageUrl"
-                  maxLength={1000}
-                  placeholder="https://exemple.com/photo-tournoi.jpg"
-                  className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                />
-              </label>
-
-              <label className="flex flex-col gap-1 sm:col-span-2">
-                <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Tournoi lié (optionnel)
-                </span>
-                <select
-                  name="tournamentId"
-                  defaultValue=""
-                  className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                >
-                  <option value="">Aucun tournoi spécifique</option>
-                  {tournaments.map((tournament) => (
-                    <option key={tournament.id} value={tournament.id}>
-                      Tour {tournament.tour} · {tournament.nom}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <div className="sm:col-span-2">
-                <button
-                  type="submit"
-                  className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition hover:opacity-90"
-                >
-                  Envoyer pour validation
-                </button>
-              </div>
-            </form>
+            <CommunityPostComposer action={submitPostProposal} tournaments={tournaments} />
           </div>
         ) : null}
       </section>
@@ -385,18 +270,6 @@ export default async function CommunautePage({
             className="rounded-full border border-border px-3 py-1 hover:bg-muted"
           >
             Général
-          </a>
-          <a
-            href="/communaute?zone=MARNE"
-            className="rounded-full border border-border px-3 py-1 hover:bg-muted"
-          >
-            Marne
-          </a>
-          <a
-            href="/communaute?zone=ARDENNES"
-            className="rounded-full border border-border px-3 py-1 hover:bg-muted"
-          >
-            Ardennes
           </a>
         </div>
       </section>
