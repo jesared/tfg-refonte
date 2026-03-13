@@ -1,6 +1,7 @@
 import { CommunityPostScope, CommunityZone } from "@prisma/client";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { createHash } from "node:crypto";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 import type { Prisma } from "@prisma/client";
@@ -57,6 +58,19 @@ const formatDate = (date: Date) =>
     month: "long",
     year: "numeric",
   });
+
+const getAvatarColor = (seed: string) => {
+  const colors = [
+    "bg-sky-500/15 text-sky-700",
+    "bg-fuchsia-500/15 text-fuchsia-700",
+    "bg-emerald-500/15 text-emerald-700",
+    "bg-amber-500/15 text-amber-700",
+    "bg-violet-500/15 text-violet-700",
+  ];
+  const digest = createHash("sha256").update(seed).digest("hex");
+  const value = Number.parseInt(digest.slice(0, 2), 16);
+  return colors[value % colors.length];
+};
 
 export default async function CommunautePage({
   searchParams,
@@ -393,19 +407,33 @@ export default async function CommunautePage({
             post.author.communityProfile?.displayName ||
             post.author.name ||
             "Membre de la communauté";
+          const authorInitial = authorName.trim().charAt(0).toUpperCase() || "M";
+          const avatarColor = getAvatarColor(authorName);
 
           return (
             <article
               key={post.id}
               className="rounded-2xl border border-border bg-card p-5 shadow-sm"
             >
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Fil communauté
-              </p>
-              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <span>{formatDate(post.publishedAt)}</span>
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${avatarColor}`}
+                  >
+                    {authorInitial}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{authorName}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDate(post.publishedAt)}
+                      {post.author.communityProfile?.club
+                        ? ` · ${post.author.communityProfile.club}`
+                        : ""}
+                    </p>
+                  </div>
+                </div>
                 {post.zone ? (
-                  <span className="rounded-full bg-muted px-2 py-0.5 font-medium text-foreground/80">
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-foreground/80">
                     {zoneLabel[post.zone]}
                   </span>
                 ) : null}
@@ -414,13 +442,6 @@ export default async function CommunautePage({
               <h2 className="mt-3 line-clamp-2 text-lg font-semibold text-foreground">
                 {post.title ?? "Publication communauté"}
               </h2>
-
-              <p className="mt-2 text-xs uppercase tracking-wide text-muted-foreground">
-                Par {authorName}
-                {post.author.communityProfile?.club
-                  ? ` · ${post.author.communityProfile.club}`
-                  : ""}
-              </p>
 
               <p className="mt-3 line-clamp-4 text-sm leading-relaxed text-foreground/90">
                 {post.content}
