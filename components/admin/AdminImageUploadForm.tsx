@@ -1,17 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import Image from "next/image";
+import { useEffect, useMemo, useState, useTransition } from "react";
 
-type MediaItem = {
-  id: string;
-  originalUrl: string;
-  thumbnailUrl: string;
-  sizeBytes: number;
-  width: number | null;
-  height: number | null;
-  createdAt: string;
-  altText: string | null;
-  sourceRef: string | null;
+import {
+  type AdminMediaItem,
+  deleteMediaAction,
+  getMediaLibraryAction,
+  updateMediaAltAction,
+  uploadMediaAction,
+} from "@/app/admin/uploads/actions";
+import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+
+type Toast = {
+  id: number;
+  type: "success" | "error" | "info";
+  message: string;
 };
 
 const MAX_FILE_SIZE = 8 * 1024 * 1024;
@@ -20,204 +32,252 @@ function formatSize(size: number) {
   return `${(size / (1024 * 1024)).toFixed(2)} Mo`;
 }
 
-export function AdminImageUploadForm({ initialMedia }: { initialMedia: MediaItem[] }) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [mediaItems, setMediaItems] = useState<MediaItem[]>(initialMedia);
-  const [copiedMediaId, setCopiedMediaId] = useState<string | null>(null);
+export function AdminImageUploadForm({ initialMedia }: { initialMedia: AdminMediaItem[] }) {
+  const [mediaItems, setMediaItems] = useState<AdminMediaItem[]>(initialMedia);
+  const [loadingLibrary, setLoadingLibrary] = useState(true);
+  const [isUploading, startUpload] = useTransition();
+  const [isSavingAlt, startSaveAlt] = useTransition();
+  const [isDeleting, startDelete] = useTransition();
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  const [selectedMedia, setSelectedMedia] = useState<AdminMediaItem | null>(null);
+  const [altDraft, setAltDraft] = useState("");
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  const pushToast = (type: Toast["type"], message: string) => {
+    const id = Date.now() + Math.random();
+    setToasts((prev) => [...prev, { id, type, message }]);
+    window.setTimeout(() => {
+      setToasts((prev) => prev.filter((toast) => toast.id !== id));
+    }, 2800);
+  };
+
+  useEffect(() => {
+    getMediaLibraryAction()
+      .then((items) => {
+        setMediaItems(items);
+      })
+      .catch(() => {
+        pushToast("error", "Erreur pendant le chargement de la librairie média.");
+      })
+      .finally(() => setLoadingLibrary(false));
+  }, []);
+
+  const selectedMeta = useMemo(
+    () => mediaItems.find((item) => item.id === selectedMedia?.id) ?? selectedMedia,
+    [mediaItems, selectedMedia],
+  );
+
+  function onUploadSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setIsLoading(true);
-    setError(null);
-
     const form = event.currentTarget;
     const formData = new FormData(form);
     const file = formData.get("file");
 
     if (!(file instanceof File) || file.size === 0) {
-      setError("Sélectionne une image avant de lancer l'upload.");
-      setIsLoading(false);
+      pushToast("error", "Sélectionnez un fichier avant de lancer l'upload.");
       return;
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      setError("Le fichier dépasse 8 Mo. Réduis l'image puis réessaie.");
-      setIsLoading(false);
+      pushToast("error", "Le fichier dépasse la limite de 8 Mo.");
       return;
     }
 
-    try {
-      const response = await fetch("/api/admin/uploads", {
-        method: "POST",
-        body: formData,
-      });
+    pushToast("info", "Upload en cours...");
+    startUpload(async () => {
+      const result = await uploadMediaAction(formData);
 
-      const payload = (await response.json().catch(() => null)) as {
-        media?: MediaItem;
-        error?: string;
-      } | null;
-
-      if (!response.ok || !payload?.media) {
-        setError(payload?.error ?? "Upload impossible.");
+      if (!result.ok || !result.media) {
+        pushToast("error", result.message);
         return;
       }
 
-      const uploadedMedia = payload.media;
-      setMediaItems((prev) => [uploadedMedia, ...prev]);
+      setMediaItems((prev) => [result.media!, ...prev]);
       form.reset();
-    } catch {
-      setError("Upload impossible. Vérifie la connexion et la configuration serveur.");
-    } finally {
-      setIsLoading(false);
-    }
+      pushToast("success", "Upload réussi.");
+    });
   }
 
-  async function handleDelete(mediaId: string) {
-    const previousItems = mediaItems;
-    setMediaItems((prev) => prev.filter((item) => item.id !== mediaId));
+  function onSaveAlt() {
+    if (!selectedMeta) {
+      return;
+    }
 
-    try {
-      const response = await fetch(`/api/admin/uploads/${mediaId}`, { method: "DELETE" });
+    startSaveAlt(async () => {
+      const result = await updateMediaAltAction({ mediaId: selectedMeta.id, alt: altDraft });
 
-      if (!response.ok) {
-        setMediaItems(previousItems);
-        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-        setError(payload?.error ?? "Suppression impossible.");
+      if (!result.ok) {
+        pushToast("error", result.message);
+        return;
       }
-    } catch {
-      setMediaItems(previousItems);
-      setError("Suppression impossible. Vérifie la connexion et réessaie.");
-    }
+
+      setMediaItems((prev) =>
+        prev.map((item) => (item.id === selectedMeta.id ? { ...item, alt: altDraft.trim() || null } : item)),
+      );
+      pushToast("success", "Texte alternatif sauvegardé.");
+    });
   }
 
-  async function copyToClipboard(mediaId: string, value: string) {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopiedMediaId(mediaId);
-      window.setTimeout(() => setCopiedMediaId((current) => (current === mediaId ? null : current)), 2000);
-    } catch {
-      setError("Impossible de copier automatiquement. Copie l'URL manuellement.");
+  function onDelete() {
+    if (!selectedMeta) {
+      return;
     }
+
+    startDelete(async () => {
+      pushToast("info", "Suppression en cours...");
+      const result = await deleteMediaAction(selectedMeta.id);
+
+      if (!result.ok) {
+        pushToast("error", result.message);
+        return;
+      }
+
+      setMediaItems((prev) => prev.filter((item) => item.id !== selectedMeta.id));
+      setSelectedMedia(null);
+      pushToast("success", "Média supprimé.");
+    });
   }
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-      <h2 className="text-lg font-semibold text-foreground">Média admin V2 (S3 + thumbnails)</h2>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Upload compressé en WebP, miniature générée automatiquement, puis enregistrement en base.
-      </p>
+    <section className="rounded-2xl border border-border bg-card p-5 shadow-sm md:p-6">
+      <div className="flex flex-col gap-2">
+        <h2 className="text-lg font-semibold text-foreground">Bibliothèque média</h2>
+        <p className="text-sm text-muted-foreground">
+          Upload vers le bucket objet, stockage des métadonnées en base puis gestion des assets en grille.
+        </p>
+      </div>
 
-      <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
-        <div className="space-y-2">
-          <label htmlFor="admin-image-file" className="text-sm font-medium text-foreground">
-            Fichier image
-          </label>
-          <input
-            id="admin-image-file"
-            name="file"
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/avif"
-            className="block w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-semibold file:text-primary-foreground"
-            required
-          />
-        </div>
-
+      <form className="mt-5 grid gap-4 rounded-xl border border-border/70 bg-muted/20 p-4 md:grid-cols-[1fr_auto]" onSubmit={onUploadSubmit}>
         <div className="grid gap-4 md:grid-cols-2">
           <label className="space-y-2 text-sm font-medium text-foreground">
-            Texte alternatif (optionnel)
+            Fichier
             <input
-              name="altText"
-              type="text"
-              maxLength={180}
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal"
-              placeholder="Ex: remise des prix catégorie junior"
+              name="file"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/avif"
+              className="block w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-semibold file:text-primary-foreground"
+              required
             />
           </label>
           <label className="space-y-2 text-sm font-medium text-foreground">
-            Source/licence (optionnel)
+            Texte alt (optionnel)
             <input
-              name="sourceRef"
+              name="alt"
               type="text"
-              maxLength={255}
+              maxLength={180}
+              placeholder="Ex : finale double senior"
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal"
-              placeholder="Ex: Photo interne / Unsplash - auteur"
             />
           </label>
         </div>
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-70"
-        >
-          {isLoading ? "Upload en cours..." : "Envoyer l'image"}
-        </button>
+        <div className="flex items-end">
+          <Button type="submit" disabled={isUploading} className="w-full md:w-auto">
+            {isUploading ? "Upload..." : "Uploader"}
+          </Button>
+        </div>
       </form>
 
-      {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
-
-      <div className="mt-6 space-y-3">
-        <div>
-          <h3 className="text-sm font-semibold text-foreground">Bibliothèque média</h3>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Pour réutiliser une image dans un contenu, copie son URL avec le bouton « Copier URL » puis colle-la où tu veux.
-          </p>
-        </div>
-
-        {mediaItems.length === 0 ? (
+      <div className="mt-6">
+        {loadingLibrary ? (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {Array.from({ length: 10 }).map((_, index) => (
+              <div key={index} className="aspect-square animate-pulse rounded-lg bg-muted" />
+            ))}
+          </div>
+        ) : mediaItems.length === 0 ? (
           <p className="text-sm text-muted-foreground">Aucun média pour le moment.</p>
         ) : (
-          <ul className="space-y-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {mediaItems.map((item) => (
-              <li
+              <button
                 key={item.id}
-                className="flex flex-col gap-3 rounded-xl border border-border/70 bg-muted/20 p-3 md:flex-row md:items-center md:justify-between"
+                type="button"
+                onClick={() => {
+                  setSelectedMedia(item);
+                  setAltDraft(item.alt ?? "");
+                }}
+                className="group relative aspect-square overflow-hidden rounded-lg border border-border bg-muted"
               >
-                <div className="flex items-center gap-3">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={item.thumbnailUrl}
-                    alt={item.altText ?? "Miniature média"}
-                    className="h-16 w-16 rounded-md border border-border object-cover"
-                  />
-                  <div className="text-sm">
-                    <a
-                      href={item.originalUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="font-semibold text-primary hover:underline"
-                    >
-                      Voir l&apos;original
-                    </a>
-                    <p className="text-muted-foreground">
-                      {formatSize(item.sizeBytes)} • {item.width ?? "?"}x{item.height ?? "?"}
-                    </p>
-                    {item.sourceRef ? (
-                      <p className="text-xs text-muted-foreground">Source: {item.sourceRef}</p>
-                    ) : null}
-                  </div>
+                <Image
+                  src={item.thumbnailUrl}
+                  alt={item.alt ?? item.name}
+                  fill
+                  sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 20vw"
+                  className="object-cover transition group-hover:scale-105"
+                  unoptimized
+                />
+                <div className="absolute inset-x-0 bottom-0 bg-black/50 px-2 py-1 text-left text-[11px] text-white">
+                  <p className="truncate">{item.name}</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    className="rounded-md border border-border px-3 py-1 text-xs font-semibold text-foreground hover:bg-muted"
-                    onClick={() => copyToClipboard(item.id, item.originalUrl)}
-                  >
-                    {copiedMediaId === item.id ? "URL copiée" : "Copier URL"}
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-md border border-red-300 px-3 py-1 text-xs font-semibold text-red-700 hover:bg-red-50"
-                    onClick={() => handleDelete(item.id)}
-                  >
-                    Supprimer
-                  </button>
-                </div>
-              </li>
+              </button>
             ))}
-          </ul>
+          </div>
         )}
+      </div>
+
+      <Sheet open={Boolean(selectedMedia)} onOpenChange={(open) => !open && setSelectedMedia(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-md">
+          {selectedMeta ? (
+            <>
+              <SheetHeader>
+                <SheetTitle>Détails du média</SheetTitle>
+                <SheetDescription>Modifiez le texte alternatif ou supprimez l&apos;asset.</SheetDescription>
+              </SheetHeader>
+              <div className="space-y-4">
+                <div className="relative aspect-square overflow-hidden rounded-lg border border-border">
+                  <Image
+                    src={selectedMeta.thumbnailUrl}
+                    alt={selectedMeta.alt ?? selectedMeta.name}
+                    fill
+                    sizes="400px"
+                    className="object-cover"
+                    unoptimized
+                  />
+                </div>
+                <div className="space-y-1 text-xs text-muted-foreground">
+                  <p className="break-all">{selectedMeta.key}</p>
+                  <p>{formatSize(selectedMeta.size)}</p>
+                </div>
+                <label className="block space-y-2 text-sm font-medium">
+                  Texte alternatif
+                  <textarea
+                    value={altDraft}
+                    onChange={(event) => setAltDraft(event.target.value)}
+                    rows={3}
+                    maxLength={180}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal"
+                  />
+                </label>
+              </div>
+              <SheetFooter className="mt-3">
+                <Button variant="outline" onClick={onSaveAlt} disabled={isSavingAlt || isDeleting}>
+                  {isSavingAlt ? "Enregistrement..." : "Sauvegarder Alt"}
+                </Button>
+                <Button variant="destructive" onClick={onDelete} disabled={isDeleting || isSavingAlt}>
+                  {isDeleting ? "Suppression..." : "Supprimer"}
+                </Button>
+              </SheetFooter>
+            </>
+          ) : null}
+        </SheetContent>
+      </Sheet>
+
+      <div className="pointer-events-none fixed bottom-4 right-4 z-[60] flex w-80 flex-col gap-2">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`rounded-lg border px-3 py-2 text-sm shadow-md ${
+              toast.type === "success"
+                ? "border-emerald-300 bg-emerald-50 text-emerald-900"
+                : toast.type === "error"
+                  ? "border-red-300 bg-red-50 text-red-900"
+                  : "border-blue-300 bg-blue-50 text-blue-900"
+            }`}
+          >
+            {toast.message}
+          </div>
+        ))}
       </div>
     </section>
   );
