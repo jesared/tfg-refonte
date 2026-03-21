@@ -81,6 +81,13 @@ export default async function TournamentsPage({ searchParams }: PageProps) {
     orderBy: [{ date: "desc" }],
   });
 
+  const hasActiveFilters =
+    Boolean(q) ||
+    (status !== "all" && Boolean(status)) ||
+    !Number.isNaN(tour) ||
+    Boolean(params.from) ||
+    Boolean(params.to);
+
   const openRegistrationsCount = tournaments.filter((tournament) => tournament.inscriptionOuverte).length;
   const pastTournamentsCount = tournaments.filter((tournament) => new Date(tournament.date) < today).length;
 
@@ -172,14 +179,28 @@ export default async function TournamentsPage({ searchParams }: PageProps) {
 
         {tournaments.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-muted/20 p-8 text-center">
-            <p className="text-sm text-muted-foreground">Aucun tournoi n&apos;a encore été créé.</p>
-            <Link
-              href="/admin/tournaments/new"
-              className="mt-4 inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
-            >
-              <Check className="h-4 w-4" aria-hidden="true" />
-              Créer le premier tournoi
-            </Link>
+            <p className="text-sm text-muted-foreground">
+              {hasActiveFilters
+                ? "Aucun tournoi ne correspond à ces filtres."
+                : "Aucun tournoi n&apos;a encore été créé."}
+            </p>
+
+            {hasActiveFilters ? (
+              <Link
+                href="/admin/tournaments"
+                className="mt-4 inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
+              >
+                Réinitialiser les filtres
+              </Link>
+            ) : (
+              <Link
+                href="/admin/tournaments/new"
+                className="mt-4 inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
+              >
+                <Check className="h-4 w-4" aria-hidden="true" />
+                Créer le premier tournoi
+              </Link>
+            )}
           </div>
         ) : (
           <div>
