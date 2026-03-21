@@ -62,7 +62,7 @@ export async function POST(req: Request) {
       .toBuffer();
 
     const basename = `${Date.now()}-${randomUUID()}`;
-    const keys = buildMediaKeys(basename);
+    const keys = buildMediaKeys(basename, { prefix: "community-media" });
 
     const [originalUpload, thumbnailUpload] = await Promise.all([
       uploadObject({
