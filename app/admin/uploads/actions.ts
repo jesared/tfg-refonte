@@ -22,7 +22,28 @@ export type AdminMediaItem = {
   type: string;
   size: number;
   alt: string | null;
+  width: number | null;
+  height: number | null;
   createdAt: string;
+};
+
+export type MediaLibraryQuery = {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  mimeType?: string;
+  alt?: "all" | "with-alt" | "without-alt";
+  dateFrom?: string;
+  dateTo?: string;
+  sortBy?: "createdAt" | "name" | "size";
+  sortOrder?: "asc" | "desc";
+};
+
+export type MediaLibraryResult = {
+  items: AdminMediaItem[];
+  total: number;
+  page: number;
+  pageSize: number;
 };
 
 type ActionResult = {
@@ -49,6 +70,8 @@ function mapMedia(item: {
   mimeType: string;
   sizeBytes: number;
   altText: string | null;
+  width: number | null;
+  height: number | null;
   createdAt: Date;
 }): AdminMediaItem {
   return {
@@ -60,20 +83,65 @@ function mapMedia(item: {
     type: item.mimeType,
     size: item.sizeBytes,
     alt: item.altText,
+    width: item.width,
+    height: item.height,
     createdAt: item.createdAt.toISOString(),
   };
 }
 
-export async function getMediaLibraryAction(): Promise<AdminMediaItem[]> {
+export async function getMediaLibraryAction(query?: MediaLibraryQuery): Promise<MediaLibraryResult> {
   const user = await requireAdmin();
 
   if (!user) {
-    return [];
+    return { items: [], total: 0, page: 1, pageSize: 24 };
   }
 
+  const page = Math.max(1, query?.page ?? 1);
+  const pageSize = Math.min(60, Math.max(12, query?.pageSize ?? 24));
+  const search = query?.search?.trim();
+  const mimeType = query?.mimeType?.trim();
+  const alt = query?.alt ?? "all";
+  const dateFrom = query?.dateFrom ? new Date(query.dateFrom) : null;
+  const dateTo = query?.dateTo ? new Date(query.dateTo) : null;
+  const sortBy = query?.sortBy ?? "createdAt";
+  const sortOrder = query?.sortOrder ?? "desc";
+
+  const where = {
+    ...(search
+      ? {
+          OR: [{ name: { contains: search, mode: "insensitive" as const } }, { objectKey: { contains: search } }],
+        }
+      : {}),
+    ...(mimeType ? { mimeType } : {}),
+    ...(alt === "with-alt"
+      ? { altText: { not: null } }
+      : alt === "without-alt"
+        ? { OR: [{ altText: null }, { altText: "" }] }
+        : {}),
+    ...((dateFrom || dateTo)
+      ? {
+          createdAt: {
+            ...(dateFrom ? { gte: dateFrom } : {}),
+            ...(dateTo ? { lte: new Date(dateTo.getTime() + 24 * 60 * 60 * 1000 - 1) } : {}),
+          },
+        }
+      : {}),
+  };
+
+  const orderBy =
+    sortBy === "name"
+      ? { name: sortOrder }
+      : sortBy === "size"
+        ? { sizeBytes: sortOrder }
+        : { createdAt: sortOrder };
+
+  const total = await prisma.media.count({ where });
+
   const items = await prisma.media.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 60,
+    where,
+    orderBy,
+    skip: (page - 1) * pageSize,
+    take: pageSize,
     select: {
       id: true,
       originalUrl: true,
@@ -83,11 +151,13 @@ export async function getMediaLibraryAction(): Promise<AdminMediaItem[]> {
       mimeType: true,
       sizeBytes: true,
       altText: true,
+      width: true,
+      height: true,
       createdAt: true,
     },
   });
 
-  return items.map(mapMedia);
+  return { items: items.map(mapMedia), total, page, pageSize };
 }
 
 export async function uploadMediaAction(formData: FormData): Promise<ActionResult & { media?: AdminMediaItem }> {
@@ -169,6 +239,8 @@ export async function uploadMediaAction(formData: FormData): Promise<ActionResul
         mimeType: true,
         sizeBytes: true,
         altText: true,
+        width: true,
+        height: true,
         createdAt: true,
       },
     });
@@ -221,4 +293,76 @@ export async function deleteMediaAction(mediaId: string): Promise<ActionResult> 
   revalidatePath("/admin/uploads");
 
   return { ok: true, message: "Média supprimé." };
+}
+
+export async function updateMediaAltManyAction(input: { mediaIds: string[]; alt: string }): Promise<ActionResult> {
+  const user = await requireAdmin();
+
+  if (!user) {
+    return { ok: false, message: "Non autorisé." };
+  }
+
+  const mediaIds = Array.from(new Set(input.mediaIds.filter(Boolean)));
+
+  if (mediaIds.length === 0) {
+    return { ok: false, message: "Aucun média sélectionné." };
+  }
+
+  await prisma.media.updateMany({
+    where: { id: { in: mediaIds } },
+    data: { altText: input.alt.trim() || null },
+  });
+
+  revalidatePath("/admin/uploads");
+
+  return { ok: true, message: "Texte alternatif mis à jour sur la sélection." };
+}
+
+export async function deleteMediaManyAction(mediaIdsInput: string[]): Promise<ActionResult> {
+  const user = await requireAdmin();
+
+  if (!user) {
+    return { ok: false, message: "Non autorisé." };
+  }
+
+  const mediaIds = Array.from(new Set(mediaIdsInput.filter(Boolean)));
+
+  if (mediaIds.length === 0) {
+    return { ok: false, message: "Aucun média sélectionné." };
+  }
+
+  const media = await prisma.media.findMany({
+    where: { id: { in: mediaIds } },
+    select: { id: true, objectKey: true, thumbnailObjectKey: true },
+  });
+
+  await Promise.allSettled(media.flatMap((item) => [deleteObject(item.objectKey), deleteObject(item.thumbnailObjectKey)]));
+  await prisma.media.deleteMany({ where: { id: { in: media.map((item) => item.id) } } });
+
+  revalidatePath("/admin/uploads");
+
+  return { ok: true, message: "Médias supprimés." };
+}
+
+export async function updateMediaNameAction(input: { mediaId: string; name: string }): Promise<ActionResult> {
+  const user = await requireAdmin();
+
+  if (!user) {
+    return { ok: false, message: "Non autorisé." };
+  }
+
+  const name = input.name.trim();
+
+  if (!name) {
+    return { ok: false, message: "Le nom de fichier ne peut pas être vide." };
+  }
+
+  await prisma.media.update({
+    where: { id: input.mediaId },
+    data: { name },
+  });
+
+  revalidatePath("/admin/uploads");
+
+  return { ok: true, message: "Nom du fichier mis à jour." };
 }
