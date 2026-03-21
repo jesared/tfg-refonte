@@ -19,9 +19,11 @@ type CommunityPostComposerProps = {
 export function CommunityPostComposer({ action, tournaments }: CommunityPostComposerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
+  const [uploadedMediaId, setUploadedMediaId] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -32,6 +34,21 @@ export function CommunityPostComposer({ action, tournaments }: CommunityPostComp
       }
     };
   }, [previewUrl]);
+
+  async function deleteUploadedMedia(mediaId: string) {
+    const response = await fetch("/api/community/uploads", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ mediaId }),
+    });
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+      throw new Error(payload?.error ?? "Suppression impossible pour le moment.");
+    }
+  }
 
   async function handleImageUpload(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -62,6 +79,8 @@ export function CommunityPostComposer({ action, tournaments }: CommunityPostComp
     setPreviewUrl(URL.createObjectURL(file));
     setFileName(file.name);
 
+    const previousMediaId = uploadedMediaId;
+
     const formData = new FormData();
     formData.set("file", file);
 
@@ -74,34 +93,60 @@ export function CommunityPostComposer({ action, tournaments }: CommunityPostComp
       });
 
       const payload = (await response.json().catch(() => null)) as
-        | { imageUrl?: string; error?: string }
+        | { imageUrl?: string; mediaId?: string; error?: string }
         | null;
 
       if (!response.ok || !payload?.imageUrl) {
         setUploadedUrl(null);
+        setUploadedMediaId(null);
         setUploadError(payload?.error ?? "Upload impossible. Réessayez dans quelques instants.");
         return;
       }
 
       setUploadedUrl(payload.imageUrl);
-    } catch {
+      setUploadedMediaId(payload.mediaId ?? null);
+
+      if (previousMediaId && previousMediaId !== payload.mediaId) {
+        try {
+          await deleteUploadedMedia(previousMediaId);
+        } catch {
+          setUploadError("Nouvelle image enregistrée, mais suppression de l’ancienne impossible.");
+        }
+      }
+    } catch (error) {
       setUploadedUrl(null);
-      setUploadError("Erreur réseau pendant l'upload.");
+      setUploadedMediaId(null);
+      const message = error instanceof Error ? error.message : "Erreur réseau pendant l'upload.";
+      setUploadError(message);
     } finally {
       setIsUploading(false);
     }
   }
 
-  function removeUploadedImage() {
+  async function removeUploadedImage() {
+    setIsRemoving(true);
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
     }
-    setUploadedUrl(null);
-    setPreviewUrl(null);
-    setUploadError(null);
-    setFileName(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+
+    try {
+      if (uploadedMediaId) {
+        await deleteUploadedMedia(uploadedMediaId);
+      }
+
+      setUploadedUrl(null);
+      setUploadedMediaId(null);
+      setPreviewUrl(null);
+      setUploadError(null);
+      setFileName(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Suppression impossible pour le moment.";
+      setUploadError(message);
+    } finally {
+      setIsRemoving(false);
     }
   }
 
@@ -227,10 +272,13 @@ export function CommunityPostComposer({ action, tournaments }: CommunityPostComp
                 {previewUrl || uploadedUrl ? (
                   <button
                     type="button"
-                    onClick={removeUploadedImage}
+                    onClick={() => {
+                      void removeUploadedImage();
+                    }}
+                    disabled={isRemoving}
                     className="w-fit rounded-md border border-input px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted"
                   >
-                    Retirer l&apos;image
+                    {isRemoving ? "Suppression..." : "Retirer l&apos;image"}
                   </button>
                 ) : null}
               </label>
@@ -256,10 +304,10 @@ export function CommunityPostComposer({ action, tournaments }: CommunityPostComp
               <div className="sm:col-span-2">
                 <button
                   type="submit"
-                  disabled={isUploading}
+                  disabled={isUploading || isRemoving}
                   className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition hover:opacity-90"
                 >
-                  {isUploading ? "Patientez..." : "Envoyer pour validation"}
+                  {isUploading || isRemoving ? "Patientez..." : "Envoyer pour validation"}
                 </button>
               </div>
             </form>
