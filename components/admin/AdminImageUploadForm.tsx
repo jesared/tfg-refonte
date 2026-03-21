@@ -138,6 +138,21 @@ export function AdminImageUploadForm({ initialMedia }: { initialMedia: AdminMedi
     });
   }
 
+  function onCopyUrl() {
+    if (!selectedMeta) {
+      return;
+    }
+
+    navigator.clipboard
+      .writeText(selectedMeta.url)
+      .then(() => {
+        pushToast("success", "URL copiée dans le presse-papiers.");
+      })
+      .catch(() => {
+        pushToast("error", "Impossible de copier l'URL.");
+      });
+  }
+
   return (
     <section className="rounded-2xl border border-border bg-card p-5 shadow-sm md:p-6">
       <div className="flex flex-col gap-2">
@@ -158,6 +173,9 @@ export function AdminImageUploadForm({ initialMedia }: { initialMedia: AdminMedi
               className="block w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-semibold file:text-primary-foreground"
               required
             />
+            <p className="text-xs font-normal text-muted-foreground">
+              Formats acceptés : JPG, PNG, WEBP, AVIF — taille maximale : 8 Mo.
+            </p>
           </label>
           <label className="space-y-2 text-sm font-medium text-foreground">
             Texte alt (optionnel)
@@ -177,6 +195,14 @@ export function AdminImageUploadForm({ initialMedia }: { initialMedia: AdminMedi
           </Button>
         </div>
       </form>
+      {isUploading ? (
+        <div className="mt-3 space-y-2">
+          <p className="text-sm font-medium text-primary">Téléversement en cours...</p>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div className="h-full w-1/3 animate-pulse rounded-full bg-primary" />
+          </div>
+        </div>
+      ) : null}
 
       <div className="mt-6">
         {loadingLibrary ? (
@@ -251,6 +277,9 @@ export function AdminImageUploadForm({ initialMedia }: { initialMedia: AdminMedi
                 </label>
               </div>
               <SheetFooter className="mt-3">
+                <Button variant="secondary" onClick={onCopyUrl} disabled={isSavingAlt || isDeleting}>
+                  Copier l&apos;URL
+                </Button>
                 <Button variant="outline" onClick={onSaveAlt} disabled={isSavingAlt || isDeleting}>
                   {isSavingAlt ? "Enregistrement..." : "Sauvegarder Alt"}
                 </Button>
