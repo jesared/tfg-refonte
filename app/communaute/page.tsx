@@ -120,6 +120,35 @@ const getFilterClassName = (isActive: boolean) =>
       : "border-border text-foreground hover:bg-muted"
   }`;
 
+const normalizePrefix = (value: string) => value.replace(/\/+$/, "");
+
+const getAllowedImagePrefixes = () => {
+  const prefixes = new Set<string>();
+
+  const publicBase = process.env.SUPABASE_PUBLIC_URL_BASE?.trim();
+  if (publicBase) {
+    try {
+      prefixes.add(normalizePrefix(new URL(publicBase).toString()));
+    } catch {
+      // Ignore malformed env value and fallback to the default Supabase path if available.
+    }
+  }
+
+  const supabaseUrl = process.env.SUPABASE_URL?.trim();
+  const bucket = process.env.SUPABASE_STORAGE_BUCKET?.trim();
+
+  if (supabaseUrl && bucket) {
+    try {
+      const defaultPublicBase = new URL(`/storage/v1/object/public/${bucket}/`, supabaseUrl).toString();
+      prefixes.add(normalizePrefix(defaultPublicBase));
+    } catch {
+      // Ignore malformed env value and keep previously discovered prefixes.
+    }
+  }
+
+  return [...prefixes];
+};
+
 export default async function CommunautePage({
   searchParams,
 }: {
@@ -137,6 +166,7 @@ export default async function CommunautePage({
   );
 
   const hasZoneFilter = Object.values(CommunityZone).includes(zoneFilter as CommunityZone);
+  const allowedImagePrefixes = getAllowedImagePrefixes();
 
   let posts: CommunityPostFeedItem[] = [];
   const tournaments = await prisma.tournament.findMany({
@@ -181,11 +211,17 @@ export default async function CommunautePage({
     if (rawImageUrl.length > 0) {
       try {
         const parsedUrl = new URL(rawImageUrl);
-        if (["http:", "https:"].includes(parsedUrl.protocol)) {
-          imageUrl = parsedUrl.toString();
+        const normalizedUrl = parsedUrl.toString();
+        const isHttpUrl = ["http:", "https:"].includes(parsedUrl.protocol);
+        const isAllowedHost =
+          allowedImagePrefixes.length === 0 ||
+          allowedImagePrefixes.some((prefix) => normalizedUrl === prefix || normalizedUrl.startsWith(`${prefix}/`));
+
+        if (isHttpUrl && isAllowedHost) {
+          imageUrl = normalizedUrl;
         }
       } catch {
-        return;
+        imageUrl = null;
       }
     }
 
