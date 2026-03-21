@@ -8,8 +8,8 @@ import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
 export const metadata: Metadata = {
-  title: "Admin - Upload d'images",
-  description: "Ajout d'images administrateur pour les contenus du site.",
+  title: "Admin - Media Library",
+  description: "Bibliothèque média de style WordPress pour l'administration.",
 };
 
 export default async function AdminUploadsPage() {
@@ -19,54 +19,30 @@ export default async function AdminUploadsPage() {
     redirect("/");
   }
 
-  let media: Array<{
-    id: string;
-    originalUrl: string;
-    thumbnailUrl: string;
-    sizeBytes: number;
-    width: number | null;
-    height: number | null;
-    createdAt: Date;
-    altText: string | null;
-    sourceRef: string | null;
-  }> = [];
-  let dbError: string | null = null;
-
-  try {
-    media = await prisma.media.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 20,
-      select: {
-        id: true,
-        originalUrl: true,
-        thumbnailUrl: true,
-        sizeBytes: true,
-        width: true,
-        height: true,
-        createdAt: true,
-        altText: true,
-        sourceRef: true,
-      },
-    });
-  } catch (error) {
-    dbError = error instanceof Error ? error.message : "Erreur BDD inconnue.";
-  }
+  const media = await prisma.media.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 60,
+    select: {
+      id: true,
+      originalUrl: true,
+      thumbnailUrl: true,
+      objectKey: true,
+      name: true,
+      mimeType: true,
+      sizeBytes: true,
+      altText: true,
+      createdAt: true,
+    },
+  });
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-col gap-6">
+    <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 pb-10 pt-2 md:px-6">
       <header className="rounded-2xl border border-border bg-card px-6 py-7 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Administration
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Administration</p>
+        <h1 className="mt-3 text-3xl font-semibold text-foreground">Media Library</h1>
+        <p className="mt-3 max-w-3xl text-sm text-muted-foreground sm:text-base">
+          Interface &quot;WP-style&quot; pour uploader, consulter et éditer les assets centralisés du site.
         </p>
-        <h1 className="mt-3 text-3xl font-semibold text-foreground">Upload d&apos;images</h1>
-        <p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">
-          V2 activée : compression automatique, thumbnail et enregistrement des médias en base.
-        </p>
-        {dbError ? (
-          <p className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-            La BDD n&apos;est pas prête: {dbError}. Vérifie `DATABASE_URL` puis applique les migrations Prisma.
-          </p>
-        ) : null}
         <div className="mt-4">
           <Link href="/admin" className="text-sm font-semibold text-primary hover:underline">
             ← Retour au dashboard admin
@@ -76,7 +52,14 @@ export default async function AdminUploadsPage() {
 
       <AdminImageUploadForm
         initialMedia={media.map((item) => ({
-          ...item,
+          id: item.id,
+          url: item.originalUrl,
+          thumbnailUrl: item.thumbnailUrl,
+          key: item.objectKey,
+          name: item.name ?? "asset",
+          type: item.mimeType,
+          size: item.sizeBytes,
+          alt: item.altText,
           createdAt: item.createdAt.toISOString(),
         }))}
       />
