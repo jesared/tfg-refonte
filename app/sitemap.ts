@@ -3,21 +3,15 @@ import type { MetadataRoute } from 'next';
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 
 const routes = [
-  '/communaute',
-  '/agenda',
-  '/classements',
-  '/contact',
-  '/profile',
-  '/recompenses',
-  '/salles',
-  '/tableaux',
+  '/',
   '/trophee',
-  '/users',
-  '/admin',
-  '/admin/classements',
-  '/admin/tournois',
-  '/admin/inscriptions',
-  '/admin/utilisateurs',
+  '/agenda',
+  '/tableaux',
+  '/classements',
+  '/communaute',
+  '/recompenses',
+  '/inscription',
+  '/contact',
 ] as const;
 
 export default function sitemap(): MetadataRoute.Sitemap {
