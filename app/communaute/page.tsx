@@ -149,6 +149,11 @@ const getAllowedImagePrefixes = () => {
   return [...prefixes];
 };
 
+type ComposerSubmissionState = {
+  ok: boolean;
+  message: string | null;
+};
+
 export default async function CommunautePage({
   searchParams,
 }: {
@@ -180,12 +185,15 @@ export default async function CommunautePage({
     },
   });
 
-  async function submitPostProposal(formData: FormData) {
+  async function submitPostProposal(
+    _: ComposerSubmissionState,
+    formData: FormData,
+  ): Promise<ComposerSubmissionState> {
     "use server";
 
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return;
+      return { ok: false, message: "Connectez-vous pour publier dans la communauté." };
     }
 
     const title = String(formData.get("title") ?? "").trim();
@@ -196,7 +204,7 @@ export default async function CommunautePage({
     const rawImageUrl = String(formData.get("imageUrl") ?? "").trim();
 
     if (content.length < 12) {
-      return;
+      return { ok: false, message: "Le contenu doit contenir au moins 12 caractères." };
     }
 
     const zone = Object.values(CommunityZone).includes(zoneValue as CommunityZone)
@@ -225,21 +233,27 @@ export default async function CommunautePage({
       }
     }
 
-    await prisma.communityPost.create({
-      data: {
-        authorId: session.user.id,
-        title: title.length > 0 ? title : null,
-        content,
-        imageUrl,
-        tournamentId,
-        zone,
-        scope,
-        status: "DRAFT",
-      },
-    });
+    try {
+      await prisma.communityPost.create({
+        data: {
+          authorId: session.user.id,
+          title: title.length > 0 ? title : null,
+          content,
+          imageUrl,
+          tournamentId,
+          zone,
+          scope,
+          status: "DRAFT",
+        },
+      });
+    } catch (error) {
+      console.error("[communaute] Unable to create draft post", error);
+      return { ok: false, message: "Impossible d'enregistrer la publication pour le moment." };
+    }
 
     revalidatePath("/communaute");
     revalidatePath("/admin/communaute");
+    return { ok: true, message: "Publication envoyée. Elle sera visible après validation admin." };
   }
 
   try {
