@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { CommunityPostScope } from "@prisma/client";
 import { Table2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 
 type TournamentOption = {
   id: string;
@@ -12,13 +12,18 @@ type TournamentOption = {
 };
 
 type CommunityPostComposerProps = {
-  action: (formData: FormData) => Promise<void>;
+  action: (
+    state: { ok: boolean; message: string | null },
+    formData: FormData,
+  ) => Promise<{ ok: boolean; message: string | null }>;
   tournaments: TournamentOption[];
 };
 
 export function CommunityPostComposer({ action, tournaments }: CommunityPostComposerProps) {
+  const [submitState, formAction] = useActionState(action, { ok: false, message: null });
   const [isOpen, setIsOpen] = useState(false);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
+  const [uploadedMediaId, setUploadedMediaId] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -32,6 +37,25 @@ export function CommunityPostComposer({ action, tournaments }: CommunityPostComp
       }
     };
   }, [previewUrl]);
+
+  useEffect(() => {
+    if (!submitState.ok) {
+      return;
+    }
+
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setUploadedUrl(null);
+    setUploadedMediaId(null);
+    setPreviewUrl(null);
+    setUploadError(null);
+    setFileName(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    setIsOpen(false);
+  }, [previewUrl, submitState.ok]);
 
   async function handleImageUpload(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -74,29 +98,57 @@ export function CommunityPostComposer({ action, tournaments }: CommunityPostComp
       });
 
       const payload = (await response.json().catch(() => null)) as
-        | { imageUrl?: string; error?: string }
+        | { imageUrl?: string; mediaId?: string; error?: string }
         | null;
 
-      if (!response.ok || !payload?.imageUrl) {
+      if (!response.ok || !payload?.imageUrl || !payload.mediaId) {
         setUploadedUrl(null);
+        setUploadedMediaId(null);
         setUploadError(payload?.error ?? "Upload impossible. Réessayez dans quelques instants.");
         return;
       }
 
+      const previousMediaId = uploadedMediaId;
       setUploadedUrl(payload.imageUrl);
+      setUploadedMediaId(payload.mediaId);
+
+      if (previousMediaId && previousMediaId !== payload.mediaId) {
+        try {
+          await deleteUploadedMedia(previousMediaId);
+        } catch {
+          setUploadError("Nouvelle image enregistrée, mais suppression de l’ancienne impossible.");
+        }
+      }
     } catch {
       setUploadedUrl(null);
+      setUploadedMediaId(null);
       setUploadError("Erreur réseau pendant l'upload.");
     } finally {
       setIsUploading(false);
     }
   }
 
+  async function deleteUploadedMedia(mediaId: string) {
+    const response = await fetch(`/api/community/uploads/${mediaId}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      throw new Error("delete_failed");
+    }
+  }
+
   function removeUploadedImage() {
+    if (uploadedMediaId) {
+      void deleteUploadedMedia(uploadedMediaId).catch(() => {
+        setUploadError("Impossible de supprimer l’image côté serveur.");
+      });
+    }
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
     }
     setUploadedUrl(null);
+    setUploadedMediaId(null);
     setPreviewUrl(null);
     setUploadError(null);
     setFileName(null);
@@ -146,7 +198,7 @@ export function CommunityPostComposer({ action, tournaments }: CommunityPostComp
               </button>
             </div>
 
-            <form action={action} className="mt-4 grid gap-3 sm:grid-cols-2">
+            <form action={formAction} className="mt-4 grid gap-3 sm:grid-cols-2">
               <label className="flex flex-col gap-1 sm:col-span-2">
                 <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Titre (optionnel)
@@ -254,6 +306,11 @@ export function CommunityPostComposer({ action, tournaments }: CommunityPostComp
               </label>
 
               <div className="sm:col-span-2">
+                {submitState.message ? (
+                  <p className={`mb-2 text-xs ${submitState.ok ? "text-emerald-700" : "text-destructive"}`}>
+                    {submitState.message}
+                  </p>
+                ) : null}
                 <button
                   type="submit"
                   disabled={isUploading}
