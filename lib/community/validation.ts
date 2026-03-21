@@ -53,6 +53,27 @@ function parseOptionalString(value: unknown, maxLength: number) {
   return normalized;
 }
 
+function parseOptionalHttpUrl(value: unknown, maxLength: number) {
+  const normalized = parseOptionalString(value, maxLength);
+
+  if (!normalized) {
+    return null;
+  }
+
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(normalized);
+  } catch {
+    throw new ValidationError("Field imageUrl must be a valid URL");
+  }
+
+  if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+    throw new ValidationError("Field imageUrl must use http or https");
+  }
+
+  return parsedUrl.toString();
+}
+
 function parseEnumValue<T extends string>(value: unknown, enumObject: Record<string, T>, field: string) {
   if (value === null || value === undefined || value === "") {
     return null;
@@ -74,7 +95,7 @@ export function parseCreatePostDto(payload: unknown) {
   return {
     title: parseOptionalString(body.title, 140),
     content: parseRequiredString(body.content, "content", 5000),
-    imageUrl: parseOptionalString(body.imageUrl, 1000),
+    imageUrl: parseOptionalHttpUrl(body.imageUrl, 1000),
     tournamentId: parseOptionalString(body.tournamentId, 64),
     scope: parseEnumValue(body.scope, CommunityPostScope, "scope") ?? CommunityPostScope.TOURNAMENT,
     status: parseEnumValue(body.status, CommunityPostStatus, "status") ?? CommunityPostStatus.PUBLISHED,
