@@ -31,6 +31,8 @@ export default async function AdminUploadsPage() {
       mimeType: true,
       sizeBytes: true,
       altText: true,
+      width: true,
+      height: true,
       createdAt: true,
     },
   });
@@ -60,6 +62,8 @@ export default async function AdminUploadsPage() {
           type: item.mimeType,
           size: item.sizeBytes,
           alt: item.altText,
+          width: item.width,
+          height: item.height,
           createdAt: item.createdAt.toISOString(),
         }))}
       />

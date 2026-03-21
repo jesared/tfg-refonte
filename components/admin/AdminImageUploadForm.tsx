@@ -10,6 +10,7 @@ import {
   getMediaLibraryAction,
   updateMediaAltManyAction,
   updateMediaAltAction,
+  updateMediaNameAction,
   uploadMediaAction,
 } from "@/app/admin/uploads/actions";
 import { Button } from "@/components/ui/button";
@@ -42,11 +43,15 @@ export function AdminImageUploadForm({ initialMedia }: { initialMedia: AdminMedi
   const [isDeleting, startDelete] = useTransition();
   const [isBulkDeleting, startBulkDelete] = useTransition();
   const [isBulkSavingAlt, startBulkSaveAlt] = useTransition();
+  const [isSavingName, startSaveName] = useTransition();
 
   const [selectedMedia, setSelectedMedia] = useState<AdminMediaItem | null>(null);
   const [altDraft, setAltDraft] = useState("");
+  const [nameDraft, setNameDraft] = useState("");
+  const [uploadAltDraft, setUploadAltDraft] = useState("");
   const [bulkAltDraft, setBulkAltDraft] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isDragOver, setIsDragOver] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(24);
@@ -99,14 +104,21 @@ export function AdminImageUploadForm({ initialMedia }: { initialMedia: AdminMedi
 
   function onUploadSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = event.currentTarget;
-    const formData = new FormData(form);
+    const formData = new FormData(event.currentTarget);
     const file = formData.get("file");
 
     if (!(file instanceof File) || file.size === 0) {
       pushToast("error", "Sélectionnez un fichier avant de lancer l'upload.");
       return;
     }
+
+    void uploadSingleFile(file, uploadAltDraft, event.currentTarget);
+  }
+
+  async function uploadSingleFile(file: File, alt: string, form?: HTMLFormElement) {
+    const formData = new FormData();
+    formData.set("file", file);
+    formData.set("alt", alt);
 
     if (file.size > MAX_FILE_SIZE) {
       pushToast("error", "Le fichier dépasse la limite de 8 Mo.");
@@ -124,7 +136,10 @@ export function AdminImageUploadForm({ initialMedia }: { initialMedia: AdminMedi
 
       setMediaItems((prev) => [result.media!, ...prev]);
       setTotalItems((prev) => prev + 1);
-      form.reset();
+      if (form) {
+        form.reset();
+      }
+      setUploadAltDraft("");
       pushToast("success", "Upload réussi.");
     });
   }
@@ -240,6 +255,60 @@ export function AdminImageUploadForm({ initialMedia }: { initialMedia: AdminMedi
       });
   }
 
+  function onGridKeyDown(event: React.KeyboardEvent<HTMLButtonElement>, item: AdminMediaItem) {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+    event.preventDefault();
+    setSelectedMedia(item);
+    setAltDraft(item.alt ?? "");
+    setNameDraft(item.name);
+  }
+
+  function onDropUpload(event: React.DragEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsDragOver(false);
+    const file = event.dataTransfer.files?.[0];
+
+    if (!file || !file.type.startsWith("image/")) {
+      pushToast("error", "Déposez un fichier image valide.");
+      return;
+    }
+
+    void uploadSingleFile(file, uploadAltDraft);
+  }
+
+  function onPasteUpload(event: React.ClipboardEvent<HTMLFormElement>) {
+    const imageItem = Array.from(event.clipboardData.items).find((item) => item.type.startsWith("image/"));
+    if (!imageItem) {
+      return;
+    }
+    const file = imageItem.getAsFile();
+    if (!file) {
+      return;
+    }
+    event.preventDefault();
+    void uploadSingleFile(file, uploadAltDraft);
+  }
+
+  function onSaveName() {
+    if (!selectedMeta) {
+      return;
+    }
+
+    startSaveName(async () => {
+      const result = await updateMediaNameAction({ mediaId: selectedMeta.id, name: nameDraft });
+
+      if (!result.ok) {
+        pushToast("error", result.message);
+        return;
+      }
+
+      setMediaItems((prev) => prev.map((item) => (item.id === selectedMeta.id ? { ...item, name: nameDraft.trim() } : item)));
+      pushToast("success", "Nom de fichier mis à jour.");
+    });
+  }
+
   return (
     <section className="rounded-2xl border border-border bg-card p-5 shadow-sm md:p-6">
       <div className="flex flex-col gap-2">
@@ -249,7 +318,19 @@ export function AdminImageUploadForm({ initialMedia }: { initialMedia: AdminMedi
         </p>
       </div>
 
-      <form className="mt-5 grid gap-4 rounded-xl border border-border/70 bg-muted/20 p-4 md:grid-cols-[1fr_auto]" onSubmit={onUploadSubmit}>
+      <form
+        className={`mt-5 grid gap-4 rounded-xl border border-border/70 bg-muted/20 p-4 transition md:grid-cols-[1fr_auto] ${
+          isDragOver ? "border-primary bg-primary/5" : ""
+        }`}
+        onSubmit={onUploadSubmit}
+        onDragOver={(event) => {
+          event.preventDefault();
+          setIsDragOver(true);
+        }}
+        onDragLeave={() => setIsDragOver(false)}
+        onDrop={onDropUpload}
+        onPaste={onPasteUpload}
+      >
         <div className="grid gap-4 md:grid-cols-2">
           <label className="space-y-2 text-sm font-medium text-foreground">
             Fichier
@@ -269,6 +350,8 @@ export function AdminImageUploadForm({ initialMedia }: { initialMedia: AdminMedi
             <input
               name="alt"
               type="text"
+              value={uploadAltDraft}
+              onChange={(event) => setUploadAltDraft(event.target.value)}
               maxLength={180}
               placeholder="Ex : finale double senior"
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal"
@@ -282,6 +365,9 @@ export function AdminImageUploadForm({ initialMedia }: { initialMedia: AdminMedi
           </Button>
         </div>
       </form>
+      <p className="mt-2 text-xs text-muted-foreground">
+        Astuce : glissez-déposez une image sur la zone d&apos;upload ou collez directement depuis le presse-papiers.
+      </p>
       {isUploading ? (
         <div className="mt-3 space-y-2">
           <p className="text-sm font-medium text-primary">Téléversement en cours...</p>
@@ -452,8 +538,10 @@ export function AdminImageUploadForm({ initialMedia }: { initialMedia: AdminMedi
                 onClick={() => {
                   setSelectedMedia(item);
                   setAltDraft(item.alt ?? "");
+                  setNameDraft(item.name);
                 }}
-                className="group relative aspect-square overflow-hidden rounded-lg border border-border bg-muted"
+                onKeyDown={(event) => onGridKeyDown(event, item)}
+                className="group relative aspect-square overflow-hidden rounded-lg border border-border bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               >
                 <input
                   type="checkbox"
@@ -519,9 +607,24 @@ export function AdminImageUploadForm({ initialMedia }: { initialMedia: AdminMedi
                   />
                 </div>
                 <div className="space-y-1 text-xs text-muted-foreground">
+                  <p className="font-medium text-foreground">{new Date(selectedMeta.createdAt).toLocaleString("fr-FR")}</p>
                   <p className="break-all">{selectedMeta.key}</p>
                   <p>{formatSize(selectedMeta.size)}</p>
+                  <p>
+                    {selectedMeta.width && selectedMeta.height
+                      ? `${selectedMeta.width} × ${selectedMeta.height} px`
+                      : "Dimensions indisponibles"}
+                  </p>
                 </div>
+                <label className="block space-y-2 text-sm font-medium">
+                  Nom du fichier
+                  <input
+                    value={nameDraft}
+                    onChange={(event) => setNameDraft(event.target.value)}
+                    maxLength={180}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal"
+                  />
+                </label>
                 <label className="block space-y-2 text-sm font-medium">
                   Texte alternatif
                   <textarea
@@ -537,6 +640,9 @@ export function AdminImageUploadForm({ initialMedia }: { initialMedia: AdminMedi
                 <Button variant="secondary" onClick={onCopyUrl} disabled={isSavingAlt || isDeleting}>
                   Copier l&apos;URL
                 </Button>
+                <Button variant="outline" onClick={onSaveName} disabled={isSavingName || isDeleting || isSavingAlt}>
+                  {isSavingName ? "Renommage..." : "Renommer"}
+                </Button>
                 <Button variant="outline" onClick={onSaveAlt} disabled={isSavingAlt || isDeleting}>
                   {isSavingAlt ? "Enregistrement..." : "Sauvegarder Alt"}
                 </Button>
@@ -549,7 +655,7 @@ export function AdminImageUploadForm({ initialMedia }: { initialMedia: AdminMedi
         </SheetContent>
       </Sheet>
 
-      <div className="pointer-events-none fixed bottom-4 right-4 z-[60] flex w-80 flex-col gap-2">
+      <div className="pointer-events-none fixed inset-x-2 bottom-3 z-[60] flex max-w-md flex-col gap-2 sm:inset-x-auto sm:right-4 sm:w-80">
         {toasts.map((toast) => (
           <div
             key={toast.id}

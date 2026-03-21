@@ -22,6 +22,8 @@ export type AdminMediaItem = {
   type: string;
   size: number;
   alt: string | null;
+  width: number | null;
+  height: number | null;
   createdAt: string;
 };
 
@@ -68,6 +70,8 @@ function mapMedia(item: {
   mimeType: string;
   sizeBytes: number;
   altText: string | null;
+  width: number | null;
+  height: number | null;
   createdAt: Date;
 }): AdminMediaItem {
   return {
@@ -79,6 +83,8 @@ function mapMedia(item: {
     type: item.mimeType,
     size: item.sizeBytes,
     alt: item.altText,
+    width: item.width,
+    height: item.height,
     createdAt: item.createdAt.toISOString(),
   };
 }
@@ -145,6 +151,8 @@ export async function getMediaLibraryAction(query?: MediaLibraryQuery): Promise<
       mimeType: true,
       sizeBytes: true,
       altText: true,
+      width: true,
+      height: true,
       createdAt: true,
     },
   });
@@ -231,6 +239,8 @@ export async function uploadMediaAction(formData: FormData): Promise<ActionResul
         mimeType: true,
         sizeBytes: true,
         altText: true,
+        width: true,
+        height: true,
         createdAt: true,
       },
     });
@@ -332,4 +342,27 @@ export async function deleteMediaManyAction(mediaIdsInput: string[]): Promise<Ac
   revalidatePath("/admin/uploads");
 
   return { ok: true, message: "Médias supprimés." };
+}
+
+export async function updateMediaNameAction(input: { mediaId: string; name: string }): Promise<ActionResult> {
+  const user = await requireAdmin();
+
+  if (!user) {
+    return { ok: false, message: "Non autorisé." };
+  }
+
+  const name = input.name.trim();
+
+  if (!name) {
+    return { ok: false, message: "Le nom de fichier ne peut pas être vide." };
+  }
+
+  await prisma.media.update({
+    where: { id: input.mediaId },
+    data: { name },
+  });
+
+  revalidatePath("/admin/uploads");
+
+  return { ok: true, message: "Nom du fichier mis à jour." };
 }
