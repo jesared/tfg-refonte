@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import sharp from "sharp";
 
-import { uploadObject, buildMediaKeys } from "@/lib/media-storage";
+import { deleteObject, uploadObject, buildMediaKeys } from "@/lib/media-storage";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
@@ -117,5 +117,55 @@ export async function POST(req: Request) {
       },
       { status: 500 },
     );
+  }
+}
+
+export async function DELETE(req: Request) {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return unauthorized();
+  }
+
+  let payload: { mediaId?: unknown };
+  try {
+    payload = (await req.json()) as { mediaId?: unknown };
+  } catch {
+    return badRequest("Payload JSON invalide");
+  }
+
+  const mediaId = String(payload.mediaId ?? "").trim();
+  if (!mediaId) {
+    return badRequest("mediaId manquant");
+  }
+
+  const media = await prisma.media.findUnique({
+    where: { id: mediaId },
+    select: {
+      id: true,
+      uploaderId: true,
+      objectKey: true,
+      thumbnailObjectKey: true,
+    },
+  });
+
+  if (!media) {
+    return NextResponse.json({ error: "Média introuvable" }, { status: 404 });
+  }
+
+  const isOwner = media.uploaderId === session.user.id;
+  const isAdmin = session.user.role === "ADMIN";
+  if (!isOwner && !isAdmin) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  try {
+    await Promise.allSettled([deleteObject(media.objectKey), deleteObject(media.thumbnailObjectKey)]);
+    await prisma.media.delete({ where: { id: media.id } });
+
+    return NextResponse.json({ deletedId: media.id }, { status: 200 });
+  } catch (error) {
+    console.error("[community/uploads] Delete failed", error);
+    return NextResponse.json({ error: "Suppression impossible côté serveur." }, { status: 500 });
   }
 }
