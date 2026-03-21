@@ -1,4 +1,5 @@
 import { CalendarDays, Check, ShieldCheck, Trophy } from "lucide-react";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth";
@@ -6,21 +7,88 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { TournamentActionMenu } from "./_components/tournament-action-menu";
+import { TournamentFilters } from "./_components/tournament-filters";
 
-export default async function TournamentsPage() {
+type PageProps = {
+  searchParams?: Promise<{
+    q?: string;
+    status?: string;
+    tour?: string;
+    from?: string;
+    to?: string;
+  }>;
+};
+
+export default async function TournamentsPage({ searchParams }: PageProps) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user || session.user.role !== "ADMIN") {
     redirect("/");
   }
 
+  const params = (await searchParams) ?? {};
+  const q = params.q?.trim() ?? "";
+  const status = params.status ?? "all";
+  const tour = Number.parseInt(params.tour ?? "", 10);
+
+  const startDate = params.from ? new Date(`${params.from}T00:00:00.000Z`) : null;
+  const endDate = params.to ? new Date(`${params.to}T23:59:59.999Z`) : null;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const where: Prisma.TournamentWhereInput = {};
+  const dateFilter: Prisma.DateTimeFilter = {};
+
+  if (q) {
+    where.nom = { contains: q, mode: "insensitive" };
+  }
+
+  if (!Number.isNaN(tour)) {
+    where.tour = tour;
+  }
+
+  if (startDate) {
+    dateFilter.gte = startDate;
+  }
+
+  if (endDate) {
+    dateFilter.lte = endDate;
+  }
+
+  if (status === "open") {
+    where.inscriptionOuverte = true;
+  }
+
+  if (status === "closed") {
+    where.inscriptionOuverte = false;
+  }
+
+  if (status === "past") {
+    dateFilter.lt = today;
+  }
+
+  if (status === "upcoming") {
+    dateFilter.gte = today;
+  }
+
+  if (Object.keys(dateFilter).length > 0) {
+    where.date = dateFilter;
+  }
+
   const tournaments = await prisma.tournament.findMany({
+    where,
     orderBy: [{ date: "desc" }],
   });
 
+  const hasActiveFilters =
+    Boolean(q) ||
+    (status !== "all" && Boolean(status)) ||
+    !Number.isNaN(tour) ||
+    Boolean(params.from) ||
+    Boolean(params.to);
+
   const openRegistrationsCount = tournaments.filter((tournament) => tournament.inscriptionOuverte).length;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
   const pastTournamentsCount = tournaments.filter((tournament) => new Date(tournament.date) < today).length;
 
   async function deleteTournament(formData: FormData) {
@@ -107,16 +175,32 @@ export default async function TournamentsPage() {
           <p className="text-xs text-muted-foreground">Triés du plus récent au plus ancien</p>
         </div>
 
+        <TournamentFilters />
+
         {tournaments.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-muted/20 p-8 text-center">
-            <p className="text-sm text-muted-foreground">Aucun tournoi n&apos;a encore été créé.</p>
-            <Link
-              href="/admin/tournaments/new"
-              className="mt-4 inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
-            >
-              <Check className="h-4 w-4" aria-hidden="true" />
-              Créer le premier tournoi
-            </Link>
+            <p className="text-sm text-muted-foreground">
+              {hasActiveFilters
+                ? "Aucun tournoi ne correspond à ces filtres."
+                : "Aucun tournoi n&apos;a encore été créé."}
+            </p>
+
+            {hasActiveFilters ? (
+              <Link
+                href="/admin/tournaments"
+                className="mt-4 inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
+              >
+                Réinitialiser les filtres
+              </Link>
+            ) : (
+              <Link
+                href="/admin/tournaments/new"
+                className="mt-4 inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
+              >
+                <Check className="h-4 w-4" aria-hidden="true" />
+                Créer le premier tournoi
+              </Link>
+            )}
           </div>
         ) : (
           <div>
