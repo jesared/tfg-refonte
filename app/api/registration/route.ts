@@ -7,6 +7,12 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
 const LICENCE_REGEX = /^[A-Za-z0-9]{3,9}$/;
 
+class TournamentCapacityError extends Error {
+  constructor() {
+    super("TOURNAMENT_CAPACITY_REACHED");
+  }
+}
+
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
 
@@ -91,6 +97,19 @@ export async function POST(req: Request) {
 
   try {
     await prisma.$transaction(async (tx) => {
+      const [registrationsCount, categoryCapacity] = await Promise.all([
+        tx.registration.count({ where: { tournamentId } }),
+        tx.category.aggregate({
+          where: { tournamentId },
+          _sum: { maxJoueurs: true },
+        }),
+      ]);
+
+      const maxPlayers = categoryCapacity._sum.maxJoueurs;
+      if (maxPlayers !== null && registrationsCount >= maxPlayers) {
+        throw new TournamentCapacityError();
+      }
+
       const player = await tx.player.upsert({
         where: { numeroLicence },
         update: { nom, prenom, club, genre, points },
@@ -116,6 +135,12 @@ export async function POST(req: Request) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       return NextResponse.json(
         { error: "Cette licence est déjà inscrite sur ce tour." },
+        { status: 409 },
+      );
+    }
+    if (error instanceof TournamentCapacityError) {
+      return NextResponse.json(
+        { error: "Le tournoi est complet, impossible d'ajouter une inscription." },
         { status: 409 },
       );
     }
