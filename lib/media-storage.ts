@@ -12,8 +12,10 @@ export function assertStorageConfig() {
   }
 }
 
-export function buildMediaKeys(filenameBase: string) {
-  const prefix = process.env.SUPABASE_MEDIA_PREFIX?.replace(/^\/+|\/+$/g, "") || "admin-media";
+export function buildMediaKeys(filenameBase: string, options?: { prefix?: string }) {
+  const envPrefix = process.env.SUPABASE_MEDIA_PREFIX?.replace(/^\/+|\/+$/g, "");
+  const optionPrefix = options?.prefix?.replace(/^\/+|\/+$/g, "");
+  const prefix = optionPrefix || envPrefix || "admin-media";
 
   return {
     originalKey: `${prefix}/original/${filenameBase}.webp`,
