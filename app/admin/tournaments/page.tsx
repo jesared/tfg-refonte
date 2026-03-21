@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { RegistrationCountCell } from "./_components/registration-count-cell";
 import { TournamentActionMenu } from "./_components/tournament-action-menu";
 import { TournamentFilters } from "./_components/tournament-filters";
 
@@ -79,6 +80,19 @@ export default async function TournamentsPage({ searchParams }: PageProps) {
   const tournaments = await prisma.tournament.findMany({
     where,
     orderBy: [{ date: "desc" }],
+    select: {
+      id: true,
+      nom: true,
+      tour: true,
+      date: true,
+      inscriptionOuverte: true,
+      categories: {
+        select: { maxJoueurs: true },
+      },
+      _count: {
+        select: { registrations: true },
+      },
+    },
   });
 
   const hasActiveFilters =
@@ -203,13 +217,14 @@ export default async function TournamentsPage({ searchParams }: PageProps) {
             )}
           </div>
         ) : (
-          <div>
-            <table className="w-full table-fixed text-left text-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[760px] table-fixed text-left text-sm">
               <thead>
                 <tr className="border-b border-border text-muted-foreground">
                   <th className="px-3 py-2">Nom</th>
                   <th className="px-3 py-2">Tour</th>
                   <th className="px-3 py-2">Date</th>
+                  <th className="px-3 py-2">Inscriptions</th>
                   <th className="px-3 py-2">Statut</th>
                   <th className="px-3 py-2 text-right">Actions</th>
                 </tr>
@@ -217,12 +232,27 @@ export default async function TournamentsPage({ searchParams }: PageProps) {
               <tbody>
               {tournaments.map((tournament) => {
                 const isPastTournament = new Date(tournament.date) < today;
+                const maxPlayers = tournament.categories.reduce<number | null>(
+                  (sum, category) =>
+                    category.maxJoueurs === null
+                      ? sum
+                      : (sum ?? 0) + category.maxJoueurs,
+                  null,
+                );
 
                 return (
                   <tr key={tournament.id} className="border-b border-border/60 last:border-0">
                     <td className="px-3 py-3 font-medium text-foreground">{tournament.nom}</td>
-                    <td className="px-3 py-3">Tour {tournament.tour}</td>
-                    <td className="px-3 py-3">{new Date(tournament.date).toLocaleDateString("fr-FR")}</td>
+                    <td className="px-3 py-3 whitespace-nowrap">Tour {tournament.tour}</td>
+                    <td className="px-3 py-3 whitespace-nowrap">
+                      {new Date(tournament.date).toLocaleDateString("fr-FR")}
+                    </td>
+                    <td className="px-3 py-3">
+                      <RegistrationCountCell
+                        registeredPlayers={tournament._count.registrations}
+                        maxPlayers={maxPlayers}
+                      />
+                    </td>
                     <td className="px-3 py-3">
                       <div className="flex flex-wrap items-center gap-2">
                         {isPastTournament ? (
