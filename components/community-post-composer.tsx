@@ -1,8 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import { CommunityPostScope } from "@prisma/client";
 import { Table2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type TournamentOption = {
   id: string;
@@ -17,6 +18,92 @@ type CommunityPostComposerProps = {
 
 export function CommunityPostComposer({ action, tournaments }: CommunityPostComposerProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
+  async function handleImageUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    setUploadError(null);
+
+    if (!file) {
+      return;
+    }
+
+    const allowedMimeTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
+    const maxFileSize = 8 * 1024 * 1024;
+
+    if (!allowedMimeTypes.has(file.type)) {
+      setUploadError("Type non supporté. Utilisez JPG, PNG, WEBP ou AVIF.");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > maxFileSize) {
+      setUploadError("Fichier trop volumineux (maximum 8 Mo).");
+      event.target.value = "";
+      return;
+    }
+
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewUrl(URL.createObjectURL(file));
+    setFileName(file.name);
+
+    const formData = new FormData();
+    formData.set("file", file);
+
+    setIsUploading(true);
+
+    try {
+      const response = await fetch("/api/community/uploads", {
+        method: "POST",
+        body: formData,
+      });
+
+      const payload = (await response.json().catch(() => null)) as
+        | { imageUrl?: string; error?: string }
+        | null;
+
+      if (!response.ok || !payload?.imageUrl) {
+        setUploadedUrl(null);
+        setUploadError(payload?.error ?? "Upload impossible. Réessayez dans quelques instants.");
+        return;
+      }
+
+      setUploadedUrl(payload.imageUrl);
+    } catch {
+      setUploadedUrl(null);
+      setUploadError("Erreur réseau pendant l'upload.");
+    } finally {
+      setIsUploading(false);
+    }
+  }
+
+  function removeUploadedImage() {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setUploadedUrl(null);
+    setPreviewUrl(null);
+    setUploadError(null);
+    setFileName(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
 
   return (
     <>
@@ -105,15 +192,47 @@ export function CommunityPostComposer({ action, tournaments }: CommunityPostComp
 
               <label className="flex flex-col gap-1">
                 <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  URL de l&apos;image (optionnel)
+                  Image (optionnel)
                 </span>
                 <input
-                  type="url"
-                  name="imageUrl"
-                  maxLength={1000}
-                  placeholder="https://exemple.com/photo-tournoi.jpg"
-                  className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/avif"
+                  onChange={handleImageUpload}
+                  className="h-10 rounded-md border border-input bg-background px-3 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-primary-foreground"
                 />
+                <input type="hidden" name="imageUrl" value={uploadedUrl ?? ""} />
+                {isUploading ? (
+                  <p className="text-xs text-muted-foreground">Upload en cours...</p>
+                ) : null}
+                {uploadError ? <p className="text-xs text-destructive">{uploadError}</p> : null}
+                {previewUrl ? (
+                  <div className="rounded-md border border-border bg-muted/20 p-2">
+                    <Image
+                      src={previewUrl}
+                      alt="Prévisualisation"
+                      width={400}
+                      height={160}
+                      unoptimized
+                      className="h-24 w-full rounded object-cover"
+                    />
+                  </div>
+                ) : null}
+                {uploadedUrl ? (
+                  <p className="text-xs text-emerald-700">Image uploadée avec succès.</p>
+                ) : null}
+                {fileName ? (
+                  <p className="text-xs text-muted-foreground">Fichier : {fileName}</p>
+                ) : null}
+                {previewUrl || uploadedUrl ? (
+                  <button
+                    type="button"
+                    onClick={removeUploadedImage}
+                    className="w-fit rounded-md border border-input px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted"
+                  >
+                    Retirer l&apos;image
+                  </button>
+                ) : null}
               </label>
 
               <label className="flex flex-col gap-1 sm:col-span-2">
@@ -137,9 +256,10 @@ export function CommunityPostComposer({ action, tournaments }: CommunityPostComp
               <div className="sm:col-span-2">
                 <button
                   type="submit"
+                  disabled={isUploading}
                   className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition hover:opacity-90"
                 >
-                  Envoyer pour validation
+                  {isUploading ? "Patientez..." : "Envoyer pour validation"}
                 </button>
               </div>
             </form>
