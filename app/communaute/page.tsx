@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 import type { Prisma } from "@prisma/client";
 import {
+  Activity,
   Image as ImageIcon,
   MessageSquare,
   ShieldAlert,
@@ -15,6 +16,12 @@ import {
 } from "lucide-react";
 
 import { CommunityPostComposer } from "@/components/community-post-composer";
+import { CommunityPlayerProfileCard } from "@/components/community-player-profile-card";
+import {
+  generateActivitySentence,
+  hasTripleCrownBadge,
+  type ActivityEventPayload,
+} from "@/lib/community/activity-feed";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
@@ -282,6 +289,42 @@ export default async function CommunautePage({
     .sort((a, b) => b.engagementScore - a.engagementScore)
     .slice(0, 6);
 
+  const gradeByEngagement = (engagementScore: number) => {
+    if (engagementScore >= 24) {
+      return "Élite";
+    }
+
+    if (engagementScore >= 14) {
+      return "Confirmé";
+    }
+
+    return "Challenger";
+  };
+
+  const estimatedWinsFromEngagement = (engagementScore: number) =>
+    Math.min(5, Math.floor(engagementScore / 8));
+
+  const activityFeedEvents: ActivityEventPayload[] = [
+    ...posts.slice(0, 4).map((post) => ({
+      playerName:
+        post.author.communityProfile?.displayName || post.author.name || "Un joueur du circuit",
+      type: "VICTORY" as const,
+      tournamentName: post.tournament?.nom,
+      createdAt: post.publishedAt,
+    })),
+    ...membersByEngagement.slice(0, 3).map((member) => ({
+      playerName: member.communityProfile?.displayName || member.name || "Un joueur du circuit",
+      type: "GRADE_CHANGE" as const,
+      previousGrade: "Challenger",
+      newGrade: gradeByEngagement(member.engagementScore),
+    })),
+    ...members.slice(0, 3).map((member) => ({
+      playerName: member.communityProfile?.displayName || member.name || "Un joueur du circuit",
+      type: "REGISTRATION" as const,
+      tournamentName: tournaments[0]?.nom,
+    })),
+  ].slice(0, 8);
+
   const uniqueClubs = new Set(
     members
       .map((member) => member.communityProfile?.club)
@@ -403,6 +446,65 @@ export default async function CommunautePage({
                 {new Set(posts.map((post) => post.tournament?.tour).filter(Boolean)).size}
               </span>
             </div>
+          </div>
+        </article>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
+        <article className="rounded-2xl border border-border bg-card p-4 sm:p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Profils joueurs
+              </p>
+              <h2 className="mt-1 text-lg font-semibold text-foreground">
+                Micro-réseau social sportif
+              </h2>
+            </div>
+            <Trophy className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {membersByEngagement.map((member) => {
+              const playerName =
+                member.communityProfile?.displayName || member.name || "Membre de la communauté";
+              const wins = estimatedWinsFromEngagement(member.engagementScore);
+              return (
+                <CommunityPlayerProfileCard
+                  key={`${playerName}-profile`}
+                  playerName={playerName}
+                  grade={gradeByEngagement(member.engagementScore)}
+                  club={member.communityProfile?.club}
+                  zone={
+                    member.communityProfile?.zone ? zoneLabel[member.communityProfile.zone] : null
+                  }
+                  wins={wins}
+                  hasTripleCrown={hasTripleCrownBadge(wins)}
+                />
+              );
+            })}
+          </div>
+        </article>
+
+        <article className="rounded-2xl border border-border bg-card p-4 sm:p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Fil d’activité
+              </p>
+              <h2 className="mt-1 text-lg font-semibold text-foreground">Événements récents</h2>
+            </div>
+            <Activity className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+          </div>
+          <div className="mt-4 space-y-2">
+            {activityFeedEvents.map((event, index) => (
+              <p
+                key={`${event.playerName}-${event.type}-${index}`}
+                className="rounded-lg bg-muted/40 p-2.5 text-xs text-foreground/90"
+              >
+                {generateActivitySentence(event)}
+              </p>
+            ))}
           </div>
         </article>
       </section>
