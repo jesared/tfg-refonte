@@ -27,6 +27,7 @@ export function CommunityPostComposer({ action, tournaments }: CommunityPostComp
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -85,6 +86,8 @@ export function CommunityPostComposer({ action, tournaments }: CommunityPostComp
     }
     setPreviewUrl(URL.createObjectURL(file));
     setFileName(file.name);
+
+    const previousMediaId = uploadedMediaId;
 
     const formData = new FormData();
     formData.set("file", file);
@@ -279,10 +282,13 @@ export function CommunityPostComposer({ action, tournaments }: CommunityPostComp
                 {previewUrl || uploadedUrl ? (
                   <button
                     type="button"
-                    onClick={removeUploadedImage}
+                    onClick={() => {
+                      void removeUploadedImage();
+                    }}
+                    disabled={isRemoving}
                     className="w-fit rounded-md border border-input px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted"
                   >
-                    Retirer l&apos;image
+                    {isRemoving ? "Suppression..." : "Retirer l&apos;image"}
                   </button>
                 ) : null}
               </label>
@@ -313,10 +319,10 @@ export function CommunityPostComposer({ action, tournaments }: CommunityPostComp
                 ) : null}
                 <button
                   type="submit"
-                  disabled={isUploading}
+                  disabled={isUploading || isRemoving}
                   className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition hover:opacity-90"
                 >
-                  {isUploading ? "Patientez..." : "Envoyer pour validation"}
+                  {isUploading || isRemoving ? "Patientez..." : "Envoyer pour validation"}
                 </button>
               </div>
             </form>
