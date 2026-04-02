@@ -75,7 +75,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Sidebar />
             <div className="flex-1 md:pl-[var(--sidebar-width)]">
               <main className="px-4 py-6 sm:px-6 lg:px-8">
-                <AppBreadcrumb />
+                <div className="md:pl-[var(--breadcrumb-offset)]">
+                  <AppBreadcrumb />
+                </div>
                 <div className="mt-4">{children}</div>
               </main>
             </div>

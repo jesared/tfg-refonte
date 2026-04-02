@@ -86,9 +86,20 @@ export function Sidebar() {
       "--sidebar-width",
       isDesktopCollapsed ? "0rem" : "16rem",
     );
+<<<<<<< codex/add-collapsible-sidebar-functionality-rtsch8
+    document.documentElement.style.setProperty(
+      "--breadcrumb-offset",
+      isDesktopCollapsed ? "3rem" : "0rem",
+    );
 
     return () => {
       document.documentElement.style.setProperty("--sidebar-width", "16rem");
+      document.documentElement.style.setProperty("--breadcrumb-offset", "0rem");
+=======
+
+    return () => {
+      document.documentElement.style.setProperty("--sidebar-width", "16rem");
+>>>>>>> main
     };
   }, [isDesktopCollapsed]);
 
